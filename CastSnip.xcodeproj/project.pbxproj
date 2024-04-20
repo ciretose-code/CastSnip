@@ -11,6 +11,13 @@
 		7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20B82BD36A83006D1AA4 /* ContentView.swift */; };
 		7B1D20BB2BD36A85006D1AA4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */; };
 		7B1D20BF2BD36A85006D1AA4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B1D20BE2BD36A85006D1AA4 /* Preview Assets.xcassets */; };
+		7B1D20C72BD36B5E006D1AA4 /* DSWaveformImage in Frameworks */ = {isa = PBXBuildFile; productRef = 7B1D20C62BD36B5E006D1AA4 /* DSWaveformImage */; };
+		7B1D20C92BD36B5E006D1AA4 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 7B1D20C82BD36B5E006D1AA4 /* DSWaveformImageViews */; };
+		7B1D20CB2BD3705B006D1AA4 /* Chapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20CA2BD3705B006D1AA4 /* Chapter.swift */; };
+		7B1D20CD2BD3709A006D1AA4 /* ChapterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */; };
+		7B1D20D12BD37282006D1AA4 /* ChapterTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20D02BD37282006D1AA4 /* ChapterTableView.swift */; };
+		7B4015432BD443530060A2BF /* intro.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015422BD443530060A2BF /* intro.mp3 */; };
+		7B4015452BD44F5A0060A2BF /* AudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4015442BD44F5A0060A2BF /* AudioView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +27,11 @@
 		7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7B1D20BC2BD36A85006D1AA4 /* CastSnip.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CastSnip.entitlements; sourceTree = "<group>"; };
 		7B1D20BE2BD36A85006D1AA4 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		7B1D20CA2BD3705B006D1AA4 /* Chapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chapter.swift; sourceTree = "<group>"; };
+		7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterView.swift; sourceTree = "<group>"; };
+		7B1D20D02BD37282006D1AA4 /* ChapterTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterTableView.swift; sourceTree = "<group>"; };
+		7B4015422BD443530060A2BF /* intro.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = intro.mp3; sourceTree = "<group>"; };
+		7B4015442BD44F5A0060A2BF /* AudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -27,6 +39,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7B1D20C72BD36B5E006D1AA4 /* DSWaveformImage in Frameworks */,
+				7B1D20C92BD36B5E006D1AA4 /* DSWaveformImageViews in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,8 +66,13 @@
 		7B1D20B52BD36A83006D1AA4 /* CastSnip */ = {
 			isa = PBXGroup;
 			children = (
+				7B4015412BD4423A0060A2BF /* Samples */,
 				7B1D20B62BD36A83006D1AA4 /* CastSnipApp.swift */,
 				7B1D20B82BD36A83006D1AA4 /* ContentView.swift */,
+				7B1D20CA2BD3705B006D1AA4 /* Chapter.swift */,
+				7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */,
+				7B1D20D02BD37282006D1AA4 /* ChapterTableView.swift */,
+				7B4015442BD44F5A0060A2BF /* AudioView.swift */,
 				7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */,
 				7B1D20BC2BD36A85006D1AA4 /* CastSnip.entitlements */,
 				7B1D20BD2BD36A85006D1AA4 /* Preview Content */,
@@ -67,6 +86,14 @@
 				7B1D20BE2BD36A85006D1AA4 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		7B4015412BD4423A0060A2BF /* Samples */ = {
+			isa = PBXGroup;
+			children = (
+				7B4015422BD443530060A2BF /* intro.mp3 */,
+			);
+			path = Samples;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -85,6 +112,10 @@
 			dependencies = (
 			);
 			name = CastSnip;
+			packageProductDependencies = (
+				7B1D20C62BD36B5E006D1AA4 /* DSWaveformImage */,
+				7B1D20C82BD36B5E006D1AA4 /* DSWaveformImageViews */,
+			);
 			productName = CastSnip;
 			productReference = 7B1D20B32BD36A83006D1AA4 /* CastSnip.app */;
 			productType = "com.apple.product-type.application";
@@ -113,6 +144,9 @@
 				Base,
 			);
 			mainGroup = 7B1D20AA2BD36A83006D1AA4;
+			packageReferences = (
+				7B1D20C52BD36B5E006D1AA4 /* XCRemoteSwiftPackageReference "DSWaveformImage" */,
+			);
 			productRefGroup = 7B1D20B42BD36A83006D1AA4 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -129,6 +163,7 @@
 			files = (
 				7B1D20BF2BD36A85006D1AA4 /* Preview Assets.xcassets in Resources */,
 				7B1D20BB2BD36A85006D1AA4 /* Assets.xcassets in Resources */,
+				7B4015432BD443530060A2BF /* intro.mp3 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,8 +174,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7B1D20CB2BD3705B006D1AA4 /* Chapter.swift in Sources */,
+				7B4015452BD44F5A0060A2BF /* AudioView.swift in Sources */,
 				7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */,
+				7B1D20CD2BD3709A006D1AA4 /* ChapterView.swift in Sources */,
 				7B1D20B72BD36A83006D1AA4 /* CastSnipApp.swift in Sources */,
+				7B1D20D12BD37282006D1AA4 /* ChapterTableView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -359,6 +398,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7B1D20C52BD36B5E006D1AA4 /* XCRemoteSwiftPackageReference "DSWaveformImage" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dmrschmidt/DSWaveformImage";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 14.2.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7B1D20C62BD36B5E006D1AA4 /* DSWaveformImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B1D20C52BD36B5E006D1AA4 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
+			productName = DSWaveformImage;
+		};
+		7B1D20C82BD36B5E006D1AA4 /* DSWaveformImageViews */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B1D20C52BD36B5E006D1AA4 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
+			productName = DSWaveformImageViews;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7B1D20AB2BD36A83006D1AA4 /* Project object */;
 }
