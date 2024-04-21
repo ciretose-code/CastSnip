@@ -15,19 +15,25 @@ let PAUSE_ICON = "pause.circle"
 
 struct AudioView: View {
     
-    @EnvironmentObject var globalModel: GlobalModel
+    @EnvironmentObject var audioModel: AudioModel
     @State var playPause = PLAY_ICON
     
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing:2) {
-                WaveformView(audioURL: globalModel.audioURL) { waveformShape in
+                WaveformView(audioURL: audioModel.url) { waveformShape in
                     waveformShape.fill(Color.purple)
                 } placeholder: {
                     ProgressView()
                 }.frame(width: geometry.size.width, height: geometry.size.height/2)
-                Timeline(timelineWidth: geometry.size.width)
-                    .frame(width: geometry.size.width, height: 8)
+                
+                
+                
+//                Timeline(chapters: audioModel.chapters, timelineWidth: geometry.size.width, audioDuration: audioModel.duration)
+//                    .frame(width: geometry.size.width, height: 8)
+                
+                
+                
                 HStack {
                     Button(action: goToStart) {
                         Image(systemName: "backward.end.circle")
@@ -94,60 +100,41 @@ struct AudioView: View {
     func jumpForward15() {
         
     }
-
-
-struct Timeline: View {
-
-    @State var timelineWidth:CGFloat = 0
     
-    let ticks: [Tick] = [.major, .minor, .mid, .minor, .mid, .minor, .mid, .minor, .mid, .minor]
     
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(1...3, id: \.self) { num in
-                TimeUnit(num: num, ticks: ticks)
-                    .stroke(.blue, lineWidth: 2)
-                    .frame(width: timelineWidth)
+    struct Timeline: View {
+        @State var chapters:[Chapter]
+        @State var timelineWidth:CGFloat
+        @State var audioDuration:CMTime
+        
+        var body: some View {
+            HStack(spacing: 0) {
+                ForEach(chapters) { chapter in
+//                    Image(systemName: "\(num).circle")
+                    let pixelOffset = (audioDuration.value == 0) ? 0.0 : CGFloat((Double(chapter.offset.value/audioDuration.value)))*timelineWidth
+                    TimelineMarker(offset: pixelOffset)
+                        .stroke(.blue, lineWidth: 1)
+                        .frame(width: 20)
+                }
             }
         }
     }
-}
-
-
-struct TimeUnit: Shape {
-    let num: Int
-    let ticks: [Tick]
     
-    func path(in rect: CGRect) -> Path {
-        let distance = rect.width / CGFloat(ticks.count)
-        var path = Path()
-        var x = rect.minX
-        for tick in ticks {
-            switch tick {
-            case .major:
-                path.move(to: CGPoint(x: x, y: rect.minY))
-                path.addLine(to: CGPoint(x: x, y: rect.maxY))
-            case .mid:
-                path.move(to: CGPoint(x: x, y: rect.maxY))
-                path.addLine(to: CGPoint(x: x, y: rect.maxY - 4))
-            case .minor:
-                path.move(to: CGPoint(x: x, y: rect.maxY))
-                path.addLine(to: CGPoint(x: x, y: rect.maxY - 2))
-            }
-            x += distance
+    struct TimelineMarker: Shape {
+        let offset: CGFloat
+        
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            path.move(to: CGPoint(x: offset, y: rect.minY))
+            path.addLine(to: CGPoint(x: offset, y: rect.maxY))
+            return path
         }
-        return path
     }
-}
-
-enum Tick {
-    case major, mid, minor
-}
 }
 
 
 struct AudioView_Previews: PreviewProvider {
     static var previews: some View {
-        AudioView().previewLayout(.fixed(width: 500, height: 100)).environmentObject(GlobalModel())
+        AudioView().previewLayout(.fixed(width: 500, height: 100)).environmentObject(AudioModel())
     }
 }

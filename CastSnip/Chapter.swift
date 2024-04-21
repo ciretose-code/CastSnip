@@ -6,12 +6,13 @@
 //
 
 import SwiftUI
-import AppKit
+import AVFoundation
 
-struct Chapter: Identifiable {
+struct Chapter: Identifiable, Hashable {
     let id = UUID()
     let title: String
-    var image: NSImage?
+    var offset: CMTime = CMTime.zero
+    var image: NSImage? = nil
     
     func getImage() -> NSImage {
         if image != nil {
