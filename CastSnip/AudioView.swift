@@ -15,13 +15,13 @@ let PAUSE_ICON = "pause.circle"
 
 struct AudioView: View {
     
-    @EnvironmentObject var audioModel: AudioModel
+    @EnvironmentObject var audioModel: PodcastAudioViewModel
     @State var playPause = PLAY_ICON
     
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing:2) {
-                WaveformView(audioURL: audioModel.url) { waveformShape in
+                WaveformView(audioURL: audioModel.podcast.url) { waveformShape in
                     waveformShape.fill(Color.purple)
                 } placeholder: {
                     ProgressView()
@@ -111,10 +111,10 @@ struct AudioView: View {
             HStack(spacing: 0) {
                 ForEach(chapters) { chapter in
 //                    Image(systemName: "\(num).circle")
-                    let pixelOffset = (audioDuration.value == 0) ? 0.0 : CGFloat((Double(chapter.offset.value/audioDuration.value)))*timelineWidth
-                    TimelineMarker(offset: pixelOffset)
-                        .stroke(.blue, lineWidth: 1)
-                        .frame(width: 20)
+//                    let pixelOffset = (audioDuration.value == 0) ? 0.0 : CGFloat((Double(chapter.offset.value/audioDuration.value)))*timelineWidth
+//                    TimelineMarker(offset: pixelOffset)
+//                        .stroke(.blue, lineWidth: 1)
+//                        .frame(width: 20)
                 }
             }
         }
@@ -135,6 +135,7 @@ struct AudioView: View {
 
 struct AudioView_Previews: PreviewProvider {
     static var previews: some View {
-        AudioView().previewLayout(.fixed(width: 500, height: 100)).environmentObject(AudioModel())
+        AudioView().previewLayout(.fixed(width: 500, height: 100))
+            .environmentObject(PodcastAudioViewModel())
     }
 }

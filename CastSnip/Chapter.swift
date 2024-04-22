@@ -11,7 +11,7 @@ import AVFoundation
 struct Chapter: Identifiable, Hashable {
     let id = UUID()
     let title: String
-    var offset: CMTime = CMTime.zero
+    var marker: CGFloat = 0.0
     var image: NSImage? = nil
     
     func getImage() -> NSImage {
