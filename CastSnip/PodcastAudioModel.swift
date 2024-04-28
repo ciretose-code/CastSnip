@@ -56,11 +56,14 @@ class PodcastAudioViewModel: ObservableObject {
                     let value = try! await item.load(.dataValue)!
 //                    print("\(value)")
 //                    print("\(key) = \(String(decoding: value, as: UTF8.self))")
-                    if (key == "CHAP") {
+                    if ("CHAP" == key) {
                         let c = Chapter(data: value)
                         print("\(c)")
                         pa.chapters.append(c)
+                    } else if ("CTOC" == key) {
+                        
                     }
+                    
                 }
             }
         } catch {
