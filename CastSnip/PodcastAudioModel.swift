@@ -12,7 +12,7 @@ import AVFoundation
 struct PodcastAudio {
     var url:URL?
     var duration:CGFloat?
-    var chapters:[Chapter]?
+    var chapters:[Chapter] = []
     var asset:AVURLAsset?
 }
 
@@ -59,6 +59,7 @@ class PodcastAudioViewModel: ObservableObject {
                     if (key == "CHAP") {
                         let c = Chapter(data: value)
                         print("\(c)")
+                        pa.chapters.append(c)
                     }
                 }
             }

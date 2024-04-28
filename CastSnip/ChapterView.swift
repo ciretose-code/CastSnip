@@ -25,3 +25,14 @@ struct ChapterView: View {
         .padding(.vertical, 2)
     }
 }
+
+
+#Preview("Chapter") {
+    struct ChapterViewTest: View {
+        var chap = Chapter()
+        var body: some View {
+           ChapterView(chapter: chap)
+        }
+    }
+    return ChapterViewTest()
+}

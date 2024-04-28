@@ -11,9 +11,12 @@ import AVFoundation
 struct Chapter: Identifiable, Hashable {
     let id = UUID()
     var title: String = ""
+    var url: String = ""
     var startTime: UInt32 = 0
     var endTime: UInt32 = 0
     var image: NSImage? = nil
+    
+    init() {}
     
     init(data: Data) {
         print("datalen: \(data.count)")
@@ -30,21 +33,47 @@ struct Chapter: Identifiable, Hashable {
         print("startOffset: \(startOffset); offset: \(offset)")
         let endOffset: UInt32 = getUInt32(data, &offset)
         print("endOffset: \(endOffset); offset: \(offset)")
-        var tag = getTag(data, &offset)
-        print("tag: \(tag)")
-        if "TIT2" == tag {
-            // Loop through Title details
-            let tit2Len = getUInt32(data, &offset)
-            let tit2Flags = getUInt16(data, &offset)
-            let tit2Info = getString(data, &offset, length: Int(tit2Len))
-            print("len: \(tit2Len); flags: \(tit2Flags); title: \(tit2Info)")
-            title = tit2Info
-        }
-        tag = getTag(data, &offset)
-        
-        
 
-        print("\(String(decoding: data, as: UTF8.self))")
+        while offset < data.count {
+            let tag = getTagHeader(data, &offset)
+            print("tag: \(tag)")
+            if "TIT2" == tag.name {
+                // Loop through Title details
+//                let tit2Len = getUInt32(data, &offset)
+//                let tit2Flags = getUInt16(data, &offset)
+                let tit2Info = getString(data, &offset, length: Int(tag.length))
+                print("title: \(tit2Info)")
+                title = tit2Info
+            }
+            if "WXXX" == tag.name {
+//                let wxxxLen = getUInt32(data, &offset)
+//                let wxxxFlags = getUInt16(data, &offset)
+                let wxxxInfo = getString(data, &offset, length: Int(tag.length))
+                url = wxxxInfo.components(separatedBy: "\0")[1]
+                print("string: \(wxxxInfo); url: \(url)")
+            }
+            if "APIC" == tag.name {
+//                let apicLen = getUInt32(data, &offset)
+//                let apicFlags = getUInt16(data, &offset)
+                let apicMimeType = getString(data, &offset)
+                let apicPictureType = getUInt8(data, &offset)
+                let apicDescription = getString(data, &offset)
+                let apicImageData = getData(data, &offset, UInt32(data.count))
+                let imgRep = NSImageRep()
+                let can = NSImageRep.canInit(with: apicImageData)
+                print("can create image: \(can)")
+                print("types: \(NSImageRep.imageTypes)")
+                image = NSImage(data: apicImageData)
+//                print("apicImageData: \(String(decoding:apicImageData, as: UTF8.self))")
+                print("image: \(String(describing: image))")
+            }
+        }
+    }
+    
+    struct ID3TagHeader {
+        var name: String = ""
+        var length: UInt32 = 0
+        var flags: UInt16 = 0
     }
     
     enum ID3StringEncoding {
@@ -73,19 +102,16 @@ struct Chapter: Identifiable, Hashable {
 //    func decodeString(_ data: Data, )
     
     
-    func getTag(_ data: Data, _ offset: inout Int) -> String {
+    func getTagHeader(_ data: Data, _ offset: inout Int) -> ID3TagHeader {
         let end: Int = offset + 4
-        let str = String(decoding: data[offset..<end], as:UTF8.self)
+        let name = String(decoding: data[offset..<end], as:UTF8.self)
         offset = end
-        return str
+        let length = getUInt32(data, &offset)
+        let flags = getUInt16(data, &offset)
+        return ID3TagHeader(name:name, length:length, flags:flags)
     }
     
-    func decodeString(_ data: Data, _ encoding: ID3StringEncoding) -> String {
-        
-//        if ib[0] == 0xFF && ib[1] == 0xFE {
-//            ib = Array(ib.dropFirst(2))
-//        }
-//        let str = String(decoding: ib, as:UTF8.self)
+    func decodeData(_ data: Data, _ encoding: ID3StringEncoding) -> String {
         switch encoding {
         case .ASCII:
             return String(data: data, encoding: .ascii)!
@@ -95,20 +121,28 @@ struct Chapter: Identifiable, Hashable {
             return String(data: data, encoding: .utf16)!
         case .UTF8:
             return String(data: data, encoding: .utf8)!
-        default:
-            return String(data: data, encoding: .ascii)!
         }
-        
-        
     }
     
-    func getString(_ data: Data, _ offset: inout Int, length: Int) -> String {
+    func getData(_ data: Data, _ offset: inout Int, _ length: UInt32) -> Data {
+        let value = data[offset..<Int(length)]
+        offset = data.count
+        return value
+    }
+    
+    func getString(_ data: Data, _ offset: inout Int, length: Int = 0) -> String {
         let textEncoding = getUInt8(data, &offset)
-        let end: Int = offset + length - 1 // -1 for the textEncoding
-//        var ib:[UInt8] = [UInt8](data[offset..<end])
-        let str: String = decodeString(data[offset..<end], getEncoding(textEncoding))
-        offset = end
-        return str
+        if length > 0 {
+            let end: Int = offset + length - 1 // -1 for the textEncoding
+            let str: String = decodeData(data[offset..<end], getEncoding(textEncoding))
+            offset = end
+            return str
+        } else {
+            // Walk until 0x00
+            let value = data[offset..<data.count].prefix(while: {$0 != 0x00})
+            offset = offset + value.count - 1
+            return decodeData(value, getEncoding(textEncoding))
+        }
     }
     
     func getUInt8(_ data: Data, _ offset: inout Int) -> UInt8 {
@@ -134,7 +168,6 @@ struct Chapter: Identifiable, Hashable {
         offset = end
         return bigEndianUInt32
     }
-    
     
     func getImage() -> NSImage {
         if image != nil {
