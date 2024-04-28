@@ -8,12 +8,20 @@
 import SwiftUI
 import AVFoundation
 
+
 @main
 struct CastSnipApp: App {
     
+    @StateObject var podcastAudioModel = PodcastAudioViewModel()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView().environmentObject(podcastAudioModel).task {
+                await podcastAudioModel.loadPodcast(from: Bundle.main.url(forResource:"intro", withExtension: "mp3")!)
+            }
+        }
+        .commands {
+            Menus()
         }
         .defaultSize(width: 800, height: 600)
     }

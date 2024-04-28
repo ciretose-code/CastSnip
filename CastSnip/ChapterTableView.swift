@@ -12,7 +12,7 @@ struct ChapterTableView: View {
 
     var body: some View {
         List {
-            ForEach(audioModel.podcast.chapters) { chapter in
+            ForEach(audioModel.podcast.chapters ?? []) { chapter in
                 ChapterView(chapter: chapter)
             }
 //            .onDelete {indexSet in

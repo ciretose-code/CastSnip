@@ -20,6 +20,7 @@
 		7B4015432BD443530060A2BF /* intro.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015422BD443530060A2BF /* intro.mp3 */; };
 		7B4015452BD44F5A0060A2BF /* AudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4015442BD44F5A0060A2BF /* AudioView.swift */; };
 		7B4015482BD452B20060A2BF /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015472BD452B20060A2BF /* README.md */; };
+		7B7404512BDD548F001811B2 /* Menus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7404502BDD548F001811B2 /* Menus.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -36,6 +37,7 @@
 		7B4015422BD443530060A2BF /* intro.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = intro.mp3; sourceTree = "<group>"; };
 		7B4015442BD44F5A0060A2BF /* AudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioView.swift; sourceTree = "<group>"; };
 		7B4015472BD452B20060A2BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		7B7404502BDD548F001811B2 /* Menus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Menus.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,6 +75,7 @@
 				7B4015462BD4526D0060A2BF /* GitHub */,
 				7B4015412BD4423A0060A2BF /* Samples */,
 				7B1D20B62BD36A83006D1AA4 /* CastSnipApp.swift */,
+				7B7404502BDD548F001811B2 /* Menus.swift */,
 				7B390A302BD5C0F5009CEDEE /* PodcastAudioModel.swift */,
 				7B1D20B82BD36A83006D1AA4 /* ContentView.swift */,
 				7B1D20CA2BD3705B006D1AA4 /* Chapter.swift */,
@@ -195,6 +198,7 @@
 				7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */,
 				7B1D20CD2BD3709A006D1AA4 /* ChapterView.swift in Sources */,
 				7B1D20B72BD36A83006D1AA4 /* CastSnipApp.swift in Sources */,
+				7B7404512BDD548F001811B2 /* Menus.swift in Sources */,
 				7B1D20D12BD37282006D1AA4 /* ChapterTableView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

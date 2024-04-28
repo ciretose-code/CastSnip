@@ -7,8 +7,7 @@
 
 import SwiftUI
 struct ContentView: View {
-    
-    @StateObject var podcastAudioModel = PodcastAudioViewModel()
+    @EnvironmentObject var audioModel: PodcastAudioViewModel
     
     var body: some View {
         HStack {
@@ -20,7 +19,7 @@ struct ContentView: View {
                 Text("Title")
             }
             
-            ChapterTableView().environmentObject(podcastAudioModel)
+            ChapterTableView().environmentObject(audioModel)
             
             VStack {
                 Image(systemName: "globe")
@@ -35,18 +34,35 @@ struct ContentView: View {
         VStack {
             HStack {
                 Text("start")
-                AudioView().environmentObject(podcastAudioModel)
+                AudioView().environmentObject(audioModel)
                 Text("end")
             }
         }.padding([.top], 10)
-        .task {
-            await podcastAudioModel.loadPodcast(from: Bundle.main.url(forResource:"intro", withExtension: "mp3")!)
+    }
+    
+}
+
+
+#Preview("Load Sample Intro") {
+    struct ContentTestView: View {
+        let audioModel = PodcastAudioViewModel()
+        var body: some View {
+            ContentView().environmentObject(audioModel)
+                .task {
+                    await audioModel.loadPodcast(from: Bundle.main.url(forResource:"intro", withExtension: "mp3")!)
+                }
         }
     }
-
+    return ContentTestView()
 }
 
-
-#Preview {
-    ContentView()
+#Preview("Load Null") {
+    struct ContentTestView: View {
+        let audioModel = PodcastAudioViewModel()
+        var body: some View {
+            ContentView().environmentObject(audioModel)
+        }
+    }
+    return ContentTestView()
 }
+

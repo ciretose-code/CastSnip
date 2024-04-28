@@ -21,12 +21,16 @@ struct AudioView: View {
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing:2) {
-                WaveformView(audioURL: audioModel.podcast.url) { waveformShape in
-                    waveformShape.fill(Color.purple)
-                } placeholder: {
-                    ProgressView()
-                }.frame(width: geometry.size.width, height: geometry.size.height/2)
-                
+                if audioModel.podcast.url != nil {
+                    WaveformView(audioURL: audioModel.podcast.url!) { waveformShape in
+                        waveformShape.fill(Color.purple)
+                    } placeholder: {
+                        ProgressView()
+                    }.frame(width: geometry.size.width, height: geometry.size.height/2)
+                } else {
+                    Text("Audio")
+                        .frame(width: geometry.size.width, height: geometry.size.height/2)
+                }
                 
                 
 //                Timeline(chapters: audioModel.chapters, timelineWidth: geometry.size.width, audioDuration: audioModel.duration)
