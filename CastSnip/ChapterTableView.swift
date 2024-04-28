@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ChapterTableView: View {
-    @EnvironmentObject var audioModel: PodcastAudioViewModel
+    @Environment(PodcastAudioViewModel.self) var audioModel
 
     var body: some View {
         List {

@@ -14,8 +14,7 @@ let PLAY_ICON = "play.circle"
 let PAUSE_ICON = "pause.circle"
 
 struct AudioView: View {
-    
-    @EnvironmentObject var audioModel: PodcastAudioViewModel
+    @Environment(PodcastAudioViewModel.self) var audioModel
     @State var playPause = PLAY_ICON
     
     var body: some View {
@@ -140,6 +139,6 @@ struct AudioView: View {
 struct AudioView_Previews: PreviewProvider {
     static var previews: some View {
         AudioView().previewLayout(.fixed(width: 500, height: 100))
-            .environmentObject(PodcastAudioViewModel())
+            .environment(PodcastAudioViewModel())
     }
 }

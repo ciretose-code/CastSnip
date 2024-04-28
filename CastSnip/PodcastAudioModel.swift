@@ -16,16 +16,14 @@ struct PodcastAudio {
     var asset:AVURLAsset?
 }
 
-class PodcastAudioViewModel: ObservableObject {
+@Observable class PodcastAudioViewModel {
  
     let id3String = ["TALB", "TPE1", "TIT2", "COMM", "USLT"]
     let id3Data = ["CTOC", "CHAP"]
     
     
-    @Published var podcast = PodcastAudio()
-    @Published var isLoading = false
-    
-    
+    var podcast = PodcastAudio()
+    var isLoading = false
     
     @MainActor
     func loadPodcast(from url: URL) async {
@@ -54,8 +52,6 @@ class PodcastAudioViewModel: ObservableObject {
                     print("\(key) = \(value ?? "unk")")
                 } else if id3Data.contains(key) {
                     let value = try! await item.load(.dataValue)!
-//                    print("\(value)")
-//                    print("\(key) = \(String(decoding: value, as: UTF8.self))")
                     if ("CHAP" == key) {
                         let c = Chapter(data: value)
                         print("\(c)")
@@ -69,13 +65,6 @@ class PodcastAudioViewModel: ObservableObject {
         } catch {
             print("no metadata")
         }
-        
-//        // Load Chapter data
-//        pa.chapters = [
-//            Chapter(title: "Intro", marker: 0.0),
-//            Chapter(title: "First Hello", marker: 5.0),
-//            Chapter(title: "Second Hello", marker: 9.4)
-//        ]
         
         return pa
     }
