@@ -35,8 +35,10 @@ struct Chapter: Identifiable, Hashable {
         print("endOffset: \(endOffset); offset: \(offset)")
 
         while offset < data.count {
+            print("pretag offset: \(offset)")
             let tag = getTagHeader(data, &offset)
             print("tag: \(tag)")
+            print("tag offset: \(offset)")
             if "TIT2" == tag.name {
                 // Loop through Title details
 //                let tit2Len = getUInt32(data, &offset)
@@ -53,19 +55,32 @@ struct Chapter: Identifiable, Hashable {
                 print("string: \(wxxxInfo); url: \(url)")
             }
             if "APIC" == tag.name {
+                print("apic offset: \(offset)")
 //                let apicLen = getUInt32(data, &offset)
 //                let apicFlags = getUInt16(data, &offset)
-                let apicMimeType = getString(data, &offset)
-                let apicPictureType = getUInt8(data, &offset)
-                let apicDescription = getString(data, &offset)
+                _ = getString(data, &offset)
+//                print("mimetype offset: \(offset)")
+                _ = getUInt8(data, &offset)
+//                print("pictype offset: \(offset)")
+                var checkOffset = offset
+                if getUInt8(data, &checkOffset) == 0x00 {
+                    // No description, skip it
+                    offset = offset + 1
+                } else {
+                    let apicDescription = getString(data, &offset)
+                }
+//                print("desc offset: \(offset)")
                 let apicImageData = getData(data, &offset, UInt32(data.count))
-                let imgRep = NSImageRep()
-                let can = NSImageRep.canInit(with: apicImageData)
-                print("can create image: \(can)")
-                print("types: \(NSImageRep.imageTypes)")
+//                print("imagedata offset: \(offset)")
+//                try! apicImageData.write(to: URL(fileURLWithPath: "/Users/ewuehler/Downloads/\(title).png"))
+//                print("data.count: \(data.count)")
+//                let imgRep = NSImageRep()
+//                let can = NSImageRep.canInit(with: apicImageData)
+//                print("can create image: \(can)")
+//                print("types: \(NSImageRep.imageTypes)")
                 image = NSImage(data: apicImageData)
 //                print("apicImageData: \(String(decoding:apicImageData, as: UTF8.self))")
-                print("image: \(String(describing: image))")
+//                print("image: \(String(describing: image))")
             }
         }
     }
@@ -125,7 +140,8 @@ struct Chapter: Identifiable, Hashable {
     }
     
     func getData(_ data: Data, _ offset: inout Int, _ length: UInt32) -> Data {
-        let value = data[offset..<Int(length)]
+//        let value = data[offset..<Int(length)]
+        let value = data.subdata(in: offset..<Int(length))
         offset = data.count
         return value
     }
@@ -140,7 +156,7 @@ struct Chapter: Identifiable, Hashable {
         } else {
             // Walk until 0x00
             let value = data[offset..<data.count].prefix(while: {$0 != 0x00})
-            offset = offset + value.count - 1
+            offset = offset + value.count + 1 // Add one for the 0x00
             return decodeData(value, getEncoding(textEncoding))
         }
     }
