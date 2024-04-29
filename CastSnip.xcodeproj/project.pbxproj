@@ -22,6 +22,8 @@
 		7B4015482BD452B20060A2BF /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015472BD452B20060A2BF /* README.md */; };
 		7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7404522BDEBB5D001811B2 /* ID3Parser.swift */; };
 		7B7404562BDECBED001811B2 /* AudioKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7B7404552BDECBED001811B2 /* AudioKitUI */; };
+		7B7404592BDF3B32001811B2 /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7B7404582BDF3B32001811B2 /* AudioKit */; };
+		7B74045C2BDF3B6F001811B2 /* Controls in Frameworks */ = {isa = PBXBuildFile; productRef = 7B74045B2BDF3B6F001811B2 /* Controls */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +50,8 @@
 			files = (
 				7B1D20C72BD36B5E006D1AA4 /* DSWaveformImage in Frameworks */,
 				7B7404562BDECBED001811B2 /* AudioKitUI in Frameworks */,
+				7B7404592BDF3B32001811B2 /* AudioKit in Frameworks */,
+				7B74045C2BDF3B6F001811B2 /* Controls in Frameworks */,
 				7B1D20C92BD36B5E006D1AA4 /* DSWaveformImageViews in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -135,6 +139,8 @@
 				7B1D20C62BD36B5E006D1AA4 /* DSWaveformImage */,
 				7B1D20C82BD36B5E006D1AA4 /* DSWaveformImageViews */,
 				7B7404552BDECBED001811B2 /* AudioKitUI */,
+				7B7404582BDF3B32001811B2 /* AudioKit */,
+				7B74045B2BDF3B6F001811B2 /* Controls */,
 			);
 			productName = CastSnip;
 			productReference = 7B1D20B32BD36A83006D1AA4 /* CastSnip.app */;
@@ -167,6 +173,8 @@
 			packageReferences = (
 				7B1D20C52BD36B5E006D1AA4 /* XCRemoteSwiftPackageReference "DSWaveformImage" */,
 				7B7404542BDECBED001811B2 /* XCRemoteSwiftPackageReference "AudioKitUI" */,
+				7B7404572BDF3B32001811B2 /* XCRemoteSwiftPackageReference "AudioKit" */,
+				7B74045A2BDF3B6F001811B2 /* XCRemoteSwiftPackageReference "Controls" */,
 			);
 			productRefGroup = 7B1D20B42BD36A83006D1AA4 /* Products */;
 			projectDirPath = "";
@@ -444,6 +452,22 @@
 				minimumVersion = 0.3.7;
 			};
 		};
+		7B7404572BDF3B32001811B2 /* XCRemoteSwiftPackageReference "AudioKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/AudioKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.6.4;
+			};
+		};
+		7B74045A2BDF3B6F001811B2 /* XCRemoteSwiftPackageReference "Controls" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/AudioKit/Controls.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.4;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -461,6 +485,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7B7404542BDECBED001811B2 /* XCRemoteSwiftPackageReference "AudioKitUI" */;
 			productName = AudioKitUI;
+		};
+		7B7404582BDF3B32001811B2 /* AudioKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B7404572BDF3B32001811B2 /* XCRemoteSwiftPackageReference "AudioKit" */;
+			productName = AudioKit;
+		};
+		7B74045B2BDF3B6F001811B2 /* Controls */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7B74045A2BDF3B6F001811B2 /* XCRemoteSwiftPackageReference "Controls" */;
+			productName = Controls;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

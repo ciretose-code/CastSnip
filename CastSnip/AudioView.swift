@@ -6,8 +6,9 @@
 //
 
 import SwiftUI
-import DSWaveformImageViews
+//import DSWaveformImageViews
 import AVFoundation
+//import Waveform
 
 
 let PLAY_ICON = "play.circle"
@@ -21,13 +22,14 @@ struct AudioView: View {
         GeometryReader { geometry in
             VStack(spacing:2) {
                 if audioModel.podcast.url != nil {
-                    WaveformView(audioURL: audioModel.podcast.url!) { waveformShape in
-                        waveformShape.fill(Color.purple)
-                    } placeholder: {
-                        ProgressView()
-                    }.frame(width: geometry.size.width, height: geometry.size.height/2)
+                    Text("This is where the waveform goes\n\(audioModel.podcast.url?.debugDescription ?? "No Audio URL")").frame(width: geometry.size.width, height: geometry.size.height/2)
+//                    WaveformView(audioURL: audioModel.podcast.url!) { waveformShape in
+//                        waveformShape.fill(Color.purple)
+//                    } placeholder: {
+//                        ProgressView()
+//                    }.frame(width: geometry.size.width, height: geometry.size.height/2)
                 } else {
-                    Text("Audio")
+                    Text("No Audio selected ")
                         .frame(width: geometry.size.width, height: geometry.size.height/2)
                 }
                 
@@ -104,6 +106,8 @@ struct AudioView: View {
         
     }
     
+
+    
     
     struct Timeline: View {
         @State var chapters:[Chapter]
@@ -133,6 +137,7 @@ struct AudioView: View {
             return path
         }
     }
+    
 }
 
 

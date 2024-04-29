@@ -12,9 +12,15 @@ struct ContentView: View {
     var body: some View {
         HStack {
             VStack {
-                Image(systemName: "waveform")
-                    .font(.system(size: 64))
-                
+                if audioModel.getCoverArt() != nil {
+                    Image(nsImage: audioModel.getCoverArt())
+                        .resizable()
+                        .frame(width: 100, height: 100)
+                } else {
+                    Image(systemName: "waveform")
+                        .font(.system(size: 64))
+                        .frame(width: 100, height: 100)
+                }
                 Spacer()
                 Text("Title")
             }

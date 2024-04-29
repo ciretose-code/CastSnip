@@ -11,15 +11,17 @@ import AVFoundation
 
 struct PodcastAudio {
     var url:URL?
+    var logo:NSImage?
     var duration:CGFloat?
     var chapters:[Chapter] = []
     var asset:AVURLAsset?
+    var file:AVAudioFile?
 }
 
 @Observable class PodcastAudioViewModel {
  
-    let id3String = ["TALB", "TPE1", "TIT2", "COMM", "USLT"]
-    let id3Data = ["CTOC", "CHAP"]
+    let id3String = ["TALB", "TPE1", "TIT2", "COMM", "USLT", "TLEN", "TYER", "TENC", ""]
+    let id3Data = ["CTOC", "CHAP", "APIC"]
     
     
     var podcast = PodcastAudio()
@@ -32,9 +34,18 @@ struct PodcastAudio {
         isLoading = false
     }
     
+    func getCoverArt() -> NSImage {
+        return podcast.logo ?? NSImage(named: NSImage.trashEmptyName)!
+    }
+    
+    private func getFile(from url: URL) -> AVAudioFile {
+        return try! AVAudioFile(forReading: url)
+    }
+    
     private func loadingPodcast(from url: URL) async -> PodcastAudio {
         var pa = PodcastAudio()
         pa.url = url
+        pa.file = getFile(from: url)
         pa.asset = AVURLAsset(url: url, options: nil)
         do {
             let dur = try await pa.asset?.load(.duration)
@@ -58,8 +69,12 @@ struct PodcastAudio {
                         pa.chapters.append(c)
                     } else if ("CTOC" == key) {
                         
+                    } else if ("APIC" == key) {
+                        pa.logo = NSImage(data: value)
+                        print("logo: \(pa.logo)")
                     }
-                    
+                } else {
+                    print("key: \(key)")
                 }
             }
         } catch {
