@@ -12,9 +12,11 @@ struct EpisodeView: View {
     @State var episodeField: String = ""
     
     var body: some View {
-        Text("Episode")
-            .font(.system(.subheadline).lowercaseSmallCaps())
-        TextField(episode, text: $episodeField)
-            .textFieldStyle(.roundedBorder)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Episode")
+                .font(.system(.subheadline).lowercaseSmallCaps())
+            TextField(episode, text: $episodeField)
+                .textFieldStyle(.roundedBorder)
+        }
     }
 }

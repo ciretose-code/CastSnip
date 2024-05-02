@@ -12,10 +12,11 @@ struct TitleView: View {
     @State var titleField: String = ""
     
     var body: some View {
-        Text("Title")
-            .font(.system(.subheadline).lowercaseSmallCaps())
-        TextField(title, text: $titleField)
-            .textFieldStyle(.roundedBorder)
-            
+        VStack(alignment: .leading, spacing: 0) {        
+            Text("Title")
+                .font(.system(.subheadline).lowercaseSmallCaps())
+            TextField(title, text: $titleField)
+                .textFieldStyle(.roundedBorder)
+        }
     }
 }

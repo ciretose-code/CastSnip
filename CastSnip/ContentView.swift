@@ -34,7 +34,7 @@ struct ContentView: View {
                     .cornerRadius(radius)
                     .overlay(RoundedRectangle(cornerRadius: radius).stroke(.black, lineWidth: 1.5))
                 
-            }.padding(EdgeInsets(top: insets, leading: insets, bottom: 0, trailing: 0))
+            }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: 0))
             
             VStack {
                 Image(systemName: "globe")
