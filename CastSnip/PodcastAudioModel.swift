@@ -16,13 +16,15 @@ struct PodcastAudio {
     var chapters:[Chapter] = []
     var asset:AVURLAsset?
     var file:AVAudioFile?
+    var title:String = ""
+    var episode:String = ""
+    var summary:String = ""
 }
 
-@Observable class PodcastAudioViewModel {
+@Observable class PodcastAudioViewModel: Identifiable {
  
-    let id3String = ["TALB", "TPE1", "TIT2", "COMM", "USLT", "TLEN", "TYER", "TENC", ""]
+    let id3String = ["TALB", "TPE1", "TIT2", "COMM", "USLT", "TLEN", "TYER", "TENC"]
     let id3Data = ["CTOC", "CHAP", "APIC"]
-    
     
     var podcast = PodcastAudio()
     var isLoading = false
@@ -34,8 +36,12 @@ struct PodcastAudio {
         isLoading = false
     }
     
-    func getCoverArt() -> NSImage {
-        return podcast.logo ?? NSImage(named: NSImage.trashEmptyName)!
+    func getCoverArt() -> Image {
+        if (podcast.logo != nil) {
+            return Image(nsImage: podcast.logo!).resizable()
+        } else {
+            return Image(systemName: "waveform")
+        }
     }
     
     private func getFile(from url: URL) -> AVAudioFile {
@@ -61,6 +67,13 @@ struct PodcastAudio {
                 if id3String.contains(key) {
                     let value = try! await item.load(.stringValue)
                     print("\(key) = \(value ?? "unk")")
+                    if ("TALB" == key) || ("TPE1" == key) {
+                        pa.title = value ?? ""
+                    } else if ("TIT2" == key) {
+                        pa.episode = value ?? ""
+                    } else if ("COMM" == key) || ("USLT" == key) {
+                        pa.summary = value ?? ""
+                    }
                 } else if id3Data.contains(key) {
                     let value = try! await item.load(.dataValue)!
                     if ("CHAP" == key) {

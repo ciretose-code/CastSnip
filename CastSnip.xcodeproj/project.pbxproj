@@ -11,8 +11,6 @@
 		7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20B82BD36A83006D1AA4 /* ContentView.swift */; };
 		7B1D20BB2BD36A85006D1AA4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */; };
 		7B1D20BF2BD36A85006D1AA4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B1D20BE2BD36A85006D1AA4 /* Preview Assets.xcassets */; };
-		7B1D20C72BD36B5E006D1AA4 /* DSWaveformImage in Frameworks */ = {isa = PBXBuildFile; productRef = 7B1D20C62BD36B5E006D1AA4 /* DSWaveformImage */; };
-		7B1D20C92BD36B5E006D1AA4 /* DSWaveformImageViews in Frameworks */ = {isa = PBXBuildFile; productRef = 7B1D20C82BD36B5E006D1AA4 /* DSWaveformImageViews */; };
 		7B1D20CB2BD3705B006D1AA4 /* Chapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20CA2BD3705B006D1AA4 /* Chapter.swift */; };
 		7B1D20CD2BD3709A006D1AA4 /* ChapterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */; };
 		7B1D20D12BD37282006D1AA4 /* ChapterTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20D02BD37282006D1AA4 /* ChapterTableView.swift */; };
@@ -20,10 +18,10 @@
 		7B4015432BD443530060A2BF /* intro.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015422BD443530060A2BF /* intro.mp3 */; };
 		7B4015452BD44F5A0060A2BF /* AudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4015442BD44F5A0060A2BF /* AudioView.swift */; };
 		7B4015482BD452B20060A2BF /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015472BD452B20060A2BF /* README.md */; };
+		7B650FDB2BE33CC200901E28 /* TitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B650FDA2BE33CC200901E28 /* TitleView.swift */; };
+		7B650FDD2BE33E5400901E28 /* EpisodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B650FDC2BE33E5400901E28 /* EpisodeView.swift */; };
+		7B650FDF2BE3437400901E28 /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B650FDE2BE3437400901E28 /* SummaryView.swift */; };
 		7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7404522BDEBB5D001811B2 /* ID3Parser.swift */; };
-		7B7404562BDECBED001811B2 /* AudioKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 7B7404552BDECBED001811B2 /* AudioKitUI */; };
-		7B7404592BDF3B32001811B2 /* AudioKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7B7404582BDF3B32001811B2 /* AudioKit */; };
-		7B74045C2BDF3B6F001811B2 /* Controls in Frameworks */ = {isa = PBXBuildFile; productRef = 7B74045B2BDF3B6F001811B2 /* Controls */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +38,9 @@
 		7B4015422BD443530060A2BF /* intro.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = intro.mp3; sourceTree = "<group>"; };
 		7B4015442BD44F5A0060A2BF /* AudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioView.swift; sourceTree = "<group>"; };
 		7B4015472BD452B20060A2BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
+		7B650FDA2BE33CC200901E28 /* TitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleView.swift; sourceTree = "<group>"; };
+		7B650FDC2BE33E5400901E28 /* EpisodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeView.swift; sourceTree = "<group>"; };
+		7B650FDE2BE3437400901E28 /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		7B7404522BDEBB5D001811B2 /* ID3Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3Parser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -48,11 +49,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7B1D20C72BD36B5E006D1AA4 /* DSWaveformImage in Frameworks */,
-				7B7404562BDECBED001811B2 /* AudioKitUI in Frameworks */,
-				7B7404592BDF3B32001811B2 /* AudioKit in Frameworks */,
-				7B74045C2BDF3B6F001811B2 /* Controls in Frameworks */,
-				7B1D20C92BD36B5E006D1AA4 /* DSWaveformImageViews in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,6 +82,9 @@
 				7B1D20CA2BD3705B006D1AA4 /* Chapter.swift */,
 				7B7404522BDEBB5D001811B2 /* ID3Parser.swift */,
 				7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */,
+				7B650FDA2BE33CC200901E28 /* TitleView.swift */,
+				7B650FDE2BE3437400901E28 /* SummaryView.swift */,
+				7B650FDC2BE33E5400901E28 /* EpisodeView.swift */,
 				7B1D20D02BD37282006D1AA4 /* ChapterTableView.swift */,
 				7B4015442BD44F5A0060A2BF /* AudioView.swift */,
 				7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */,
@@ -136,11 +135,6 @@
 			);
 			name = CastSnip;
 			packageProductDependencies = (
-				7B1D20C62BD36B5E006D1AA4 /* DSWaveformImage */,
-				7B1D20C82BD36B5E006D1AA4 /* DSWaveformImageViews */,
-				7B7404552BDECBED001811B2 /* AudioKitUI */,
-				7B7404582BDF3B32001811B2 /* AudioKit */,
-				7B74045B2BDF3B6F001811B2 /* Controls */,
 			);
 			productName = CastSnip;
 			productReference = 7B1D20B32BD36A83006D1AA4 /* CastSnip.app */;
@@ -171,10 +165,6 @@
 			);
 			mainGroup = 7B1D20AA2BD36A83006D1AA4;
 			packageReferences = (
-				7B1D20C52BD36B5E006D1AA4 /* XCRemoteSwiftPackageReference "DSWaveformImage" */,
-				7B7404542BDECBED001811B2 /* XCRemoteSwiftPackageReference "AudioKitUI" */,
-				7B7404572BDF3B32001811B2 /* XCRemoteSwiftPackageReference "AudioKit" */,
-				7B74045A2BDF3B6F001811B2 /* XCRemoteSwiftPackageReference "Controls" */,
 			);
 			productRefGroup = 7B1D20B42BD36A83006D1AA4 /* Products */;
 			projectDirPath = "";
@@ -208,10 +198,13 @@
 				7B1D20CB2BD3705B006D1AA4 /* Chapter.swift in Sources */,
 				7B4015452BD44F5A0060A2BF /* AudioView.swift in Sources */,
 				7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */,
+				7B650FDD2BE33E5400901E28 /* EpisodeView.swift in Sources */,
 				7B1D20CD2BD3709A006D1AA4 /* ChapterView.swift in Sources */,
+				7B650FDB2BE33CC200901E28 /* TitleView.swift in Sources */,
 				7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */,
 				7B1D20B72BD36A83006D1AA4 /* CastSnipApp.swift in Sources */,
 				7B1D20D12BD37282006D1AA4 /* ChapterTableView.swift in Sources */,
+				7B650FDF2BE3437400901E28 /* SummaryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -434,69 +427,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		7B1D20C52BD36B5E006D1AA4 /* XCRemoteSwiftPackageReference "DSWaveformImage" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/dmrschmidt/DSWaveformImage";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 14.2.2;
-			};
-		};
-		7B7404542BDECBED001811B2 /* XCRemoteSwiftPackageReference "AudioKitUI" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/AudioKit/AudioKitUI";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.3.7;
-			};
-		};
-		7B7404572BDF3B32001811B2 /* XCRemoteSwiftPackageReference "AudioKit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/AudioKit/AudioKit.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.6.4;
-			};
-		};
-		7B74045A2BDF3B6F001811B2 /* XCRemoteSwiftPackageReference "Controls" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/AudioKit/Controls.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.1.4;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		7B1D20C62BD36B5E006D1AA4 /* DSWaveformImage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7B1D20C52BD36B5E006D1AA4 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
-			productName = DSWaveformImage;
-		};
-		7B1D20C82BD36B5E006D1AA4 /* DSWaveformImageViews */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7B1D20C52BD36B5E006D1AA4 /* XCRemoteSwiftPackageReference "DSWaveformImage" */;
-			productName = DSWaveformImageViews;
-		};
-		7B7404552BDECBED001811B2 /* AudioKitUI */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7B7404542BDECBED001811B2 /* XCRemoteSwiftPackageReference "AudioKitUI" */;
-			productName = AudioKitUI;
-		};
-		7B7404582BDF3B32001811B2 /* AudioKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7B7404572BDF3B32001811B2 /* XCRemoteSwiftPackageReference "AudioKit" */;
-			productName = AudioKit;
-		};
-		7B74045B2BDF3B6F001811B2 /* Controls */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7B74045A2BDF3B6F001811B2 /* XCRemoteSwiftPackageReference "Controls" */;
-			productName = Controls;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7B1D20AB2BD36A83006D1AA4 /* Project object */;
 }

@@ -9,23 +9,32 @@ import SwiftUI
 struct ContentView: View {
     @Environment(PodcastAudioViewModel.self) var audioModel
     
+    @State var titleField: String = ""
+    
+    @State var radius: CGFloat = 12
+    @State var insets: CGFloat = 16
     var body: some View {
         HStack {
-            VStack {
-                if audioModel.getCoverArt() != nil {
-                    Image(nsImage: audioModel.getCoverArt())
-                        .resizable()
-                        .frame(width: 100, height: 100)
-                } else {
-                    Image(systemName: "waveform")
-                        .font(.system(size: 64))
-                        .frame(width: 100, height: 100)
+            VStack(alignment: .leading) {
+                HStack(alignment: .top) {
+                    audioModel.getCoverArt()
+                        .aspectRatio(contentMode: .fit)
+                        .font(.system(size: 80))
+                        .cornerRadius(radius)
+                        .overlay(RoundedRectangle(cornerRadius: radius).stroke(.black, lineWidth: 1.5))
+                        .frame(width: 200, height: 200)
+                    VStack(alignment: .leading) {
+                        TitleView(title: audioModel.podcast.title)
+                        EpisodeView(episode: audioModel.podcast.episode)
+                        SummaryView(summary: audioModel.podcast.summary)
+                    }
                 }
                 Spacer()
-                Text("Title")
-            }
-            
-            ChapterTableView().environment(audioModel)
+                ChapterTableView().environment(audioModel)
+                    .cornerRadius(radius)
+                    .overlay(RoundedRectangle(cornerRadius: radius).stroke(.black, lineWidth: 1.5))
+                
+            }.padding(EdgeInsets(top: insets, leading: insets, bottom: 0, trailing: 0))
             
             VStack {
                 Image(systemName: "globe")
@@ -33,17 +42,18 @@ struct ContentView: View {
                     .foregroundStyle(.tint)
                 Text("Hello, world!")
             }
+            .frame(width:150)
             
             
         }
-        Spacer()
-        VStack {
-            HStack {
-                Text("start")
-                AudioView().environment(audioModel)
-                Text("end")
-            }
-        }.padding([.top], 10)
+//        Spacer()
+//        VStack {
+//            HStack {
+//                Text("start")
+//                AudioView().environment(audioModel)
+//                Text("end")
+//            }
+//        }.padding([.top], 10)
     }
     
 }

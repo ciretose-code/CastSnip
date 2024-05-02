@@ -9,29 +9,46 @@ import SwiftUI
 
 struct ChapterView: View {
     let chapter: Chapter
+    let defaultImage: NSImage?
     
     var body: some View {
         HStack {
-            Image(nsImage: chapter.getImage())
+            Image(nsImage: getImage())
                 .resizable()
                 .aspectRatio(contentMode: .fit)
+                .clipShape(.rect(cornerRadius: 4))
                 .frame(width: 48, height: 48)
                 .padding(.leading, 2)
-            Text(chapter.title)
-                .font(.headline)
-                .lineLimit(1)
+            VStack(alignment: .leading) {
+                Text(chapter.title)
+                    .font(.headline)
+                    .lineLimit(1)
+                Text(chapter.url)
+                    .font(.subheadline)
+                    .lineLimit(1)
+            }
             Spacer()
         }
         .padding(.vertical, 2)
+    }
+    
+    func getImage() -> NSImage {
+        if chapter.image != nil {
+            return chapter.image!
+        } else if defaultImage != nil {
+            return defaultImage!
+        } else {
+            return NSImage(systemSymbolName:"photo.badge.plus", accessibilityDescription: "Add Image")!
+        }
     }
 }
 
 
 #Preview("Chapter") {
     struct ChapterViewTest: View {
-        var chap = Chapter()
+        var chap = Chapter(title: "Title", url: "https://mostlysecurity.com")
         var body: some View {
-           ChapterView(chapter: chap)
+           ChapterView(chapter: chap, defaultImage: nil)
         }
     }
     return ChapterViewTest()

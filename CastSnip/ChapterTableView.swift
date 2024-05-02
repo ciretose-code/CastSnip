@@ -13,15 +13,14 @@ struct ChapterTableView: View {
     var body: some View {
         List {
             ForEach(audioModel.podcast.chapters) { chapter in
-                ChapterView(chapter: chapter)
+                ChapterView(chapter: chapter, defaultImage: audioModel.podcast.logo)
             }
 //            .onDelete {indexSet in
 //                indexSet.forEach() { idx in
 //                    $audioModel.removeChapter(at: idx)
 //                }
 //            }
-        }
-        .navigationTitle("Chapters")
+        }.scrollIndicators(.hidden)
     }
     
 }

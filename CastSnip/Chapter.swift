@@ -19,6 +19,13 @@ struct Chapter: Identifiable, Hashable {
     
     init() {}
     
+    init(title: String = "", url: String = "", startTime: UInt32 = 0, endTime: UInt32 = 0) {
+        self.title = title
+        self.url = url
+        self.startTime = startTime
+        self.endTime = endTime
+    }
+    
     init(data: Data) {
         let toc = data.prefix(while: {$0 != 0x00})
         var offset = toc.count+1
@@ -55,11 +62,11 @@ struct Chapter: Identifiable, Hashable {
         }
     }
         
-    func getImage() -> NSImage {
-        if image != nil {
-            return image!
-        } else {
-            return NSImage(systemSymbolName:"photo.badge.plus", accessibilityDescription: "Add Image")!
-        }
-    }
+//    func getImage() -> NSImage? {
+//        if image != nil {
+//            return image!
+//        } else {
+//            return NSImage(systemSymbolName:"photo.badge.plus", accessibilityDescription: "Add Image")!
+//        }
+//    }
 }
