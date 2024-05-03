@@ -26,10 +26,24 @@ struct ChapterView: View {
                 Text(chapter.url)
                     .font(.subheadline)
                     .lineLimit(1)
+                HStack() {
+//                    VStack(alignment: .center) {
+                        Text("Duration:").padding(.leading, 3)
+                            .foregroundColor(.secondary)
+                            .font(.system(size:10).lowercaseSmallCaps())
+//                    }
+                    Text("00:00:04").font(.system(size:12)).monospaced()
+                        .padding(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 4))
+                }.background(.white)
+                    .cornerRadius(6)
+                    .overlay(RoundedRectangle(cornerRadius:6).stroke(.secondary, lineWidth: 0))
             }
             Spacer()
+            HStack(alignment: .top) {
+                TimeView(radius: 6)
+            }
         }
-        .padding(.vertical, 2)
+//        .padding(.vertical, 2)
     }
     
     func getImage() -> NSImage {
@@ -51,5 +65,5 @@ struct ChapterView: View {
            ChapterView(chapter: chap, defaultImage: nil)
         }
     }
-    return ChapterViewTest()
+    return ChapterViewTest().padding()
 }

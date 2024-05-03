@@ -46,25 +46,15 @@ struct ContentView: View {
                     .overlay(RoundedRectangle(cornerRadius: radius).stroke(.secondary, lineWidth: 1))
                 
             }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: 0))
-            
-            VStack {
-                Image(systemName: "globe")
-                    .imageScale(.large)
-                    .foregroundStyle(.tint)
-                Text("Hello, world!")
+
+            VStack(alignment: .trailing) {
+                Spacer()
+                Button(action: {print(audioModel.podcast)}) {
+                    Text("Print to Console")
+                }
             }
-            .frame(width:150)
-            
-            
+            .padding()
         }
-//        Spacer()
-//        VStack {
-//            HStack {
-//                Text("start")
-//                AudioView().environment(audioModel)
-//                Text("end")
-//            }
-//        }.padding([.top], 10)
     }
     
 }
