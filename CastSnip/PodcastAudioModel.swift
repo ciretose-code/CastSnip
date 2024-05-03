@@ -36,12 +36,28 @@ struct PodcastAudio {
         isLoading = false
     }
     
-    func getCoverArt() -> Image {
-        if (podcast.logo != nil) {
-            return Image(nsImage: podcast.logo!).resizable()
+    func hasCoverArt() -> Bool {
+        return podcast.logo != nil
+    }
+    
+    func getCoverArt() -> Image? {
+        if (hasCoverArt()) {
+            return Image(nsImage: podcast.logo!)
         } else {
-            return Image(systemName: "waveform")
+            return nil
         }
+    }
+    
+    func getTitle() -> Binding<String> {
+        return Binding(get: { self.podcast.title }, set: { self.podcast.title = $0 })
+    }
+    
+    func getEpisode() -> Binding<String> {
+        return Binding(get: { self.podcast.episode }, set: { self.podcast.episode = $0 })
+    }
+    
+    func getSummary() -> Binding<String> {
+        return Binding(get: { self.podcast.summary }, set: { self.podcast.summary = $0 })
     }
     
     private func getFile(from url: URL) -> AVAudioFile {

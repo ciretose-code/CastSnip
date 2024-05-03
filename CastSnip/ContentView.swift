@@ -11,28 +11,39 @@ struct ContentView: View {
     
     @State var titleField: String = ""
     
-    @State var radius: CGFloat = 12
+    @State var radius: CGFloat = 6
     @State var insets: CGFloat = 16
+    
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
                 HStack(alignment: .top) {
-                    audioModel.getCoverArt()
-                        .aspectRatio(contentMode: .fit)
-                        .font(.system(size: 80))
-                        .cornerRadius(radius)
-                        .overlay(RoundedRectangle(cornerRadius: radius).stroke(.black, lineWidth: 1.5))
-                        .frame(width: 200, height: 200)
+                    ZStack {
+                        if audioModel.hasCoverArt() {
+                            audioModel.getCoverArt()!
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .cornerRadius(radius*2)
+                                .overlay(RoundedRectangle(cornerRadius: radius*2).stroke(.secondary, lineWidth: 1.5))
+                        } else {
+                            Image(systemName: "waveform")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .font(.system(size: 20))
+                                .foregroundColor(.secondary)
+                                .padding()
+                        }
+                    }.frame(width: 180, height: 180)
                     VStack(alignment: .leading) {
-                        TitleView(title: audioModel.podcast.title)
-                        EpisodeView(episode: audioModel.podcast.episode)
-                        SummaryView(summary: audioModel.podcast.summary)
-                    }
+                        TitleView(radius: radius, title: audioModel.getTitle())
+                        EpisodeView(radius: radius, episode: audioModel.getEpisode())
+                        SummaryView(radius: radius, summary: audioModel.getSummary())
+                    }.frame(minHeight: 180)
                 }
                 Spacer()
                 ChapterTableView().environment(audioModel)
                     .cornerRadius(radius)
-                    .overlay(RoundedRectangle(cornerRadius: radius).stroke(.black, lineWidth: 1.5))
+                    .overlay(RoundedRectangle(cornerRadius: radius).stroke(.secondary, lineWidth: 1))
                 
             }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: 0))
             

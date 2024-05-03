@@ -20,7 +20,8 @@ struct ChapterTableView: View {
 //                    $audioModel.removeChapter(at: idx)
 //                }
 //            }
-        }.scrollIndicators(.hidden)
+        }
+        .scrollIndicators(.automatic)
     }
     
 }
