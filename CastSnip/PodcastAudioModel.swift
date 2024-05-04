@@ -94,20 +94,32 @@ struct PodcastAudio {
                     let value = try! await item.load(.dataValue)!
                     if ("CHAP" == key) {
                         let c = Chapter(data: value)
-                        print("\(c)")
+//                        print("\(c)")
                         pa.chapters.append(c)
                     } else if ("CTOC" == key) {
                         
                     } else if ("APIC" == key) {
                         pa.logo = NSImage(data: value)
-                        print("logo: \(pa.logo)")
+//                        print("logo: \(pa.logo)")
                     }
                 } else {
-                    print("key: \(key)")
+                    let value = try! await item.load(.dataValue)
+                    print("key: \(key)\n\(value)\n\n")
                 }
             }
         } catch {
-            print("no metadata")
+            print("error id3 metadata: \(error)")
+        }
+        
+        do {
+            print("itunes metadata")
+            for item in try await pa.asset!.loadMetadata(for: .iTunesMetadata) {
+                let key = item.key?.description ?? "unknown"
+                print("key: \(key)")
+
+            }
+        } catch {
+            print("error itunes metadata: \(error)")
         }
         
         return pa

@@ -10,6 +10,7 @@ import SwiftUI
 struct ChapterView: View {
     let chapter: Chapter
     let defaultImage: NSImage?
+    let showHours: Bool
     
     var body: some View {
         HStack {
@@ -26,21 +27,10 @@ struct ChapterView: View {
                 Text(chapter.url)
                     .font(.subheadline)
                     .lineLimit(1)
-                HStack() {
-//                    VStack(alignment: .center) {
-                        Text("Duration:").padding(.leading, 3)
-                            .foregroundColor(.secondary)
-                            .font(.system(size:10).lowercaseSmallCaps())
-//                    }
-                    Text("00:00:04").font(.system(size:12)).monospaced()
-                        .padding(EdgeInsets(top: 2, leading: 0, bottom: 2, trailing: 4))
-                }.background(.white)
-                    .cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius:6).stroke(.secondary, lineWidth: 0))
             }
             Spacer()
             HStack(alignment: .top) {
-                TimeView(radius: 6)
+                TimeView(radius: 6, start:chapter.startTime, end: chapter.endTime, showHours: showHours)
             }
         }
 //        .padding(.vertical, 2)
@@ -60,9 +50,9 @@ struct ChapterView: View {
 
 #Preview("Chapter") {
     struct ChapterViewTest: View {
-        var chap = Chapter(title: "Title", url: "https://mostlysecurity.com")
+        var chap = Chapter(title: "Title", url: "https://mostlysecurity.com", startTime: 4000, endTime: 7000)
         var body: some View {
-           ChapterView(chapter: chap, defaultImage: nil)
+            ChapterView(chapter: chap, defaultImage: nil, showHours: true)
         }
     }
     return ChapterViewTest().padding()

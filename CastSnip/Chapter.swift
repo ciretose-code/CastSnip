@@ -29,10 +29,10 @@ struct Chapter: Identifiable, Hashable {
     init(data: Data) {
         let toc = data.prefix(while: {$0 != 0x00})
         var offset = toc.count+1
-        self.startTime = ID3Parser.getUInt32(data, &offset)
-        self.endTime = ID3Parser.getUInt32(data, &offset)
-        let startOffset: UInt32 = ID3Parser.getUInt32(data, &offset)
-        let endOffset: UInt32 = ID3Parser.getUInt32(data, &offset)
+        startTime = ID3Parser.getUInt32(data, &offset)
+        endTime = ID3Parser.getUInt32(data, &offset)
+        let _ : UInt32 = ID3Parser.getUInt32(data, &offset) // startOffset
+        let _ : UInt32 = ID3Parser.getUInt32(data, &offset) // endOffset
 
         while offset < data.count {
             let tag = ID3Parser.getTagHeader(data, &offset)

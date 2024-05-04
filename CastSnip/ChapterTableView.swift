@@ -13,7 +13,7 @@ struct ChapterTableView: View {
     var body: some View {
         List {
             ForEach(audioModel.podcast.chapters) { chapter in
-                ChapterView(chapter: chapter, defaultImage: audioModel.podcast.logo)
+                ChapterView(chapter: chapter, defaultImage: audioModel.podcast.logo, showHours: showHours(audioModel.podcast.duration ?? 0))
             }
 //            .onDelete {indexSet in
 //                indexSet.forEach() { idx in
@@ -24,4 +24,7 @@ struct ChapterTableView: View {
         .scrollIndicators(.automatic)
     }
     
+    func showHours(_ duration: CGFloat = 0) -> Bool {
+        return duration > (60*60)
+    }
 }
