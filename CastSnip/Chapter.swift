@@ -14,7 +14,11 @@ struct Chapter: Identifiable, Hashable {
     var url: String = ""
     var startTime: UInt32 = 0
     var endTime: UInt32 = 0
+    #if os(iOS)
+    var image: UIImage? = nil
+    #else
     var image: NSImage? = nil
+    #endif
     var imageDescription: String = ""
     
     init() {}
@@ -57,7 +61,11 @@ struct Chapter: Identifiable, Hashable {
                     imageDescription = apicDescription
                 }
                 let apicImageData = ID3Parser.getData(data, &offset, UInt32(data.count))
+                #if os(iOS)
+                image = UIImage(data: apicImageData)
+                #else
                 image = NSImage(data: apicImageData)
+                #endif
             }
         }
     }

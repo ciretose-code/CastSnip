@@ -15,12 +15,8 @@ struct ChapterTableView: View {
             ForEach(audioModel.podcast.chapters) { chapter in
                 ChapterView(chapter: chapter, defaultImage: audioModel.podcast.logo, showHours: showHours(audioModel.podcast.duration ?? 0))
             }
-//            .onDelete {indexSet in
-//                indexSet.forEach() { idx in
-//                    $audioModel.removeChapter(at: idx)
-//                }
-//            }
         }
+        .listStyle(.plain)
         .scrollIndicators(.automatic)
     }
     
@@ -28,3 +24,28 @@ struct ChapterTableView: View {
         return duration > (60*60)
     }
 }
+
+
+#Preview("Chapter Table View") {
+    struct ChapterTableViewTest: View {
+        var body: some View {
+            ChapterTableView().environment({
+                () -> PodcastAudioViewModel in
+                var audioModel = PodcastAudioViewModel()
+                let chapters = [
+                    Chapter(title: "Title 1", url: "https://mostlysecurity.com", startTime: 0, endTime: 4000),
+                    Chapter(title: "Title 2", url: "https://mostlysecurity.com", startTime: 4000, endTime: 7000),
+                    Chapter(title: "Title 3", url: "https://mostlysecurity.com", startTime: 7000, endTime: 17000)
+                ]
+                var podcast = PodcastAudio()
+                podcast.chapters = chapters
+                podcast.title = "Mostly Security"
+                podcast.duration = 17000
+                audioModel.podcast = podcast
+                return audioModel
+            }())
+        }
+    }
+    return ChapterTableViewTest().padding()
+}
+

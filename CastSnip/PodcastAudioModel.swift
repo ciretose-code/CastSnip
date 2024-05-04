@@ -11,7 +11,11 @@ import AVFoundation
 
 struct PodcastAudio {
     var url:URL?
+    #if os(iOS)
+    var logo:UIImage?
+    #else
     var logo:NSImage?
+    #endif
     var duration:CGFloat?
     var chapters:[Chapter] = []
     var asset:AVURLAsset?
@@ -42,7 +46,11 @@ struct PodcastAudio {
     
     func getCoverArt() -> Image? {
         if (hasCoverArt()) {
+            #if os(iOS)
+            return Image(uiImage: podcast.logo!)
+            #else
             return Image(nsImage: podcast.logo!)
+            #endif
         } else {
             return nil
         }
@@ -99,7 +107,11 @@ struct PodcastAudio {
                     } else if ("CTOC" == key) {
                         
                     } else if ("APIC" == key) {
+                        #if os(iOS)
+                        pa.logo = UIImage(data: value)
+                        #else
                         pa.logo = NSImage(data: value)
+                        #endif
 //                        print("logo: \(pa.logo)")
                     }
                 } else {
@@ -126,3 +138,5 @@ struct PodcastAudio {
     }
     
 }
+
+

@@ -9,17 +9,30 @@ import SwiftUI
 
 struct ChapterView: View {
     let chapter: Chapter
+    #if os(iOS)
+    let defaultImage: UIImage?
+    #else
     let defaultImage: NSImage?
+    #endif
     let showHours: Bool
     
     var body: some View {
         HStack {
+            #if os(iOS)
+            Image(uiImage: getImage())
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .clipShape(.rect(cornerRadius: 4))
+                .frame(width: 48, height: 48)
+                .padding(.leading, 2)
+            #else
             Image(nsImage: getImage())
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .clipShape(.rect(cornerRadius: 4))
                 .frame(width: 48, height: 48)
                 .padding(.leading, 2)
+            #endif
             VStack(alignment: .leading) {
                 Text(chapter.title)
                     .font(.headline)
@@ -36,6 +49,17 @@ struct ChapterView: View {
 //        .padding(.vertical, 2)
     }
     
+    #if os(iOS)
+    func getImage() -> UIImage {
+        if chapter.image != nil {
+            return chapter.image!
+        } else if defaultImage != nil {
+            return defaultImage!
+        } else {
+            return UIImage(systemName:"photo.badge.plus")!
+        }
+    }
+    #else
     func getImage() -> NSImage {
         if chapter.image != nil {
             return chapter.image!
@@ -45,6 +69,7 @@ struct ChapterView: View {
             return NSImage(systemSymbolName:"photo.badge.plus", accessibilityDescription: "Add Image")!
         }
     }
+    #endif
 }
 
 

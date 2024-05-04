@@ -47,10 +47,14 @@ struct CastSnipApp: App {
             }
             
             CommandGroup(before: .help){
+                #if os(iOS)
+                Link("mostlysecurity.com", destination: URL(string: "https://mostlysecurity.com")!)
+                #else
                 Button("mostlysecurity.com") {
                     showMostlySecurityWebsite()
                 }
                 .keyboardShortcut("/", modifiers: .command)
+                #endif
             }
         }
     
@@ -58,6 +62,9 @@ struct CastSnipApp: App {
     }
     
     func openPodcastFile() -> URL? {
+        #if os(iOS)
+        return nil
+        #else
         let openPanel = NSOpenPanel()
         openPanel.allowedContentTypes = [.mp3]
         openPanel.allowsMultipleSelection = false
@@ -65,6 +72,7 @@ struct CastSnipApp: App {
         openPanel.canChooseFiles = true
         let response = openPanel.runModal()
         return response == .OK ? openPanel.url : nil
+        #endif
     }
     
     func showMostlySecurityWebsite() {
@@ -72,7 +80,11 @@ struct CastSnipApp: App {
         guard let url = URL(string: address) else {
             fatalError("Invalid URL: \(address)")
         }
+        #if os(iOS)
+        print(address)
+        #else
         NSWorkspace.shared.open(url)
+        #endif
     }
 }
 
