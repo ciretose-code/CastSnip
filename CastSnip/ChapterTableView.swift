@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ChapterTableView: View {
-    @Environment(PodcastAudioViewModel.self) var audioModel
+    @Environment(PodcastAudioModel.self) var audioModel
 
     var body: some View {
         List {
@@ -30,8 +30,8 @@ struct ChapterTableView: View {
     struct ChapterTableViewTest: View {
         var body: some View {
             ChapterTableView().environment({
-                () -> PodcastAudioViewModel in
-                var audioModel = PodcastAudioViewModel()
+                () -> PodcastAudioModel in
+                var audioModel = PodcastAudioModel()
                 let chapters = [
                     Chapter(title: "Title 1", url: "https://mostlysecurity.com", startTime: 0, endTime: 4000),
                     Chapter(title: "Title 2", url: "https://mostlysecurity.com", startTime: 4000, endTime: 7000),

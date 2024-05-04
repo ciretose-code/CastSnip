@@ -12,7 +12,7 @@ import AVFoundation
 @main
 struct CastSnipApp: App {
     
-    @State var podcastAudioModel = PodcastAudioViewModel()
+    @State var podcastAudioModel = PodcastAudioModel()
 
     @State var fileURL: URL = Bundle.main.url(forResource:"intro", withExtension: "mp3")!
     

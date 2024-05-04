@@ -7,7 +7,7 @@
 
 import SwiftUI
 struct ContentView: View {
-    @Environment(PodcastAudioViewModel.self) var audioModel
+    @Environment(PodcastAudioModel.self) var audioModel
     
     @State var titleField: String = ""
     
@@ -38,9 +38,14 @@ struct ContentView: View {
                         TitleView(radius: radius, title: audioModel.getTitle())
                         EpisodeView(radius: radius, episode: audioModel.getEpisode())
                         SummaryView(radius: radius, summary: audioModel.getSummary())
-                    }.frame(minHeight: 180)
+                    }.frame(minHeight: 180, maxHeight: 180)
                 }
                 Spacer()
+                HStack() {
+                    Text("File Size: TODO MB").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule()).frame(minWidth:180)
+                    Spacer()
+                    Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (audioModel.podcast.duration ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
+                }
                 ChapterTableView().environment(audioModel)
                     .cornerRadius(radius)
                     .overlay(RoundedRectangle(cornerRadius: radius).stroke(.secondary, lineWidth: 1))
@@ -62,7 +67,7 @@ struct ContentView: View {
 
 #Preview("Load Sample Intro") {
     struct ContentTestView: View {
-        let audioModel = PodcastAudioViewModel()
+        let audioModel = PodcastAudioModel()
         var body: some View {
             ContentView().environment(audioModel)
                 .task {
@@ -75,7 +80,7 @@ struct ContentView: View {
 
 #Preview("Load Null") {
     struct ContentTestView: View {
-        let audioModel = PodcastAudioViewModel()
+        let audioModel = PodcastAudioModel()
         var body: some View {
             ContentView().environment(audioModel)
         }

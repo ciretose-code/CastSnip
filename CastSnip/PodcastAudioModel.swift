@@ -25,7 +25,7 @@ struct PodcastAudio {
     var summary:String = ""
 }
 
-@Observable class PodcastAudioViewModel: Identifiable {
+@Observable class PodcastAudioModel: Identifiable {
  
     let id3String = ["TALB", "TPE1", "TIT2", "COMM", "USLT", "TLEN", "TYER", "TENC"]
     let id3Data = ["CTOC", "CHAP", "APIC"]
