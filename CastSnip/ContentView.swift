@@ -9,8 +9,6 @@ import SwiftUI
 struct ContentView: View {
     @Environment(PodcastAudioModel.self) var audioModel
     
-    @State var titleField: String = ""
-    
     @State var radius: CGFloat = 6
     @State var insets: CGFloat = 16
     
@@ -41,27 +39,60 @@ struct ContentView: View {
                     }.frame(minHeight: 180, maxHeight: 180)
                 }
                 Spacer()
-                HStack() {
-                    Text("File Size: TODO MB").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule()).frame(minWidth:180)
-                    Spacer()
-                    Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (audioModel.podcast.duration ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
+                NavigationStack {
+                    ChapterTableView().environment(audioModel)
+                        .cornerRadius(radius)
+                        .overlay(RoundedRectangle(cornerRadius: radius).stroke(.secondary, lineWidth: 1))
+                    
+                    HStack() {
+                        Spacer()
+                        Text("File Size: TODO MB").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule()).frame(minWidth:180)
+                        Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (audioModel.podcast.duration ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
+                        Spacer()
+                    }
                 }
-                ChapterTableView().environment(audioModel)
-                    .cornerRadius(radius)
-                    .overlay(RoundedRectangle(cornerRadius: radius).stroke(.secondary, lineWidth: 1))
-                
-            }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: 0))
-
-            VStack(alignment: .trailing) {
-                Spacer()
-                Button(action: {print(audioModel.podcast)}) {
-                    Text("Print to Console")
+#if os(iOS)
+                .toolbar {
+                    ToolbarItemGroup(placement: .bottomBar) {
+                        Button(action: openPodcastFile){
+                            Label("Open MP3", systemImage: "plus")
+                        }.help("Open MP3")
+                        Button(action: savePodcastFile){
+                            Label("Save MP3", systemImage: "square.and.arrow.up")
+                        }.help("Save MP3")
+                    }
+                    
                 }
-            }
-            .padding()
+#endif
+            }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: insets))
+            
+            //            VStack(alignment: .trailing) {
+            //                Spacer()
+            //                Button(action: {print(audioModel.podcast)}) {
+            //                    Text("Print to Console")
+            //                }
+            //            }
+            //            .padding()
         }
+#if os(macOS)
+        .toolbar {
+            Button(action: openPodcastFile){
+                Label("Open MP3", systemImage: "plus")
+            }.help("Open MP3")
+            Button(action: savePodcastFile){
+                Label("Save MP3", systemImage: "square.and.arrow.up")
+            }.help("Save MP3")
+        }
+#endif
     }
     
+    private func openPodcastFile() {
+        
+    }
+    
+    private func savePodcastFile() {
+        
+    }
 }
 
 
