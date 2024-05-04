@@ -18,8 +18,9 @@ struct CastSnipApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView().environment(podcastAudioModel).task {
-                print("scene load")
+            ContentView().environment(podcastAudioModel)
+                .frame(minWidth: 800, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
+                .task {
                 await podcastAudioModel.loadPodcast(from: fileURL)
             }
         }
