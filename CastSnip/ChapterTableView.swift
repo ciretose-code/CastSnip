@@ -9,15 +9,58 @@ import SwiftUI
 
 struct ChapterTableView: View {
     @Environment(PodcastAudioModel.self) var audioModel
+    @State var selectedRow: Chapter?
+    var radius: CGFloat
 
     var body: some View {
-        List {
-            ForEach(audioModel.podcast.chapters) { chapter in
-                ChapterView(chapter: chapter, defaultImage: audioModel.podcast.logo, showHours: showHours(audioModel.podcast.duration ?? 0))
+        HStack(alignment: .top) {
+            VStack {
+                List(audioModel.podcast.chapters, id: \.self, selection: $selectedRow) {
+                    chapter in
+                    ChapterView(chapter: chapter, defaultImage: audioModel.podcast.logo, showHours: showHours(audioModel.podcast.duration ?? 0))
+                }
+                .onChange(of: selectedRow) { s in
+                    print(s)
+                }
+                .refreshable {
+                    addChapter()
+                }
+                .listStyle(.plain)
+                .scrollIndicators(.automatic)
+            }.cornerRadius(radius)
+                .overlay(RoundedRectangle(cornerRadius: radius).stroke(.secondary, lineWidth: 1))
+            Spacer()
+            VStack {
+                Button(action: addChapter){
+                    Image(systemName: "plus.rectangle")
+                }
+                .help("Add Chapter")
+                Button(action: {
+                    if selectedRow != nil {
+                        deleteChapter(selectedRow!.id)
+                    }
+                }) {
+                    Image(systemName: "minus.rectangle")
+                }
             }
         }
-        .listStyle(.plain)
-        .scrollIndicators(.automatic)
+    }
+    
+    func addChapter() {
+        audioModel.podcast.chapters.insert(Chapter(), at: 1)
+    }
+    
+    func deleteChapter(_ id: UUID) {
+        var chapterIndex: Int {
+            audioModel.podcast.chapters.firstIndex(where: {$0.id == id}) ?? 0
+        }
+        if chapterIndex > 0 {
+            audioModel.podcast.chapters.remove(at: chapterIndex)
+        }
+    }
+    
+    func editChapter() {
+        print("Edit Button Pressed")
     }
     
     func showHours(_ duration: CGFloat = 0) -> Bool {
@@ -29,7 +72,7 @@ struct ChapterTableView: View {
 #Preview("Chapter Table View") {
     struct ChapterTableViewTest: View {
         var body: some View {
-            ChapterTableView().environment({
+            ChapterTableView(radius: 6).environment({
                 () -> PodcastAudioModel in
                 var audioModel = PodcastAudioModel()
                 let chapters = [

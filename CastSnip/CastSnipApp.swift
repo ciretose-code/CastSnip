@@ -45,6 +45,10 @@ struct CastSnipApp: App {
                     }
                 }
                 .keyboardShortcut("O", modifiers: .command)
+                Button("Save As...") {
+                    savePodcastFile()
+                }
+                .keyboardShortcut("S", modifiers: .command)
             }
             
             CommandGroup(before: .help){
@@ -74,6 +78,10 @@ struct CastSnipApp: App {
         let response = openPanel.runModal()
         return response == .OK ? openPanel.url : nil
         #endif
+    }
+    
+    func savePodcastFile() {
+        print("save podcast file")
     }
     
     func showMostlySecurityWebsite() {

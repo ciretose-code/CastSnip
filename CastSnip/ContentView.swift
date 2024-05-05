@@ -39,10 +39,8 @@ struct ContentView: View {
                     }.frame(minHeight: 180, maxHeight: 180)
                 }
                 Spacer()
-                NavigationStack {
-                    ChapterTableView().environment(audioModel)
-                        .cornerRadius(radius)
-                        .overlay(RoundedRectangle(cornerRadius: radius).stroke(.secondary, lineWidth: 1))
+                VStack {
+                    ChapterTableView(radius: radius).environment(audioModel)
                     
                     HStack() {
                         Spacer()
@@ -51,39 +49,18 @@ struct ContentView: View {
                         Spacer()
                     }
                 }
-#if os(iOS)
-                .toolbar {
-                    ToolbarItemGroup(placement: .bottomBar) {
-                        Button(action: openPodcastFile){
-                            Label("Open MP3", systemImage: "plus")
-                        }.help("Open MP3")
-                        Button(action: savePodcastFile){
-                            Label("Save MP3", systemImage: "square.and.arrow.up")
-                        }.help("Save MP3")
-                    }
-                    
-                }
-#endif
             }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: insets))
-            
-            //            VStack(alignment: .trailing) {
-            //                Spacer()
-            //                Button(action: {print(audioModel.podcast)}) {
-            //                    Text("Print to Console")
-            //                }
-            //            }
-            //            .padding()
         }
-#if os(macOS)
-        .toolbar {
-            Button(action: openPodcastFile){
-                Label("Open MP3", systemImage: "plus")
-            }.help("Open MP3")
-            Button(action: savePodcastFile){
-                Label("Save MP3", systemImage: "square.and.arrow.up")
-            }.help("Save MP3")
-        }
-#endif
+//#if os(macOS)
+//        .toolbar {
+//            Button(action: openPodcastFile){
+//                Label("Open MP3", systemImage: "plus")
+//            }.help("Open MP3")
+//            Button(action: savePodcastFile){
+//                Label("Save MP3", systemImage: "square.and.arrow.up")
+//            }.help("Save MP3")
+//        }
+//#endif
     }
     
     private func openPodcastFile() {

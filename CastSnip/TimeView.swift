@@ -27,9 +27,10 @@ struct TimeView: View {
                 Text("Duration").padding(.trailing, 3)
                     .foregroundColor(.secondary)
                     .font(.system(size:6).lowercaseSmallCaps())
-            }.background(.white)
-                .cornerRadius(radius)
-                .overlay(RoundedRectangle(cornerRadius:radius).stroke(.secondary, lineWidth: 0))
+            }
+//            .background(.white)
+//                .cornerRadius(radius)
+//                .overlay(RoundedRectangle(cornerRadius:radius).stroke(.secondary, lineWidth: 0))
         }.frame(minWidth: 96, minHeight:48)
             
     }
