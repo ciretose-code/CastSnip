@@ -68,6 +68,14 @@ struct PodcastAudio {
         return Binding(get: { self.podcast.summary }, set: { self.podcast.summary = $0 })
     }
     
+    func getChapterIndex(_ id: UUID) -> Int {
+        var chapterIndex: Int {
+            podcast.chapters.firstIndex(where: {$0.id == id}) ?? 0
+        }
+        return chapterIndex
+    }
+    
+    
     private func getFile(from url: URL) -> AVAudioFile {
         return try! AVAudioFile(forReading: url)
     }

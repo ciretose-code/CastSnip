@@ -8,7 +8,8 @@
 import SwiftUI
 import AVFoundation
 
-struct Chapter: Identifiable, Hashable {
+struct Chapter: Identifiable, Hashable, Comparable {
+    
     let id = UUID()
     var title: String = ""
     var url: String = ""
@@ -23,7 +24,7 @@ struct Chapter: Identifiable, Hashable {
     
     init() {}
     
-    init(title: String = "", url: String = "", startTime: UInt32 = 0, endTime: UInt32 = 0) {
+    init(title: String = "", url: String = "", startTime: UInt32 = 1, endTime: UInt32 = 0) {
         self.title = title
         self.url = url
         self.startTime = startTime
@@ -69,12 +70,20 @@ struct Chapter: Identifiable, Hashable {
             }
         }
     }
-        
-//    func getImage() -> NSImage? {
-//        if image != nil {
-//            return image!
-//        } else {
-//            return NSImage(systemSymbolName:"photo.badge.plus", accessibilityDescription: "Add Image")!
-//        }
-//    }
+    
+    mutating func updateImage(_ newImage: NSImage?) {
+        if newImage != nil {
+            self.image = newImage
+        }
+    }
+    
+    
+    static func < (lhs: Chapter, rhs: Chapter) -> Bool {
+        return lhs.startTime < rhs.startTime
+    }
+
+    static func > (lhs: Chapter, rhs: Chapter) -> Bool {
+        return lhs.startTime > rhs.startTime
+    }
+
 }

@@ -15,12 +15,12 @@ struct ChapterTableView: View {
     var body: some View {
         HStack(alignment: .top) {
             VStack {
-                List(audioModel.podcast.chapters, id: \.self, selection: $selectedRow) {
+                List(audioModel.podcast.chapters.sorted(), id: \.self, selection: $selectedRow) {
                     chapter in
                     ChapterView(chapter: chapter, defaultImage: audioModel.podcast.logo, showHours: showHours(audioModel.podcast.duration ?? 0))
                 }
-                .onChange(of: selectedRow) { s in
-                    print(s)
+                .onChange(of: selectedRow) {
+                    rowChanged(selectedRow)
                 }
                 .refreshable {
                     addChapter()
@@ -30,10 +30,11 @@ struct ChapterTableView: View {
             }.cornerRadius(radius)
                 .overlay(RoundedRectangle(cornerRadius: radius).stroke(.secondary, lineWidth: 1))
             Spacer()
-            VStack {
+            VStack(alignment: .leading) {
                 Button(action: addChapter){
                     Image(systemName: "plus.rectangle")
-                }
+                    Text("Add")
+                }.buttonStyle(LinkButtonStyle())
                 .help("Add Chapter")
                 Button(action: {
                     if selectedRow != nil {
@@ -41,9 +42,14 @@ struct ChapterTableView: View {
                     }
                 }) {
                     Image(systemName: "minus.rectangle")
-                }
+                    Text("Delete")
+                }.buttonStyle(LinkButtonStyle())
             }
         }
+    }
+    
+    func rowChanged(_ row: Chapter?) {
+        print(row as Any)
     }
     
     func addChapter() {
@@ -51,9 +57,7 @@ struct ChapterTableView: View {
     }
     
     func deleteChapter(_ id: UUID) {
-        var chapterIndex: Int {
-            audioModel.podcast.chapters.firstIndex(where: {$0.id == id}) ?? 0
-        }
+        let chapterIndex = audioModel.getChapterIndex(id)
         if chapterIndex > 0 {
             audioModel.podcast.chapters.remove(at: chapterIndex)
         }
