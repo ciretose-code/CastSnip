@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct TimeView: View {
+    @Binding var start: UInt32
+//    @Binding var end: UInt32
     var radius: CGFloat
-    var start: UInt32
-    var end: UInt32
     var showHours: Bool
 
     var body: some View {
@@ -19,21 +19,72 @@ struct TimeView: View {
                 Text("Start").padding(.trailing, 3)
                     .foregroundColor(.secondary)
                     .font(.system(size:8).lowercaseSmallCaps())
-                Text(ID3Parser.toTrackTime(millis: start)).font(.system(size:14)).monospaced()
+                EditableTextField(text: getStartTime())
+                    .font(.system(size:14)).monospaced()
+                    .multilineTextAlignment(.trailing)
                     .padding(.trailing, 4)
-                Text(ID3Parser.toTrackTime(millis:(end-start))).font(.system(size:12)).monospaced()
-                    .foregroundColor(.secondary)
-                    .padding(.trailing, 4)
-                Text("Duration").padding(.trailing, 3)
-                    .foregroundColor(.secondary)
-                    .font(.system(size:6).lowercaseSmallCaps())
+//                Text(ID3Parser.toTrackTime(millis: self.end - self.start)).font(.system(size:12)).monospaced()
+//                    .foregroundColor(.secondary)
+//                    .padding(.trailing, 4)
+//                Text("Duration").padding(.trailing, 3)
+//                    .foregroundColor(.secondary)
+//                    .font(.system(size:6).lowercaseSmallCaps())
             }
 //            .background(.white)
 //                .cornerRadius(radius)
 //                .overlay(RoundedRectangle(cornerRadius:radius).stroke(.secondary, lineWidth: 0))
-        }.frame(minWidth: 96, minHeight:48)
+        }.frame(minWidth: 96, maxWidth: 96, minHeight:48, maxHeight: 48)
             
     }
+    
+    private func millisToTrack(_ millis: UInt32) -> String {
+        return ID3Parser.toTrackTime(millis: millis)
+    }
+    
+    private func trackToMillis(_ track: String) -> UInt32 {
+        let t = track.components(separatedBy: ":")
+        if (t.count == 1) {
+            if let seconds = UInt32(t[0]) {
+                return seconds * 1000
+            } else {
+                return 0
+            }
+        } else if (t.count == 2) {
+            if let minutes = UInt32(t[0]) {
+                if let seconds = UInt32(t[1]) {
+                    return (minutes * 60 * 1000) + (seconds * 1000)
+                } else {
+                    return (minutes * 60 * 1000)
+                }
+            } else {
+                return 0
+            }
+        } else if (t.count == 3) {
+            if let hours = UInt32(t[0]) {
+                if let minutes = UInt32(t[1]) {
+                    if let seconds = UInt32(t[2]) {
+                        return (hours * 60 * 60 * 1000) + (minutes * 60 * 1000) + (seconds * 1000)
+                    } else {
+                        return minutes * 60 * 1000
+                    }
+                } else {
+                    return (hours * 60 * 60 * 1000)
+                }
+            } else {
+                return 0
+            }
+        } else {
+            return 0
+        }
+    }
+    
+    private func getStartTime() -> Binding<String> {
+        return Binding(get: { millisToTrack(self.start) }, set: { self.start = trackToMillis($0) })
+    }
+    
+//    private func getDuration() -> Binding<String> {
+//        return Binding(get: { millisToTrack(self.end-self.start)}, set: {self.end = self.start + trackToMillis($0)})
+//    }
     
 }
 
@@ -42,8 +93,10 @@ struct TimeView: View {
 #Preview("Time") {
     
     struct TimeTestView: View {
+        @State private var s:UInt32 = 71000000
+//        @State private var e:UInt32 = 72123456
         var body: some View {
-            TimeView(radius: 6, start: 71000000, end: 72123456, showHours: true)
+            TimeView(start: $s, radius: 6, showHours: true)
         }
     }
     return TimeTestView().padding()
