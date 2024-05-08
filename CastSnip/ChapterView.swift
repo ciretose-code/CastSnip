@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ChapterView: View {
-    var chapter: Chapter
+    @State var chapter: Chapter
     #if os(iOS)
     let defaultImage: UIImage?
     #else
@@ -38,34 +38,18 @@ struct ChapterView: View {
                 .dropDestination(for: NSImage.self) {
                     items, location in
                     print(items)
-//                    chapter.updateImage(items.first)
+                    chapter.updateImage(items.first)
                     print(location)
                     return true
                 }
             #endif
             VStack(alignment: .leading) {
-                if chapter.title.count < 1 {
-                    Text("Chapter ")
-                        .font(.headline)
-                        .lineLimit(1)
-                        .foregroundColor(.secondary)
-                        .onTapGesture{
-                            print("Select Title")
-                        }
-                } else {
-                    Text(chapter.title)
-                        .font(.headline)
-                        .lineLimit(1)
-                        .onTapGesture{
-                            print("Select Title")
-                        }
-                }
-                Text(chapter.url)
+                EditableTextField(text: $chapter.title, placeholderText: Chapter.DEFAULT_TITLE)
+                    .font(.headline)
+                    .lineLimit(1)
+                EditableTextField(text: $chapter.url, placeholderText: Chapter.DEFAULT_URL)
                     .font(.subheadline)
                     .lineLimit(1)
-                    .onTapGesture {
-                        print("Select URL")
-                    }
             }
             Spacer()
             HStack(alignment: .top) {
