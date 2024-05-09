@@ -8,16 +8,16 @@
 import SwiftUI
 
 struct ChapterTableView: View {
-    @Environment(PodcastAudioModel.self) var audioModel
+    @Environment(AudioFile.self) var podcastAudioFile
     @State var selectedRow: Chapter?
     var radius: CGFloat
 
     var body: some View {
         HStack(alignment: .top) {
             VStack {
-                List(audioModel.podcast.chapters.sorted(), id: \.self, selection: $selectedRow) {
+                List(podcastAudioFile.podcast.chapters.sorted(), id: \.self, selection: $selectedRow) {
                     chapter in
-                    ChapterView(chapter: chapter, defaultImage: audioModel.podcast.logo, showHours: showHours(audioModel.podcast.duration ?? 0))
+                    ChapterView(chapter: chapter, defaultImage: podcastAudioFile.podcast.logo, showHours: showHours(podcastAudioFile.podcast.durationInSeconds ?? 0))
                 }
                 .onChange(of: selectedRow) {
                     rowChanged(selectedRow)
@@ -53,13 +53,13 @@ struct ChapterTableView: View {
     }
     
     func addChapter() {
-        audioModel.podcast.chapters.insert(Chapter(), at: 1)
+        podcastAudioFile.podcast.chapters.insert(Chapter(), at: 1)
     }
     
     func deleteChapter(_ id: UUID) {
-        let chapterIndex = audioModel.getChapterIndex(id)
+        let chapterIndex = podcastAudioFile.getChapterIndex(id)
         if chapterIndex > 0 {
-            audioModel.podcast.chapters.remove(at: chapterIndex)
+            podcastAudioFile.podcast.chapters.remove(at: chapterIndex)
         }
     }
     
@@ -77,17 +77,17 @@ struct ChapterTableView: View {
     struct ChapterTableViewTest: View {
         var body: some View {
             ChapterTableView(radius: 6).environment({
-                () -> PodcastAudioModel in
-                var audioModel = PodcastAudioModel()
+                () -> AudioFile in
+                let audioModel = AudioFile()
                 let chapters = [
                     Chapter(title: "Title 1", url: "https://mostlysecurity.com", startTime: 0, endTime: 4000),
                     Chapter(title: "Title 2", url: "https://mostlysecurity.com", startTime: 4000, endTime: 7000),
                     Chapter(title: "Title 3", url: "https://mostlysecurity.com", startTime: 7000, endTime: 17000)
                 ]
-                var podcast = PodcastAudio()
+                let podcast = Podcast()
                 podcast.chapters = chapters
                 podcast.title = "Mostly Security"
-                podcast.duration = 17000
+                podcast.durationInSeconds = 17000
                 audioModel.podcast = podcast
                 return audioModel
             }())

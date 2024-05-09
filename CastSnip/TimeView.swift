@@ -12,6 +12,7 @@ struct TimeView: View {
 //    @Binding var end: UInt32
     var radius: CGFloat
     var showHours: Bool
+    var maxTime: UInt32 = 1
 
     var body: some View {
         HStack(alignment: .top) {
@@ -30,6 +31,7 @@ struct TimeView: View {
 //                    .foregroundColor(.secondary)
 //                    .font(.system(size:6).lowercaseSmallCaps())
             }
+            Spacer()
 //            .background(.white)
 //                .cornerRadius(radius)
 //                .overlay(RoundedRectangle(cornerRadius:radius).stroke(.secondary, lineWidth: 0))
@@ -38,7 +40,7 @@ struct TimeView: View {
     }
     
     private func millisToTrack(_ millis: UInt32) -> String {
-        return ID3Parser.toTrackTime(millis: millis)
+        return ID3Parser.toTrackTime(millis: millis, showHours: true)
     }
     
     private func trackToMillis(_ track: String) -> UInt32 {

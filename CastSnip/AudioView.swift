@@ -15,14 +15,14 @@ let PLAY_ICON = "play.circle"
 let PAUSE_ICON = "pause.circle"
 
 struct AudioView: View {
-    @Environment(PodcastAudioModel.self) var audioModel
+    @Environment(AudioFile.self) var podcastAudioFile
     @State var playPause = PLAY_ICON
     
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing:2) {
-                if audioModel.podcast.url != nil {
-                    Text("This is where the waveform goes\n\(audioModel.podcast.url?.debugDescription ?? "No Audio URL")").frame(width: geometry.size.width, height: geometry.size.height/2)
+                if podcastAudioFile.podcast.url != nil {
+                    Text("This is where the waveform goes\n\(podcastAudioFile.podcast.url?.debugDescription ?? "No Audio URL")").frame(width: geometry.size.width, height: geometry.size.height/2)
 //                    WaveformView(audioURL: audioModel.podcast.url!) { waveformShape in
 //                        waveformShape.fill(Color.purple)
 //                    } placeholder: {
@@ -144,6 +144,6 @@ struct AudioView: View {
 struct AudioView_Previews: PreviewProvider {
     static var previews: some View {
         AudioView().previewLayout(.fixed(width: 500, height: 100))
-            .environment(PodcastAudioModel())
+            .environment(AudioFile())
     }
 }

@@ -7,7 +7,7 @@
 
 import SwiftUI
 struct ContentView: View {
-    @Environment(PodcastAudioModel.self) var audioModel
+    @Environment(AudioFile.self) var podcastAudioFile
     
     @State var radius: CGFloat = 6
     @State var insets: CGFloat = 16
@@ -17,8 +17,8 @@ struct ContentView: View {
             VStack(alignment: .leading) {
                 HStack(alignment: .top) {
                     ZStack {
-                        if audioModel.hasCoverArt() {
-                            audioModel.getCoverArt()!
+                        if podcastAudioFile.hasCoverArt() {
+                            podcastAudioFile.getCoverArt()!
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
                                 .cornerRadius(radius*2)
@@ -33,19 +33,19 @@ struct ContentView: View {
                         }
                     }.frame(width: 180, height: 180)
                     VStack(alignment: .leading) {
-                        TitleView(radius: radius, title: audioModel.getTitle())
-                        EpisodeView(radius: radius, episode: audioModel.getEpisode())
-                        SummaryView(radius: radius, summary: audioModel.getSummary())
+                        TitleView(radius: radius, title: podcastAudioFile.getTitle())
+                        EpisodeView(radius: radius, episode: podcastAudioFile.getEpisode())
+                        SummaryView(radius: radius, summary: podcastAudioFile.getSummary())
                     }.frame(minHeight: 180, maxHeight: 180)
                 }
                 Spacer()
                 VStack {
-                    ChapterTableView(radius: radius).environment(audioModel)
+                    ChapterTableView(radius: radius).environment(podcastAudioFile)
                     
                     HStack() {
                         Spacer()
                         Text("File Size: TODO MB").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule()).frame(minWidth:180)
-                        Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (audioModel.podcast.duration ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
+                        Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (podcastAudioFile.podcast.durationInSeconds ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
                         Spacer()
                     }
                 }
@@ -75,7 +75,7 @@ struct ContentView: View {
 
 #Preview("Load Sample Intro") {
     struct ContentTestView: View {
-        let audioModel = PodcastAudioModel()
+        let audioModel = AudioFile()
         var body: some View {
             ContentView().environment(audioModel)
                 .task {
@@ -88,7 +88,7 @@ struct ContentView: View {
 
 #Preview("Load Null") {
     struct ContentTestView: View {
-        let audioModel = PodcastAudioModel()
+        let audioModel = AudioFile()
         var body: some View {
             ContentView().environment(audioModel)
         }

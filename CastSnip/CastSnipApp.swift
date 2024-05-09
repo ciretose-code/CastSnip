@@ -12,22 +12,22 @@ import AVFoundation
 @main
 struct CastSnipApp: App {
     
-    @State var podcastAudioModel = PodcastAudioModel()
+    @State var podcastAudioFile = AudioFile()
 
     @State var fileURL: URL = Bundle.main.url(forResource:"intro", withExtension: "mp3")!
     
     var body: some Scene {
         WindowGroup {
-            ContentView().environment(podcastAudioModel)
+            ContentView().environment(podcastAudioFile)
                 .frame(minWidth: 800, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
                 .task {
-                await podcastAudioModel.loadPodcast(from: fileURL)
+                await podcastAudioFile.loadPodcast(from: fileURL)
             }
         }
         .onChange(of: fileURL) {
             print("onChange")
             Task.detached(priority: .high) {
-                await podcastAudioModel.loadPodcast(from: fileURL)
+                await podcastAudioFile.loadPodcast(from: fileURL)
             }
         }
         .commands {
