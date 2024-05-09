@@ -34,8 +34,11 @@ struct ChapterTableView: View {
                 Button(action: addChapter){
                     Image(systemName: "plus.rectangle")
                     Text("Add")
-                }.buttonStyle(LinkButtonStyle())
+                }
+                #if os(macOS)
+                .buttonStyle(LinkButtonStyle())
                 .help("Add Chapter")
+                #endif
                 Button(action: {
                     if selectedRow != nil {
                         deleteChapter(selectedRow!.id)
@@ -43,7 +46,10 @@ struct ChapterTableView: View {
                 }) {
                     Image(systemName: "minus.rectangle")
                     Text("Delete")
-                }.buttonStyle(LinkButtonStyle())
+                }
+                #if os(macOS)
+                .buttonStyle(LinkButtonStyle())
+                #endif
             }
         }
     }

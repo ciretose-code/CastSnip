@@ -84,12 +84,19 @@ class Chapter: Identifiable, Equatable, Comparable, Hashable, CustomStringConver
             }
         }
     }
-    
+    #if os(iOS)
+    func updateImage(_ newImage: UIImage?) {
+        if newImage != nil {
+            self.image = newImage
+        }
+    }
+    #else
     func updateImage(_ newImage: NSImage?) {
         if newImage != nil {
             self.image = newImage
         }
     }
+    #endif
     
     func updateTitle(_ newTitle: String) {
         self.title = newTitle

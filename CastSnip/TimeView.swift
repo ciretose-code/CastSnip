@@ -30,6 +30,7 @@ struct TimeView: View {
 //                Text("Duration").padding(.trailing, 3)
 //                    .foregroundColor(.secondary)
 //                    .font(.system(size:6).lowercaseSmallCaps())
+                Spacer()
             }
             Spacer()
 //            .background(.white)
