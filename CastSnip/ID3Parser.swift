@@ -127,4 +127,41 @@ class ID3Parser {
             }
         }
     }
+    
+    static func trackToMillis(_ track: String) -> UInt32 {
+        let t = track.components(separatedBy: ":")
+        if (t.count == 1) {
+            if let seconds = Float(t[0]) {
+                return UInt32(seconds * 1000)
+            } else {
+                return 0
+            }
+        } else if (t.count == 2) {
+            if let minutes = UInt32(t[0]) {
+                if let seconds = Float(t[1]) {
+                    return (minutes * 60 * 1000) + UInt32(seconds * 1000)
+                } else {
+                    return (minutes * 60 * 1000)
+                }
+            } else {
+                return 0
+            }
+        } else if (t.count == 3) {
+            if let hours = UInt32(t[0]) {
+                if let minutes = UInt32(t[1]) {
+                    if let seconds = Float(t[2]) {
+                        return (hours * 60 * 60 * 1000) + (minutes * 60 * 1000) + UInt32(seconds * 1000)
+                    } else {
+                        return minutes * 60 * 1000
+                    }
+                } else {
+                    return (hours * 60 * 60 * 1000)
+                }
+            } else {
+                return 0
+            }
+        } else {
+            return 0
+        }
+    }
 }

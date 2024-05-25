@@ -54,6 +54,7 @@ struct ChapterView: View {
             Spacer()
             HStack(alignment: .top) {
                 TimeView(start:$chapter.startTime, radius: 6, showHours: showHours)
+                    
             }
         }
 //        .padding(.vertical, 2)

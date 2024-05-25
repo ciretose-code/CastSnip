@@ -23,7 +23,7 @@ struct TimeView: View {
                 EditableTextField(text: getStartTime())
                     .font(.system(size:14)).monospaced()
                     .multilineTextAlignment(.trailing)
-                    .padding(.trailing, 4)
+                    .padding(.trailing, 4).help(Text("\(self.start) milliseconds"))
 //                Text(ID3Parser.toTrackTime(millis: self.end - self.start)).font(.system(size:12)).monospaced()
 //                    .foregroundColor(.secondary)
 //                    .padding(.trailing, 4)
@@ -36,49 +36,16 @@ struct TimeView: View {
 //            .background(.white)
 //                .cornerRadius(radius)
 //                .overlay(RoundedRectangle(cornerRadius:radius).stroke(.secondary, lineWidth: 0))
-        }.frame(minWidth: 96, maxWidth: 96, minHeight:48, maxHeight: 48)
+        }.frame(minWidth: 128, maxWidth: 128, minHeight:48, maxHeight: 48)
             
     }
     
     private func millisToTrack(_ millis: UInt32) -> String {
-        return ID3Parser.toTrackTime(millis: millis, showHours: true)
+        return ID3Parser.toTrackTime(millis: millis, showHours: true, showMillis: true)
     }
     
     private func trackToMillis(_ track: String) -> UInt32 {
-        let t = track.components(separatedBy: ":")
-        if (t.count == 1) {
-            if let seconds = UInt32(t[0]) {
-                return seconds * 1000
-            } else {
-                return 0
-            }
-        } else if (t.count == 2) {
-            if let minutes = UInt32(t[0]) {
-                if let seconds = UInt32(t[1]) {
-                    return (minutes * 60 * 1000) + (seconds * 1000)
-                } else {
-                    return (minutes * 60 * 1000)
-                }
-            } else {
-                return 0
-            }
-        } else if (t.count == 3) {
-            if let hours = UInt32(t[0]) {
-                if let minutes = UInt32(t[1]) {
-                    if let seconds = UInt32(t[2]) {
-                        return (hours * 60 * 60 * 1000) + (minutes * 60 * 1000) + (seconds * 1000)
-                    } else {
-                        return minutes * 60 * 1000
-                    }
-                } else {
-                    return (hours * 60 * 60 * 1000)
-                }
-            } else {
-                return 0
-            }
-        } else {
-            return 0
-        }
+        return ID3Parser.trackToMillis(track)
     }
     
     private func getStartTime() -> Binding<String> {
@@ -96,8 +63,8 @@ struct TimeView: View {
 #Preview("Time") {
     
     struct TimeTestView: View {
-        @State private var s:UInt32 = 71000000
-//        @State private var e:UInt32 = 72123456
+//        @State private var s:UInt32 = 71000000
+        @State private var s:UInt32 = 72123456
         var body: some View {
             TimeView(start: $s, radius: 6, showHours: true)
         }
