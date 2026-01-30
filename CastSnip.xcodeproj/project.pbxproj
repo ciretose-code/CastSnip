@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -27,6 +27,16 @@
 		7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7404522BDEBB5D001811B2 /* ID3Parser.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		7B2A95922F2C74E600C924FB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7B1D20AB2BD36A83006D1AA4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7B1D20B22BD36A83006D1AA4;
+			remoteInfo = CastSnip;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		7B1D20B32BD36A83006D1AA4 /* CastSnip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CastSnip.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B1D20B62BD36A83006D1AA4 /* CastSnipApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastSnipApp.swift; sourceTree = "<group>"; };
@@ -38,6 +48,7 @@
 		7B1D20D02BD37282006D1AA4 /* ChapterTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterTableView.swift; sourceTree = "<group>"; };
 		7B1F1CC52BE4AA4500B0A29B /* TimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeView.swift; sourceTree = "<group>"; };
 		7B1F1CC72BEAFC0D00B0A29B /* EditableTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableTextField.swift; sourceTree = "<group>"; };
+		7B2A958E2F2C74E600C924FB /* CastSnipTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CastSnipTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B390A302BD5C0F5009CEDEE /* AudioFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFile.swift; sourceTree = "<group>"; };
 		7B4015422BD443530060A2BF /* intro.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = intro.mp3; sourceTree = "<group>"; };
 		7B4015442BD44F5A0060A2BF /* AudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioView.swift; sourceTree = "<group>"; };
@@ -50,8 +61,29 @@
 		7B7404522BDEBB5D001811B2 /* ID3Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3Parser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7B2A959C2F2C776300C924FB /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CastSnip.xctestplan,
+			);
+			target = 7B2A958D2F2C74E600C924FB /* CastSnipTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		7B2A958F2F2C74E600C924FB /* CastSnipTests */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (7B2A959C2F2C776300C924FB /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = CastSnipTests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
 		7B1D20B02BD36A83006D1AA4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7B2A958B2F2C74E600C924FB /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -65,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				7B1D20B52BD36A83006D1AA4 /* CastSnip */,
+				7B2A958F2F2C74E600C924FB /* CastSnipTests */,
 				7B1D20B42BD36A83006D1AA4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -73,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				7B1D20B32BD36A83006D1AA4 /* CastSnip.app */,
+				7B2A958E2F2C74E600C924FB /* CastSnipTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -157,6 +191,29 @@
 			productReference = 7B1D20B32BD36A83006D1AA4 /* CastSnip.app */;
 			productType = "com.apple.product-type.application";
 		};
+		7B2A958D2F2C74E600C924FB /* CastSnipTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7B2A95962F2C74E600C924FB /* Build configuration list for PBXNativeTarget "CastSnipTests" */;
+			buildPhases = (
+				7B2A958A2F2C74E600C924FB /* Sources */,
+				7B2A958B2F2C74E600C924FB /* Frameworks */,
+				7B2A958C2F2C74E600C924FB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7B2A95932F2C74E600C924FB /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				7B2A958F2F2C74E600C924FB /* CastSnipTests */,
+			);
+			name = CastSnipTests;
+			packageProductDependencies = (
+			);
+			productName = CastSnipTests;
+			productReference = 7B2A958E2F2C74E600C924FB /* CastSnipTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -164,11 +221,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1530;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 1530;
 				TargetAttributes = {
 					7B1D20B22BD36A83006D1AA4 = {
 						CreatedOnToolsVersion = 15.3;
+					};
+					7B2A958D2F2C74E600C924FB = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 7B1D20B22BD36A83006D1AA4;
 					};
 				};
 			};
@@ -188,6 +249,7 @@
 			projectRoot = "";
 			targets = (
 				7B1D20B22BD36A83006D1AA4 /* CastSnip */,
+				7B2A958D2F2C74E600C924FB /* CastSnipTests */,
 			);
 		};
 /* End PBXProject section */
@@ -201,6 +263,13 @@
 				7B1D20BB2BD36A85006D1AA4 /* Assets.xcassets in Resources */,
 				7B4015482BD452B20060A2BF /* README.md in Resources */,
 				7B4015432BD443530060A2BF /* intro.mp3 in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7B2A958C2F2C74E600C924FB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -228,7 +297,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7B2A958A2F2C74E600C924FB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7B2A95932F2C74E600C924FB /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7B1D20B22BD36A83006D1AA4 /* CastSnip */;
+			targetProxy = 7B2A95922F2C74E600C924FB /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		7B1D20C02BD36A85006D1AA4 /* Debug */ = {
@@ -425,6 +509,50 @@
 			};
 			name = Release;
 		};
+		7B2A95942F2C74E600C924FB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6D39SX3E6V;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ciretose.util.CastSnipTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CastSnip.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CastSnip";
+			};
+			name = Debug;
+		};
+		7B2A95952F2C74E600C924FB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 6D39SX3E6V;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ciretose.util.CastSnipTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CastSnip.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CastSnip";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -442,6 +570,15 @@
 			buildConfigurations = (
 				7B1D20C32BD36A85006D1AA4 /* Debug */,
 				7B1D20C42BD36A85006D1AA4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7B2A95962F2C74E600C924FB /* Build configuration list for PBXNativeTarget "CastSnipTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7B2A95942F2C74E600C924FB /* Debug */,
+				7B2A95952F2C74E600C924FB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

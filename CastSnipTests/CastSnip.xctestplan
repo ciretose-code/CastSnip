@@ -1,0 +1,30 @@
+{
+  "configurations" : [
+    {
+      "id" : "CD8116D0-C090-4C9C-BB0E-A0CE1A0C29F2",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:CastSnip.xcodeproj",
+      "identifier" : "7B1D20B22BD36A83006D1AA4",
+      "name" : "CastSnip"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:CastSnip.xcodeproj",
+        "identifier" : "7B2A958D2F2C74E600C924FB",
+        "name" : "CastSnipTests"
+      }
+    }
+  ],
+  "version" : 1
+}
