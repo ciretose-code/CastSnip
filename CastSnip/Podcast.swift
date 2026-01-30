@@ -33,4 +33,18 @@ class Podcast {
         formatter.countStyle = .file
         return formatter.string(fromByteCount: Int64(size))
     }
+    
+    var shouldShowHours: Bool {
+        return (durationInSeconds ?? 0) > 3600
+    }
+    
+    func validateChapters() -> Bool {
+        let sorted = chapters.sorted()
+        for i in 0..<sorted.count - 1 {
+            if sorted[i].endTime > sorted[i + 1].startTime {
+                return false // Overlapping chapters
+            }
+        }
+        return true
+    }
 }

@@ -63,6 +63,13 @@ struct ContentView: View {
                     }
                 }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: insets))
             }
+            .alert("Error Loading Podcast", isPresented: .constant(podcastAudioFile.errorMessage != nil)) {
+                Button("OK") {
+                    podcastAudioFile.errorMessage = nil
+                }
+            } message: {
+                Text(podcastAudioFile.errorMessage ?? "")
+            }
         }
 //#if os(macOS)
 //        .toolbar {

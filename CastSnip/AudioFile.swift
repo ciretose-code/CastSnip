@@ -17,13 +17,32 @@ class AudioFile: Identifiable {
     
     var podcast = Podcast()
     var isLoading = false
+    var errorMessage: String?
+    var hasUnsavedChanges = false
     private let logger = Logger(subsystem: "com.castsnip", category: "AudioFile")
     
     @MainActor
     func loadPodcast(from url: URL) async {
         isLoading = true
+        errorMessage = nil
         podcast = await loadingPodcast(from: url)
+        
+        // Check for loading failures
+        if podcast.asset == nil {
+            errorMessage = "Failed to load audio file. The file may be corrupted or in an unsupported format."
+        } else if podcast.durationInSeconds == 0 {
+            errorMessage = "Warning: Could not determine audio duration."
+        }
+        
         isLoading = false
+    }
+    
+    func markAsModified() {
+        hasUnsavedChanges = true
+    }
+    
+    func markAsSaved() {
+        hasUnsavedChanges = false
     }
     
     func hasCoverArt() -> Bool {

@@ -7,27 +7,34 @@
 
 import SwiftUI
 import AVFoundation
+import OSLog
 
 
 @main
 struct CastSnipApp: App {
     
+    private let logger = Logger(subsystem: "com.castsnip", category: "App")
+    
     @State var podcastAudioFile = AudioFile()
 
-    @State var fileURL: URL = Bundle.main.url(forResource:"intro", withExtension: "mp3")!
+    @State var fileURL: URL? = Bundle.main.url(forResource:"intro", withExtension: "mp3")
     
     var body: some Scene {
         WindowGroup {
             ContentView().environment(podcastAudioFile)
                 .frame(minWidth: 800, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
                 .task {
-                await podcastAudioFile.loadPodcast(from: fileURL)
-            }
+                    if let url = fileURL {
+                        await podcastAudioFile.loadPodcast(from: url)
+                    }
+                }
         }
         .onChange(of: fileURL) {
             print("onChange")
-            Task.detached(priority: .high) {
-                await podcastAudioFile.loadPodcast(from: fileURL)
+            if let url = fileURL {
+                Task.detached(priority: .high) {
+                    await podcastAudioFile.loadPodcast(from: url)
+                }
             }
         }
         .commands {
@@ -87,7 +94,8 @@ struct CastSnipApp: App {
     func showMostlySecurityWebsite() {
         let address = "https://mostlysecurity.com"
         guard let url = URL(string: address) else {
-            fatalError("Invalid URL: \(address)")
+            logger.error("Invalid URL: \(address)")
+            return
         }
         #if os(iOS)
         print(address)

@@ -59,13 +59,41 @@ struct ChapterTableView: View {
     }
     
     func addChapter() {
-        podcastAudioFile.podcast.chapters.insert(Chapter(), at: 1)
+        let insertIndex: Int
+        let startTime: UInt32
+        
+        if let selected = selectedRow,
+           let currentIndex = podcastAudioFile.podcast.chapters.firstIndex(where: { $0.id == selected.id }) {
+            // Insert after the selected chapter
+            insertIndex = currentIndex + 1
+            startTime = selected.endTime
+        } else {
+            // Insert at the end
+            insertIndex = podcastAudioFile.podcast.chapters.count
+            if let lastChapter = podcastAudioFile.podcast.chapters.last {
+                startTime = lastChapter.endTime
+            } else {
+                startTime = 0
+            }
+        }
+        
+        // Create chapter with reasonable defaults
+        let newChapter = Chapter(
+            title: "New Chapter",
+            url: "",
+            startTime: startTime,
+            endTime: podcastAudioFile.podcast.durationInMillis ?? startTime,
+            podcastDuration: podcastAudioFile.podcast.durationInMillis ?? 0
+        )
+        
+        podcastAudioFile.podcast.chapters.insert(newChapter, at: insertIndex)
+        selectedRow = newChapter
     }
     
     func deleteChapter(_ id: UUID) {
-        let chapterIndex = podcastAudioFile.getChapterIndex(id)
-        if chapterIndex > 0 {
+        if let chapterIndex = podcastAudioFile.podcast.chapters.firstIndex(where: { $0.id == id }) {
             podcastAudioFile.podcast.chapters.remove(at: chapterIndex)
+            selectedRow = nil
         }
     }
     
