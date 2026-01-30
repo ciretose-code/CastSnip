@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+enum ChapterValidationError {
+    case invalidTimeRange
+    case startTimeExceedsDuration
+    case endTimeExceedsDuration
+    case emptyTitle
+    case invalidURL
+}
+
 @Observable
 class Chapter: Identifiable, Equatable, Comparable, Hashable, CustomStringConvertible, CustomDebugStringConvertible {
     static let DEFAULT_TITLE = "Chapter Title"
@@ -100,6 +108,42 @@ class Chapter: Identifiable, Equatable, Comparable, Hashable, CustomStringConver
     
     func updateTitle(_ newTitle: String) {
         self.title = newTitle
+    }
+    
+    func validate() -> [ChapterValidationError] {
+        var errors: [ChapterValidationError] = []
+        
+        if startTime >= endTime && endTime != 0 {
+            errors.append(.invalidTimeRange)
+        }
+        
+        if startTime > podcastDuration && podcastDuration != 0 {
+            errors.append(.startTimeExceedsDuration)
+        }
+        
+        if endTime > podcastDuration && podcastDuration != 0 {
+            errors.append(.endTimeExceedsDuration)
+        }
+        
+        if title.isEmpty {
+            errors.append(.emptyTitle)
+        }
+        
+        if !url.isEmpty {
+            if let urlObj = URL(string: url) {
+                if urlObj.scheme == nil || urlObj.host == nil {
+                    errors.append(.invalidURL)
+                }
+            } else {
+                errors.append(.invalidURL)
+            }
+        }
+        
+        return errors
+    }
+    
+    func isValid() -> Bool {
+        return validate().isEmpty
     }
     
     func hash(into hasher: inout Hasher) {

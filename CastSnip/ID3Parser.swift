@@ -58,13 +58,13 @@ class ID3Parser {
     static func decodeData(_ data: Data, _ encoding: ID3StringEncoding) -> String {
         switch encoding {
         case .ASCII:
-            return String(data: data, encoding: .ascii)!
+            return String(data: data, encoding: .ascii) ?? ""
         case .UCS2:
-            return String(data: data, encoding: .utf16)!
+            return String(data: data, encoding: .utf16) ?? ""
         case .UTF16BE:
-            return String(data: data, encoding: .utf16)!
+            return String(data: data, encoding: .utf16BigEndian) ?? ""
         case .UTF8:
-            return String(data: data, encoding: .utf8)!
+            return String(data: data, encoding: .utf8) ?? ""
         }
     }
     

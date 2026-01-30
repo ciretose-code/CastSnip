@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import OSLog
 
 @Observable
 class AudioFile: Identifiable {
@@ -16,6 +17,7 @@ class AudioFile: Identifiable {
     
     var podcast = Podcast()
     var isLoading = false
+    private let logger = Logger(subsystem: "com.castsnip", category: "AudioFile")
     
     @MainActor
     func loadPodcast(from url: URL) async {
@@ -60,14 +62,30 @@ class AudioFile: Identifiable {
     }
     
     
-    private func getFile(from url: URL) -> AVAudioFile {
-        return try! AVAudioFile(forReading: url)
+    private func getFile(from url: URL) -> AVAudioFile? {
+        do {
+            return try AVAudioFile(forReading: url)
+        } catch {
+            logger.error("Failed to read audio file: \(error.localizedDescription)")
+            return nil
+        }
     }
     
     private func loadingPodcast(from url: URL) async -> Podcast {
         var pa = Podcast()
         pa.url = url
         pa.file = getFile(from: url)
+        
+        // Get file size
+        do {
+            let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            if let fileSize = attributes[.size] as? UInt64 {
+                pa.fileSizeInBytes = fileSize
+            }
+        } catch {
+            logger.error("Failed to get file size: \(error.localizedDescription)")
+        }
+        
         pa.asset = AVURLAsset(url: url, options: nil)
         do {
             let dur = try await pa.asset?.load(.duration)
@@ -75,53 +93,70 @@ class AudioFile: Identifiable {
             pa.durationInSeconds = CGFloat(dur?.value ?? 1)/CGFloat(dur?.timescale ?? 1)
             pa.durationInMillis = UInt32((pa.durationInSeconds ?? 0)*1000)
         } catch {
-            // What do do about this error?
+            logger.error("Failed to load duration: \(error.localizedDescription)")
             pa.durationInSeconds = 0
             pa.durationInMillis = 0
         }
-//        print("duration: \(String(describing: pa.durationInSeconds))")
+        
+        guard let asset = pa.asset else {
+            logger.error("Asset is nil, cannot load metadata")
+            return pa
+        }
+        
         do {
-            for item in try await pa.asset!.loadMetadata(for: .id3Metadata) {
+            for item in try await asset.loadMetadata(for: .id3Metadata) {
                 let key = item.key?.description ?? "unknown"
                 if id3String.contains(key) {
-                    let value = try! await item.load(.stringValue)
-                    print("\(key) = \(value ?? "unk")")
-                    if ("TALB" == key) || ("TPE1" == key) {
-                        pa.title = value ?? ""
-                    } else if ("TIT2" == key) {
-                        pa.episode = value ?? ""
-                    } else if ("COMM" == key) || ("USLT" == key) {
-                        pa.summary = value ?? ""
-                    } else if ("TLEN" == key) {
-                        if let tlen = UInt32(value ?? "0") {
-                            if tlen > 0 && pa.durationInMillis == 0 {
-                                pa.durationInMillis = tlen
+                    do {
+                        let value = try await item.load(.stringValue)
+                        logger.debug("\(key) = \(value ?? "nil")")
+                        if ("TALB" == key) || ("TPE1" == key) {
+                            pa.title = value ?? ""
+                        } else if ("TIT2" == key) {
+                            pa.episode = value ?? ""
+                        } else if ("COMM" == key) || ("USLT" == key) {
+                            pa.summary = value ?? ""
+                        } else if ("TLEN" == key) {
+                            if let tlen = UInt32(value ?? "0") {
+                                if tlen > 0 && pa.durationInMillis == 0 {
+                                    pa.durationInMillis = tlen
+                                }
                             }
                         }
+                    } catch {
+                        logger.error("Failed to load string value for key \(key): \(error.localizedDescription)")
                     }
                 } else if id3Data.contains(key) {
-                    let value = try! await item.load(.dataValue)!
-                    if ("CHAP" == key) {
-                        let c = Chapter(data: value, podcastDuration: pa.durationInMillis ?? 0)
-//                        print("\(c)")
-                        pa.chapters.append(c)
-                    } else if ("CTOC" == key) {
-                        
-                    } else if ("APIC" == key) {
-                        #if os(iOS)
-                        pa.logo = UIImage(data: value)
-                        #else
-                        pa.logo = NSImage(data: value)
-                        #endif
-//                        print("logo: \(pa.logo)")
+                    do {
+                        if let value = try await item.load(.dataValue) {
+                            if ("CHAP" == key) {
+                                let c = Chapter(data: value, podcastDuration: pa.durationInMillis ?? 0)
+                                pa.chapters.append(c)
+                            } else if ("CTOC" == key) {
+                                // Table of contents - future implementation
+                                logger.debug("CTOC tag found")
+                            } else if ("APIC" == key) {
+                                #if os(iOS)
+                                pa.logo = UIImage(data: value)
+                                #else
+                                pa.logo = NSImage(data: value)
+                                #endif
+                            }
+                        }
+                    } catch {
+                        logger.error("Failed to load data value for key \(key): \(error.localizedDescription)")
                     }
                 } else {
-                    let value = try! await item.load(.dataValue)
-                    print("key: \(key)\n\(String(describing: value))\n\n")
+                    do {
+                        let value = try await item.load(.dataValue)
+                        logger.debug("Unknown key: \(key), data length: \(value?.count ?? 0)")
+                    } catch {
+                        logger.error("Failed to load unknown key \(key): \(error.localizedDescription)")
+                    }
                 }
             }
         } catch {
-            print("error id3 metadata: \(error)")
+            logger.error("Error loading id3 metadata: \(error.localizedDescription)")
         }
         
 //        do {
