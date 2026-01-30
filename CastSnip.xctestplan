@@ -18,7 +18,6 @@
   },
   "testTargets" : [
     {
-      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:CastSnip.xcodeproj",
         "identifier" : "7B2A958D2F2C74E600C924FB",
