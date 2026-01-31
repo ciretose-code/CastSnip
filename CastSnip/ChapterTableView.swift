@@ -28,7 +28,7 @@ struct ChapterTableView: View {
                 .listStyle(.plain)
                 .scrollIndicators(.automatic)
             }.cornerRadius(radius)
-                .overlay(RoundedRectangle(cornerRadius: radius).stroke(.secondary, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
             Spacer()
             VStack(alignment: .leading) {
                 Button(action: addChapter){

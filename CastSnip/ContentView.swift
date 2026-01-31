@@ -6,8 +6,10 @@
 //
 
 import SwiftUI
+
 struct ContentView: View {
     @Environment(AudioFile.self) var podcastAudioFile
+    @Environment(\.colorScheme) var colorScheme
     
     @State var radius: CGFloat = 6
     @State var insets: CGFloat = 16
@@ -34,14 +36,26 @@ struct ContentView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .cornerRadius(radius*2)
-                                    .overlay(RoundedRectangle(cornerRadius: radius*2).stroke(.secondary, lineWidth: 1.5))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: radius*2)
+                                            .stroke(Color.primary.opacity(0.2), lineWidth: 1.5)
+                                    )
+                                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
                             } else {
-                                Image(systemName: "waveform")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .font(.system(size: 20))
-                                    .foregroundColor(.secondary)
-                                    .padding()
+                                RoundedRectangle(cornerRadius: radius*2)
+                                    .fill(Color(nsColor: .controlBackgroundColor))
+                                    .overlay(
+                                        Image(systemName: "waveform")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .font(.system(size: 20))
+                                            .foregroundColor(.secondary)
+                                            .padding(40)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: radius*2)
+                                            .stroke(Color.primary.opacity(0.2), lineWidth: 1.5)
+                                    )
                             }
                         }.frame(width: 180, height: 180)
                         VStack(alignment: .leading) {
@@ -54,10 +68,14 @@ struct ContentView: View {
                     VStack {
                         ChapterTableView(radius: radius).environment(podcastAudioFile)
                         
-                        HStack() {
+                        HStack {
                             Spacer()
-                            Text("File Size: \(podcastAudioFile.podcast.getFileSizeFormatted())").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule()).frame(minWidth:180)
-                            Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (podcastAudioFile.podcast.durationInSeconds ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
+                            InfoBadge(
+                                text: "File Size: \(podcastAudioFile.podcast.getFileSizeFormatted())"
+                            )
+                            InfoBadge(
+                                text: "Running Time: \(ID3Parser.toTrackTime(millis:UInt32((podcastAudioFile.podcast.durationInSeconds ?? 0)*1000), showHours: true))"
+                            )
                             Spacer()
                         }
                     }
@@ -92,12 +110,49 @@ struct ContentView: View {
     }
 }
 
+// MARK: - Info Badge Component
+struct InfoBadge: View {
+    let text: String
+    @Environment(\.colorScheme) var colorScheme
+    
+    var body: some View {
+        Text(text)
+            .monospaced()
+            .font(.system(size: 11))
+            .padding(EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10))
+            .background(
+                Capsule()
+                    .fill(colorScheme == .dark ? Color(white: 0.2) : Color(white: 0.9))
+            )
+            .foregroundColor(.primary)
+            .overlay(
+                Capsule()
+                    .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
+            )
+            .frame(minWidth: 180)
+    }
+}
+
 
 #Preview("Load Sample Intro") {
     struct ContentTestView: View {
         let audioModel = AudioFile()
         var body: some View {
             ContentView().environment(audioModel)
+                .task {
+                    await audioModel.loadPodcast(from: Bundle.main.url(forResource:"intro", withExtension: "mp3")!)
+                }
+        }
+    }
+    return ContentTestView()
+}
+
+#Preview("Load Sample Intro - Dark Mode") {
+    struct ContentTestView: View {
+        let audioModel = AudioFile()
+        var body: some View {
+            ContentView().environment(audioModel)
+                .preferredColorScheme(.dark)
                 .task {
                     await audioModel.loadPodcast(from: Bundle.main.url(forResource:"intro", withExtension: "mp3")!)
                 }
@@ -115,4 +170,3 @@ struct ContentView: View {
     }
     return ContentTestView()
 }
-

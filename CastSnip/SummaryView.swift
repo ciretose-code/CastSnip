@@ -21,9 +21,9 @@ struct SummaryView: View {
             
             TextEditor(text: $summary)
                 .padding(EdgeInsets(top: (radius/1), leading: 0, bottom: (radius/2), trailing: 4))
-                .background(.white)
+                .background(Color(nsColor: .textBackgroundColor))
                 .cornerRadius(radius)
-                .overlay(RoundedRectangle(cornerRadius:radius).stroke(.secondary, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius:radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
 //                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         //.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)

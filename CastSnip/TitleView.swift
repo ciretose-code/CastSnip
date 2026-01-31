@@ -21,9 +21,9 @@ struct TitleView: View {
                 .textFieldStyle(.plain)
                 .padding(EdgeInsets(top: 4, leading: (radius/2), bottom: 4, trailing: (radius/2)))
                 .textFieldStyle(.roundedBorder)
-                .background(.white)
+                .background(Color(nsColor: .textBackgroundColor))
                 .cornerRadius(radius)
-                .overlay(RoundedRectangle(cornerRadius:radius).stroke(.secondary, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius:radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
         }
     }
 }
