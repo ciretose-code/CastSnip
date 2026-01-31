@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		7B16BD212F2D6B9400DFD7E8 /* AppIcon.icon in Resources */ = {isa = PBXBuildFile; fileRef = 7B16BD202F2D6B9400DFD7E8 /* AppIcon.icon */; };
+		7B16BD242F2E853900DFD7E8 /* PlatformImage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B16BD222F2E853900DFD7E8 /* PlatformImage.swift */; };
+		7B16BD252F2E853900DFD7E8 /* WaveformView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B16BD232F2E853900DFD7E8 /* WaveformView.swift */; };
 		7B1D20B72BD36A83006D1AA4 /* CastSnipApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20B62BD36A83006D1AA4 /* CastSnipApp.swift */; };
 		7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20B82BD36A83006D1AA4 /* ContentView.swift */; };
 		7B1D20BB2BD36A85006D1AA4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */; };
@@ -40,6 +42,8 @@
 
 /* Begin PBXFileReference section */
 		7B16BD202F2D6B9400DFD7E8 /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		7B16BD222F2E853900DFD7E8 /* PlatformImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlatformImage.swift; sourceTree = "<group>"; };
+		7B16BD232F2E853900DFD7E8 /* WaveformView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformView.swift; sourceTree = "<group>"; };
 		7B1D20B32BD36A83006D1AA4 /* CastSnip.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CastSnip.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B1D20B62BD36A83006D1AA4 /* CastSnipApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CastSnipApp.swift; sourceTree = "<group>"; };
 		7B1D20B82BD36A83006D1AA4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -114,6 +118,8 @@
 				7B4015412BD4423A0060A2BF /* Samples */,
 				7B1D20B62BD36A83006D1AA4 /* CastSnipApp.swift */,
 				7B1D20B82BD36A83006D1AA4 /* ContentView.swift */,
+				7B16BD222F2E853900DFD7E8 /* PlatformImage.swift */,
+				7B16BD232F2E853900DFD7E8 /* WaveformView.swift */,
 				7B7404522BDEBB5D001811B2 /* ID3Parser.swift */,
 				7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */,
 				7B1F1CC72BEAFC0D00B0A29B /* EditableTextField.swift */,
@@ -285,6 +291,8 @@
 				7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */,
 				7B5427C02BEC519000314CDB /* Chapter.swift in Sources */,
 				7B5427C22BEC51ED00314CDB /* Podcast.swift in Sources */,
+				7B16BD242F2E853900DFD7E8 /* PlatformImage.swift in Sources */,
+				7B16BD252F2E853900DFD7E8 /* WaveformView.swift in Sources */,
 				7B1D20B72BD36A83006D1AA4 /* CastSnipApp.swift in Sources */,
 				7B1D20D12BD37282006D1AA4 /* ChapterTableView.swift in Sources */,
 				7B650FDF2BE3437400901E28 /* SummaryView.swift in Sources */,

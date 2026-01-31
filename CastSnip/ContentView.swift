@@ -70,7 +70,7 @@ struct ContentView: View {
                         }.frame(minHeight: 180, maxHeight: 180)
                     }
                     Spacer()
-                    VStack {
+                    VStack(spacing: 8) {
                         HStack() {
                             Spacer()
                             Text("File Size: \(podcastAudioFile.podcast.getFileSizeFormatted())").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule()).frame(minWidth:180)
@@ -78,6 +78,12 @@ struct ContentView: View {
                             Spacer()
                         }
                         ChapterTableView(radius: radius).environment(podcastAudioFile)
+                        
+                        // Waveform visualization
+                        WaveformView(audioFile: podcastAudioFile.podcast.file, sampleCount: 200)
+                            .background(Color(nsColor: .controlBackgroundColor))
+                            .cornerRadius(radius)
+                            .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
                     }
                 }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: insets))
             }
@@ -188,4 +194,3 @@ struct ContentView: View {
     }
     return ContentTestView()
 }
-
