@@ -71,14 +71,13 @@ struct ContentView: View {
                     }
                     Spacer()
                     VStack {
-                        ChapterTableView(radius: radius).environment(podcastAudioFile)
-                        
                         HStack() {
                             Spacer()
                             Text("File Size: \(podcastAudioFile.podcast.getFileSizeFormatted())").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule()).frame(minWidth:180)
                             Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (podcastAudioFile.podcast.durationInSeconds ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
                             Spacer()
                         }
+                        ChapterTableView(radius: radius).environment(podcastAudioFile)
                     }
                 }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: insets))
             }
