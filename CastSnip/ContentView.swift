@@ -6,13 +6,14 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(AudioFile.self) var podcastAudioFile
-    @Environment(\.colorScheme) var colorScheme
     
     @State var radius: CGFloat = 6
     @State var insets: CGFloat = 16
+    @State private var isDraggingOverCoverArt = false
     
     var body: some View {
         if podcastAudioFile.isLoading {
@@ -36,28 +37,32 @@ struct ContentView: View {
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .cornerRadius(radius*2)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: radius*2)
-                                            .stroke(Color.primary.opacity(0.2), lineWidth: 1.5)
-                                    )
-                                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                                    .overlay(RoundedRectangle(cornerRadius: radius*2).stroke(.secondary, lineWidth: 1.5))
                             } else {
-                                RoundedRectangle(cornerRadius: radius*2)
-                                    .fill(Color(nsColor: .controlBackgroundColor))
-                                    .overlay(
-                                        Image(systemName: "waveform")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .font(.system(size: 20))
-                                            .foregroundColor(.secondary)
-                                            .padding(40)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: radius*2)
-                                            .stroke(Color.primary.opacity(0.2), lineWidth: 1.5)
-                                    )
+                                Image(systemName: "waveform")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.secondary)
+                                    .padding()
                             }
-                        }.frame(width: 180, height: 180)
+                        }
+                        .frame(width: 180, height: 180)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: radius*2)
+                                .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [5]))
+                                .foregroundColor(.accentColor)
+                                .opacity(isDraggingOverCoverArt ? 0.5 : 0)
+                        )
+                        .onTapGesture {
+                            selectCoverArtImage()
+                        }
+                        #if os(macOS)
+                        .onDrop(of: [.image], isTargeted: $isDraggingOverCoverArt) { providers in
+                            handleCoverArtDrop(providers: providers)
+                        }
+                        #endif
+                        
                         VStack(alignment: .leading) {
                             TitleView(radius: radius, title: podcastAudioFile.getTitle())
                             EpisodeView(radius: radius, episode: podcastAudioFile.getEpisode())
@@ -68,14 +73,10 @@ struct ContentView: View {
                     VStack {
                         ChapterTableView(radius: radius).environment(podcastAudioFile)
                         
-                        HStack {
+                        HStack() {
                             Spacer()
-                            InfoBadge(
-                                text: "File Size: \(podcastAudioFile.podcast.getFileSizeFormatted())"
-                            )
-                            InfoBadge(
-                                text: "Running Time: \(ID3Parser.toTrackTime(millis:UInt32((podcastAudioFile.podcast.durationInSeconds ?? 0)*1000), showHours: true))"
-                            )
+                            Text("File Size: \(podcastAudioFile.podcast.getFileSizeFormatted())").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule()).frame(minWidth:180)
+                            Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (podcastAudioFile.podcast.durationInSeconds ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
                             Spacer()
                         }
                     }
@@ -108,29 +109,61 @@ struct ContentView: View {
     private func savePodcastFile() {
         
     }
-}
-
-// MARK: - Info Badge Component
-struct InfoBadge: View {
-    let text: String
-    @Environment(\.colorScheme) var colorScheme
     
-    var body: some View {
-        Text(text)
-            .monospaced()
-            .font(.system(size: 11))
-            .padding(EdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10))
-            .background(
-                Capsule()
-                    .fill(colorScheme == .dark ? Color(white: 0.2) : Color(white: 0.9))
-            )
-            .foregroundColor(.primary)
-            .overlay(
-                Capsule()
-                    .stroke(Color.primary.opacity(0.1), lineWidth: 0.5)
-            )
-            .frame(minWidth: 180)
+    // MARK: - Cover Art Management
+    
+    #if os(macOS)
+    private func handleCoverArtDrop(providers: [NSItemProvider]) -> Bool {
+        guard let provider = providers.first else { return false }
+        
+        if provider.hasItemConformingToTypeIdentifier("public.image") {
+            provider.loadItem(forTypeIdentifier: "public.image", options: nil) { item, error in
+                if let error = error {
+                    print("Error loading dropped image: \(error.localizedDescription)")
+                    return
+                }
+                
+                var nsImage: NSImage?
+                
+                if let url = item as? URL {
+                    nsImage = NSImage(contentsOf: url)
+                } else if let data = item as? Data {
+                    nsImage = NSImage(data: data)
+                } else if let image = item as? NSImage {
+                    nsImage = image
+                }
+                
+                if let image = nsImage {
+                    DispatchQueue.main.async {
+                        podcastAudioFile.podcast.logo = image
+                        print("Cover art updated via drag and drop")
+                    }
+                }
+            }
+            return true
+        }
+        
+        return false
     }
+    
+    private func selectCoverArtImage() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowedContentTypes = [.image, .png, .jpeg]
+        panel.message = "Select a cover art image"
+        
+        panel.begin { response in
+            if response == .OK, let url = panel.url {
+                if let image = NSImage(contentsOf: url) {
+                    podcastAudioFile.podcast.logo = image
+                    print("Cover art updated via file selection: \(url.lastPathComponent)")
+                }
+            }
+        }
+    }
+    #endif
 }
 
 
@@ -139,20 +172,6 @@ struct InfoBadge: View {
         let audioModel = AudioFile()
         var body: some View {
             ContentView().environment(audioModel)
-                .task {
-                    await audioModel.loadPodcast(from: Bundle.main.url(forResource:"intro", withExtension: "mp3")!)
-                }
-        }
-    }
-    return ContentTestView()
-}
-
-#Preview("Load Sample Intro - Dark Mode") {
-    struct ContentTestView: View {
-        let audioModel = AudioFile()
-        var body: some View {
-            ContentView().environment(audioModel)
-                .preferredColorScheme(.dark)
                 .task {
                     await audioModel.loadPodcast(from: Bundle.main.url(forResource:"intro", withExtension: "mp3")!)
                 }
