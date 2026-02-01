@@ -19,7 +19,13 @@ struct ContentView: View {
     
     private let viewportDuration: TimeInterval = 20
     @State private var viewportStart: TimeInterval = 0
-    
+
+    /// Set to true to snap the viewport immediately on the next `updateViewport()` call.
+    @State private var shouldSnapViewport = true
+
+    /// 0...1. Higher = faster response (less smoothing).
+    private let viewportSmoothingAlpha: Double = 0.18
+
     var body: some View {
         if podcastAudioFile.isLoading {
             VStack {
@@ -130,7 +136,8 @@ struct ContentView: View {
                                 currentTime: player.currentTime,
                                 onSeek: { time in
                                     player.seek(to: time)
-                                    // Ensure viewport snaps immediately even if player publishes time slightly later.
+                                    // Snap viewport immediately after explicit seeks.
+                                    shouldSnapViewport = true
                                     updateViewport()
                                 }
                             )
@@ -144,11 +151,13 @@ struct ContentView: View {
             .onAppear {
                 player.load(url: podcastAudioFile.podcast.url)
                 viewportStart = 0
+                shouldSnapViewport = true
                 updateViewport()
             }
             .onChange(of: podcastAudioFile.podcast.url) { _, newValue in
                 player.load(url: newValue)
                 viewportStart = 0
+                shouldSnapViewport = true
                 updateViewport()
             }
             .onChange(of: player.currentTime) { _, _ in
@@ -243,14 +252,28 @@ struct ContentView: View {
             viewportStart = 0
             return
         }
-        
+
         if duration <= viewportDuration {
             viewportStart = 0
             return
         }
-        
+
+        // Ideal viewport start to keep the playhead centered.
         let centeredStart = player.currentTime - viewportDuration / 2
-        viewportStart = max(0, min(centeredStart, duration - viewportDuration))
+        let targetStart = max(0, min(centeredStart, duration - viewportDuration))
+
+        // Snap immediately for initial load/track changes and explicit seeks.
+        if shouldSnapViewport {
+            viewportStart = targetStart
+            shouldSnapViewport = false
+            return
+        }
+
+        // Smoothly approach the target to reduce visible "stepping" during playback.
+        viewportStart = viewportStart + (targetStart - viewportStart) * viewportSmoothingAlpha
+
+        // Keep the viewport clamped even with smoothing.
+        viewportStart = max(0, min(viewportStart, duration - viewportDuration))
     }
 }
 

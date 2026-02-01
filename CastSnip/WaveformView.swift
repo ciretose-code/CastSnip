@@ -115,6 +115,23 @@ struct WaveformView: View {
     }
     #endif
 
+    private struct ViewportWindow {
+        let start: TimeInterval
+        let end: TimeInterval
+        var duration: TimeInterval { max(end - start, 0) }
+    }
+
+    private func viewportWindow() -> ViewportWindow? {
+        guard audioDuration > 0, viewportDuration > 0 else { return nil }
+
+        // Clamp requested viewport to the audio duration.
+        let start = max(0, min(viewportStart, audioDuration))
+        let end = max(start, min(start + viewportDuration, audioDuration))
+        guard end > start else { return nil }
+
+        return ViewportWindow(start: start, end: end)
+    }
+
     private func drawWaveform(context: GraphicsContext, size: CGSize) {
         let width = size.width
         let height = size.height
@@ -184,18 +201,17 @@ struct WaveformView: View {
 
     private func drawPlayhead(context: GraphicsContext, size: CGSize) {
         guard viewportDuration > 0 else { return }
+        guard let window = viewportWindow() else { return }
 
         let width = size.width
         let height = size.height
 
         let t = currentTime
-        let start = viewportStart
-        let end = viewportStart + viewportDuration
 
         // If time is out of window, don't draw (shouldn't happen if viewport follows playhead, but safe).
-        guard t >= start - 0.001, t <= end + 0.001 else { return }
+        guard t >= window.start - 0.001, t <= window.end + 0.001 else { return }
 
-        let x = CGFloat((t - start) / viewportDuration) * width
+        let x = CGFloat((t - window.start) / window.duration) * width
 
         var path = Path()
         path.move(to: CGPoint(x: x, y: 0))
@@ -209,23 +225,18 @@ struct WaveformView: View {
         let width = size.width
         let height = size.height
 
-        guard audioDuration > 0, viewportDuration > 0 else { return }
-
-        let start = max(0, viewportStart)
-        let end = min(audioDuration, viewportStart + viewportDuration)
-        let window = max(end - start, 0)
-        guard window > 0 else { return }
+        guard let window = viewportWindow() else { return }
 
         // Ticks: minor every 0.5s, major every 1s, labels every 5s.
         let minorInterval: TimeInterval = 0.5
         let majorInterval: TimeInterval = 1.0
         let labelInterval: TimeInterval = 5.0
 
-        let firstTick = ceil(start / minorInterval) * minorInterval
+        let firstTick = ceil(window.start / minorInterval) * minorInterval
         var tick = firstTick
 
-        while tick <= end + 0.0001 {
-            let x = CGFloat((tick - start) / window) * width
+        while tick <= window.end + 0.0001 {
+            let x = CGFloat((tick - window.start) / window.duration) * width
 
             // Determine tick type.
             let isMajor = abs((tick / majorInterval).rounded() - (tick / majorInterval)) < 0.0001
@@ -255,14 +266,11 @@ struct WaveformView: View {
 
     private func samplesForViewport() -> [Float] {
         guard audioDuration > 0, !samples.isEmpty, viewportDuration > 0 else { return samples }
-
-        let startTime = max(0, viewportStart)
-        let endTime = min(audioDuration, viewportStart + viewportDuration)
-        guard endTime > startTime else { return [] }
+        guard let window = viewportWindow() else { return [] }
 
         // Each stored sample corresponds to `bucketDuration` seconds.
-        let startIndex = max(0, min(samples.count - 1, Int(floor(startTime / bucketDuration))))
-        let endIndexExclusive = max(startIndex + 1, min(samples.count, Int(ceil(endTime / bucketDuration))))
+        let startIndex = max(0, min(samples.count - 1, Int(floor(window.start / bucketDuration))))
+        let endIndexExclusive = max(startIndex + 1, min(samples.count, Int(ceil(window.end / bucketDuration))))
 
         return Array(samples[startIndex..<endIndexExclusive])
     }
