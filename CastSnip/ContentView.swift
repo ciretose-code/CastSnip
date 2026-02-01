@@ -15,6 +15,11 @@ struct ContentView: View {
     @State var insets: CGFloat = 16
     @State private var isDraggingOverCoverArt = false
     
+    @StateObject private var player = AudioPlayerManager()
+    
+    private let viewportDuration: TimeInterval = 20
+    @State private var viewportStart: TimeInterval = 0
+    
     var body: some View {
         if podcastAudioFile.isLoading {
             VStack {
@@ -79,13 +84,70 @@ struct ContentView: View {
                         }
                         ChapterTableView(radius: radius).environment(podcastAudioFile)
                         
-                        // Waveform visualization
-                        WaveformView(audioFile: podcastAudioFile.podcast.file, sampleCount: 500)
+                        // Transport controls + waveform viewport
+                        VStack(spacing: 8) {
+                            HStack(spacing: 16) {
+                                Button {
+                                    player.jumpBackward(10)
+                                } label: {
+                                    Label("Back 10s", systemImage: "gobackward.10")
+                                        .labelStyle(.iconOnly)
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(player.duration <= 0)
+                                
+                                Button {
+                                    player.togglePlayPause()
+                                } label: {
+                                    Label(player.isPlaying ? "Pause" : "Play", systemImage: player.isPlaying ? "pause.fill" : "play.fill")
+                                        .labelStyle(.iconOnly)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .disabled(player.duration <= 0)
+                                
+                                Button {
+                                    player.jumpForward(10)
+                                } label: {
+                                    Label("Forward 10s", systemImage: "goforward.10")
+                                        .labelStyle(.iconOnly)
+                                }
+                                .buttonStyle(.bordered)
+                                .disabled(player.duration <= 0)
+                                
+                                Spacer()
+                                
+                                Text("\(ID3Parser.toTrackTime(millis: UInt32(player.currentTime * 1000), showHours: true)) / \(ID3Parser.toTrackTime(millis: UInt32(player.duration * 1000), showHours: true))")
+                                    .font(.caption)
+                                    .monospaced()
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            WaveformView(
+                                audioFile: podcastAudioFile.podcast.file,
+                                sampleCount: 2000,
+                                viewportStart: viewportStart,
+                                viewportDuration: viewportDuration,
+                                currentTime: player.currentTime
+                            )
                             .background(Color(nsColor: .controlBackgroundColor))
                             .cornerRadius(radius)
                             .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
+                        }
                     }
                 }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: insets))
+            }
+            .onAppear {
+                player.load(url: podcastAudioFile.podcast.url)
+                viewportStart = 0
+                updateViewport()
+            }
+            .onChange(of: podcastAudioFile.podcast.url) { _, newValue in
+                player.load(url: newValue)
+                viewportStart = 0
+                updateViewport()
+            }
+            .onChange(of: player.currentTime) { _, _ in
+                updateViewport()
             }
             .alert("Error Loading Podcast", isPresented: .constant(podcastAudioFile.errorMessage != nil)) {
                 Button("OK") {
@@ -169,6 +231,22 @@ struct ContentView: View {
         }
     }
     #endif
+    
+    private func updateViewport() {
+        let duration = player.duration
+        guard duration > 0 else {
+            viewportStart = 0
+            return
+        }
+        
+        if duration <= viewportDuration {
+            viewportStart = 0
+            return
+        }
+        
+        let centeredStart = player.currentTime - viewportDuration / 2
+        viewportStart = max(0, min(centeredStart, duration - viewportDuration))
+    }
 }
 
 

@@ -28,6 +28,8 @@
 		7B650FDD2BE33E5400901E28 /* EpisodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B650FDC2BE33E5400901E28 /* EpisodeView.swift */; };
 		7B650FDF2BE3437400901E28 /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B650FDE2BE3437400901E28 /* SummaryView.swift */; };
 		7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7404522BDEBB5D001811B2 /* ID3Parser.swift */; };
+		7BD56E9D2F2FD49F000F7D25 /* AudioPlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */; };
+		7BD56EA12F2FD582000F7D25 /* ViewportMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -66,6 +68,8 @@
 		7B650FDE2BE3437400901E28 /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		7B7404522BDEBB5D001811B2 /* ID3Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3Parser.swift; sourceTree = "<group>"; };
 		7BD163DF2F2D2B230007DD6E /* CastSnip.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = CastSnip.xctestplan; sourceTree = "<group>"; };
+		7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerManager.swift; sourceTree = "<group>"; };
+		7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewportMath.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -120,6 +124,8 @@
 				7B1D20B82BD36A83006D1AA4 /* ContentView.swift */,
 				7B16BD222F2E853900DFD7E8 /* PlatformImage.swift */,
 				7B16BD232F2E853900DFD7E8 /* WaveformView.swift */,
+				7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */,
+				7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */,
 				7B7404522BDEBB5D001811B2 /* ID3Parser.swift */,
 				7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */,
 				7B1F1CC72BEAFC0D00B0A29B /* EditableTextField.swift */,
@@ -287,6 +293,7 @@
 				7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */,
 				7B650FDD2BE33E5400901E28 /* EpisodeView.swift in Sources */,
 				7B1D20CD2BD3709A006D1AA4 /* ChapterView.swift in Sources */,
+				7BD56EA12F2FD582000F7D25 /* ViewportMath.swift in Sources */,
 				7B650FDB2BE33CC200901E28 /* TitleView.swift in Sources */,
 				7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */,
 				7B5427C02BEC519000314CDB /* Chapter.swift in Sources */,
@@ -298,6 +305,7 @@
 				7B650FDF2BE3437400901E28 /* SummaryView.swift in Sources */,
 				7B1F1CC62BE4AA4500B0A29B /* TimeView.swift in Sources */,
 				7B1F1CC82BEAFC0D00B0A29B /* EditableTextField.swift in Sources */,
+				7BD56E9D2F2FD49F000F7D25 /* AudioPlayerManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
