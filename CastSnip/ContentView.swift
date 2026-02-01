@@ -80,7 +80,7 @@ struct ContentView: View {
                         ChapterTableView(radius: radius).environment(podcastAudioFile)
                         
                         // Waveform visualization
-                        WaveformView(audioFile: podcastAudioFile.podcast.file, sampleCount: 200)
+                        WaveformView(audioFile: podcastAudioFile.podcast.file, sampleCount: 500)
                             .background(Color(nsColor: .controlBackgroundColor))
                             .cornerRadius(radius)
                             .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))

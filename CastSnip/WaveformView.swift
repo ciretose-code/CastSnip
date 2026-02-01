@@ -16,7 +16,7 @@ struct WaveformView: View {
     @State private var isLoading = true
     @State private var audioDuration: TimeInterval = 0
     
-    init(audioFile: AVAudioFile?, sampleCount: Int = 200) {
+    init(audioFile: AVAudioFile?, sampleCount: Int = 500) {
         self.audioFile = audioFile
         self.sampleCount = sampleCount
     }
@@ -57,6 +57,7 @@ struct WaveformView: View {
         let height = size.height
         let midHeight = height / 2
         let barWidth = width / CGFloat(samples.count)
+        let barSpacing: CGFloat = 0.5 // Minimal spacing for skinnier bars
         
         for (index, sample) in samples.enumerated() {
             let x = CGFloat(index) * barWidth
@@ -65,12 +66,12 @@ struct WaveformView: View {
             let rect = CGRect(
                 x: x,
                 y: midHeight - barHeight / 2,
-                width: max(barWidth - 1, 1),
+                width: max(barWidth - barSpacing, 1),
                 height: max(barHeight, 1)
             )
             
             context.fill(
-                Path(roundedRect: rect, cornerRadius: 1),
+                Path(roundedRect: rect, cornerRadius: 0.5),
                 with: .color(.accentColor)
             )
         }
