@@ -12,7 +12,7 @@ import Accelerate
 struct WaveformView: View {
     let audioFile: AVAudioFile?
 
-    /// Total samples computed for the full file (downsampled).
+    /// Deprecated: retained for API compatibility; actual resolution is controlled by `bucketDuration`.
     let sampleCount: Int
 
     /// Viewport start time (seconds from start of audio).
@@ -24,6 +24,15 @@ struct WaveformView: View {
     /// Current playback time (seconds from start of audio).
     let currentTime: TimeInterval
 
+    /// Called when the user clicks/taps the waveform to seek.
+    let onSeek: (TimeInterval) -> Void
+
+    /// Each bar represents this many seconds of audio.
+    private let bucketDuration: TimeInterval = 0.1
+
+    /// Safety cap to avoid huge allocations for multi-hour files.
+    private let maxBucketCount: Int = 200_000 // 0.1s * 200k = ~5.5 hours
+
     @State private var samples: [Float] = []
     @State private var isLoading = true
     @State private var audioDuration: TimeInterval = 0
@@ -33,20 +42,22 @@ struct WaveformView: View {
         sampleCount: Int = 2000,
         viewportStart: TimeInterval,
         viewportDuration: TimeInterval,
-        currentTime: TimeInterval
+        currentTime: TimeInterval,
+        onSeek: @escaping (TimeInterval) -> Void = { _ in }
     ) {
         self.audioFile = audioFile
         self.sampleCount = sampleCount
         self.viewportStart = viewportStart
         self.viewportDuration = viewportDuration
         self.currentTime = currentTime
+        self.onSeek = onSeek
     }
 
     var body: some View {
-        GeometryReader { _ in
+        GeometryReader { geo in
             ZStack {
                 if isLoading {
-                    ProgressView("Analyzing audio...")
+                    ProgressView("Building Audio Waveform...")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if samples.isEmpty {
                     Text("No audio data")
@@ -59,9 +70,18 @@ struct WaveformView: View {
                             drawPlayhead(context: context, size: size)
                         }
                         .frame(height: 80)
+                        #if os(macOS)
+                        .contentShape(Rectangle())
+                        .onTapGesture { location in
+                            handleSeekTap(location: location, in: geo.size)
+                        }
+                        #else
+                        .contentShape(Rectangle())
+                        .onTapGesture { /* location not available */ }
+                        #endif
 
                         Canvas { context, size in
-                            drawViewportTimestamps(context: context, size: size)
+                          drawViewportTimestamps(context: context, size: size)
                         }
                         .frame(height: 20)
                     }
@@ -74,18 +94,44 @@ struct WaveformView: View {
         }
     }
 
+    #if os(macOS)
+    private func handleSeekTap(location: CGPoint, in totalSize: CGSize) {
+        guard viewportDuration > 0, totalSize.width > 0 else { return }
+
+        // Only the waveform canvas (80pt tall) should be interactive.
+        guard location.y >= 0, location.y <= 80 else { return }
+
+        let progress = min(max(location.x / totalSize.width, 0), 1)
+        var target = viewportStart + (progress * viewportDuration)
+
+        // Clamp using the best duration we have locally.
+        if audioDuration > 0 {
+            target = min(max(target, 0), audioDuration)
+        } else {
+            target = max(target, 0)
+        }
+
+        onSeek(target)
+    }
+    #endif
+
     private func drawWaveform(context: GraphicsContext, size: CGSize) {
         let width = size.width
         let height = size.height
         let midHeight = height / 2
 
-        let visibleSamples = samplesForViewport()
-        guard !visibleSamples.isEmpty else { return }
+        let visibleBuckets = samplesForViewport()
+        guard !visibleBuckets.isEmpty else { return }
 
-        let barWidth = width / CGFloat(visibleSamples.count)
+        // For a fixed ~20s viewport and 0.1s buckets, visibleBuckets is ~200.
+        // Still, protect ourselves if viewportDuration changes in the future.
+        let targetBarCount = max(1, Int(floor(width)))
+        let bars = downsampleBucketsToBars(buckets: visibleBuckets, maxBars: targetBarCount)
+
+        let barWidth = width / CGFloat(bars.count)
         let barSpacing: CGFloat = 0.5
 
-        for (index, sample) in visibleSamples.enumerated() {
+        for (index, sample) in bars.enumerated() {
             let x = CGFloat(index) * barWidth
             let barHeight = CGFloat(sample) * midHeight * 0.9
 
@@ -96,8 +142,11 @@ struct WaveformView: View {
                 height: max(barHeight, 1)
             )
 
+            // Make bars rounded at top + bottom (capsule-like).
+            let radius = min(rect.width, rect.height) / 2
+
             context.fill(
-                Path(roundedRect: rect, cornerRadius: 0.5),
+                Path(roundedRect: rect, cornerRadius: radius),
                 with: .color(.accentColor)
             )
         }
@@ -111,6 +160,26 @@ struct WaveformView: View {
             with: .color(.secondary.opacity(0.3)),
             lineWidth: 0.5
         )
+    }
+
+    /// If we have more buckets than we can reasonably draw, aggregate buckets into N bars.
+    /// Uses max amplitude per bar so peaks remain visible.
+    private func downsampleBucketsToBars(buckets: [Float], maxBars: Int) -> [Float] {
+        guard buckets.count > maxBars, maxBars > 0 else { return buckets }
+
+        let stride = Double(buckets.count) / Double(maxBars)
+        var result: [Float] = []
+        result.reserveCapacity(maxBars)
+
+        for i in 0..<maxBars {
+            let start = Int(floor(Double(i) * stride))
+            let end = Int(floor(Double(i + 1) * stride))
+            if start >= buckets.count { break }
+            let safeEnd = max(start + 1, min(end, buckets.count))
+            result.append(buckets[start..<safeEnd].max() ?? 0)
+        }
+
+        return result
     }
 
     private func drawPlayhead(context: GraphicsContext, size: CGSize) {
@@ -147,56 +216,53 @@ struct WaveformView: View {
         let window = max(end - start, 0)
         guard window > 0 else { return }
 
-        // For a ~20s viewport, 5s ticks is a good default.
-        let rawInterval: TimeInterval
-        if window <= 10 {
-            rawInterval = 1
-        } else if window <= 30 {
-            rawInterval = 5
-        } else if window <= 60 {
-            rawInterval = 10
-        } else {
-            rawInterval = 30
-        }
+        // Ticks: minor every 0.5s, major every 1s, labels every 5s.
+        let minorInterval: TimeInterval = 0.5
+        let majorInterval: TimeInterval = 1.0
+        let labelInterval: TimeInterval = 5.0
 
-        let firstTick = ceil(start / rawInterval) * rawInterval
+        let firstTick = ceil(start / minorInterval) * minorInterval
         var tick = firstTick
 
         while tick <= end + 0.0001 {
             let x = CGFloat((tick - start) / window) * width
 
+            // Determine tick type.
+            let isMajor = abs((tick / majorInterval).rounded() - (tick / majorInterval)) < 0.0001
+            let isLabel = abs((tick / labelInterval).rounded() - (tick / labelInterval)) < 0.0001
+
+            let tickHeight: CGFloat = isMajor ? 6 : 3
+
             var tickPath = Path()
             tickPath.move(to: CGPoint(x: x, y: 0))
-            tickPath.addLine(to: CGPoint(x: x, y: 5))
-
+            tickPath.addLine(to: CGPoint(x: x, y: tickHeight))
             context.stroke(tickPath, with: .color(.secondary), lineWidth: 1)
 
-            let timeString = formatTimestamp(tick)
-            context.draw(
-                Text(timeString)
-                    .font(.system(size: 9))
-                    .foregroundColor(.secondary),
-                at: CGPoint(x: x, y: height - 5),
-                anchor: .bottom
-            )
+            if isLabel {
+                let timeString = formatTimestamp(tick)
+                context.draw(
+                    Text(timeString)
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary),
+                    at: CGPoint(x: x, y: height - 5),
+                    anchor: .bottom
+                )
+            }
 
-            tick += rawInterval
+            tick += minorInterval
         }
     }
 
     private func samplesForViewport() -> [Float] {
         guard audioDuration > 0, !samples.isEmpty, viewportDuration > 0 else { return samples }
 
-        // Map viewport [start, end] into sample indices.
         let startTime = max(0, viewportStart)
         let endTime = min(audioDuration, viewportStart + viewportDuration)
         guard endTime > startTime else { return [] }
 
-        let startRatio = startTime / audioDuration
-        let endRatio = endTime / audioDuration
-
-        let startIndex = max(0, min(samples.count - 1, Int(floor(startRatio * Double(samples.count)))))
-        let endIndexExclusive = max(startIndex + 1, min(samples.count, Int(ceil(endRatio * Double(samples.count)))))
+        // Each stored sample corresponds to `bucketDuration` seconds.
+        let startIndex = max(0, min(samples.count - 1, Int(floor(startTime / bucketDuration))))
+        let endIndexExclusive = max(startIndex + 1, min(samples.count, Int(ceil(endTime / bucketDuration))))
 
         return Array(samples[startIndex..<endIndexExclusive])
     }
@@ -219,12 +285,16 @@ struct WaveformView: View {
             return
         }
 
-        // Calculate audio duration
         let duration = Double(audioFile.length) / audioFile.processingFormat.sampleRate
 
-        // Perform heavy computation off main thread
+        // Target count based on fixed 0.1s buckets.
+        let targetBucketCount = min(maxBucketCount, max(1, Int(ceil(duration / bucketDuration))))
+
+        // Perform heavy computation off main thread.
+        // Capture the file in the closure to avoid any accidental actor-isolated access.
+        let file = audioFile
         let extractedSamples = await Task.detached(priority: .userInitiated) {
-            extractAudioSamples(from: audioFile, targetSampleCount: sampleCount)
+            extractAudioSamples(from: file, targetSampleCount: targetBucketCount)
         }.value
 
         await MainActor.run {
@@ -236,7 +306,7 @@ struct WaveformView: View {
 }
 
 // MARK: - Audio Processing Helper
-fileprivate func extractAudioSamples(from audioFile: AVAudioFile, targetSampleCount: Int) -> [Float] {
+nonisolated fileprivate func extractAudioSamples(from audioFile: AVAudioFile, targetSampleCount: Int) -> [Float] {
     let totalFrames = AVAudioFrameCount(audioFile.length)
 
     guard totalFrames > 0 else { return [] }

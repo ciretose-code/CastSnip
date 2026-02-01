@@ -127,7 +127,12 @@ struct ContentView: View {
                                 sampleCount: 2000,
                                 viewportStart: viewportStart,
                                 viewportDuration: viewportDuration,
-                                currentTime: player.currentTime
+                                currentTime: player.currentTime,
+                                onSeek: { time in
+                                    player.seek(to: time)
+                                    // Ensure viewport snaps immediately even if player publishes time slightly later.
+                                    updateViewport()
+                                }
                             )
                             .background(Color(nsColor: .controlBackgroundColor))
                             .cornerRadius(radius)
