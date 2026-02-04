@@ -99,14 +99,17 @@ struct WaveformView: View {
                             drawPlayhead(context: context, size: size)
                         }
                         .frame(height: 80)
-                        #if os(macOS)
                         .contentShape(Rectangle())
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    handleSeekDrag(location: value.location, in: geo.size)
+                                }
+                        )
+                        #if os(macOS)
                         .onTapGesture { location in
                             handleSeekTap(location: location, in: geo.size)
                         }
-                        #else
-                        .contentShape(Rectangle())
-                        .onTapGesture { /* location not available */ }
                         #endif
 
                         Canvas { context, size in
@@ -125,10 +128,21 @@ struct WaveformView: View {
 
     #if os(macOS)
     private func handleSeekTap(location: CGPoint, in totalSize: CGSize) {
-        guard viewportDuration > 0, totalSize.width > 0 else { return }
+        guard let target = targetSeekTime(for: location, in: totalSize) else { return }
+        onSeek(target)
+    }
+    #endif
+
+    private func handleSeekDrag(location: CGPoint, in totalSize: CGSize) {
+        guard let target = targetSeekTime(for: location, in: totalSize) else { return }
+        onSeek(target)
+    }
+
+    private func targetSeekTime(for location: CGPoint, in totalSize: CGSize) -> TimeInterval? {
+        guard viewportDuration > 0, totalSize.width > 0 else { return nil }
 
         // Only the waveform canvas (80pt tall) should be interactive.
-        guard location.y >= 0, location.y <= 80 else { return }
+        guard location.y >= 0, location.y <= 80 else { return nil }
 
         let progress = min(max(location.x / totalSize.width, 0), 1)
         var target = viewportStart + (progress * viewportDuration)
@@ -140,9 +154,8 @@ struct WaveformView: View {
             target = max(target, 0)
         }
 
-        onSeek(target)
+        return target
     }
-    #endif
 
     private struct ViewportWindow {
         let start: TimeInterval
