@@ -23,6 +23,8 @@ struct ContentView: View {
     @State private var viewportOptions: [TimeInterval] = []
     @State private var selectedViewportIndex: Int = 0
 
+    private let viewportStepLabels: [String] = ["30s", "1m", "2m", "5m", "10m", "Full"]
+
     /// Set to true to snap the viewport immediately on the next `updateViewport()` call.
     @State private var shouldSnapViewport = true
 
@@ -101,42 +103,6 @@ struct ContentView: View {
                         
                         // Transport controls + waveform viewport
                         VStack(spacing: 8) {
-                            HStack(spacing: 16) {
-                                Button {
-                                    player.jumpBackward(10)
-                                } label: {
-                                    Label("Back 10s", systemImage: "gobackward.10")
-                                        .labelStyle(.iconOnly)
-                                }
-                                .buttonStyle(.bordered)
-                                .disabled(player.duration <= 0)
-                                
-                                Button {
-                                    player.togglePlayPause()
-                                } label: {
-                                    Label(player.isPlaying ? "Pause" : "Play", systemImage: player.isPlaying ? "pause.fill" : "play.fill")
-                                        .labelStyle(.iconOnly)
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .disabled(player.duration <= 0)
-                                
-                                Button {
-                                    player.jumpForward(10)
-                                } label: {
-                                    Label("Forward 10s", systemImage: "goforward.10")
-                                        .labelStyle(.iconOnly)
-                                }
-                                .buttonStyle(.bordered)
-                                .disabled(player.duration <= 0)
-                                
-                                Spacer()
-                                
-                                Text("\(ID3Parser.toTrackTime(millis: UInt32(player.currentTime * 1000), showHours: true)) / \(ID3Parser.toTrackTime(millis: UInt32(player.duration * 1000), showHours: true))")
-                                    .font(.caption)
-                                    .monospaced()
-                                    .foregroundStyle(.secondary)
-                            }
-                            
                             let sortedChapters = podcastAudioFile.podcast.chapters.sorted()
                             let nonZeroChapters = sortedChapters.filter { $0.startTime > 0 }
                             let chapterMarkers: [WaveformView.Marker] = nonZeroChapters.enumerated().map { index, chapter in
@@ -167,18 +133,72 @@ struct ContentView: View {
                             .cornerRadius(radius)
                             .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
 
-                            HStack(spacing: 12) {
-                                Text("Window")
+                            HStack(alignment: .center, spacing: 12) {
+                                
+                                Text("\(ID3Parser.toTrackTime(millis: UInt32(player.currentTime * 1000), showHours: true)) / \(ID3Parser.toTrackTime(millis: UInt32(player.duration * 1000), showHours: true))")
                                     .font(.caption)
+                                    .monospaced()
                                     .foregroundStyle(.secondary)
 
-                                Stepper(value: $selectedViewportIndex, in: 0...max(viewportOptions.count - 1, 0)) {
-                                    Text(viewportLabel(for: viewportDuration))
+                                Spacer()
+
+                                HStack(spacing: 16) {
+                                    Button {
+                                        player.jumpBackward(10)
+                                    } label: {
+                                        Label("Back 10s", systemImage: "gobackward.10")
+                                            .labelStyle(.iconOnly)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .disabled(player.duration <= 0)
+
+                                    Button {
+                                        player.togglePlayPause()
+                                    } label: {
+                                        Label(player.isPlaying ? "Pause" : "Play", systemImage: player.isPlaying ? "pause.fill" : "play.fill")
+                                            .labelStyle(.iconOnly)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .disabled(player.duration <= 0)
+
+                                    Button {
+                                        player.jumpForward(10)
+                                    } label: {
+                                        Label("Forward 10s", systemImage: "goforward.10")
+                                            .labelStyle(.iconOnly)
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .disabled(player.duration <= 0)
+                                }
+
+                                Spacer()
+
+                                HStack(spacing: 8) {
+
+                                    Text(viewportStepLabels[safe: selectedViewportIndex] ?? "Full")
                                         .font(.caption)
                                         .monospaced()
                                         .foregroundStyle(.secondary)
+
+                                    if viewportOptions.count > 1 {
+                                        Slider(
+                                            value: Binding(
+                                                get: { Double(selectedViewportIndex) },
+                                                set: { newValue in
+                                                    selectedViewportIndex = Int(newValue.rounded())
+                                                }
+                                            ),
+                                            in: 0...Double(viewportOptions.count - 1),
+                                            step: 1
+                                        )
+                                        .frame(width: 140)
+                                    } else {
+                                        Slider(value: .constant(0), in: 0...1)
+                                            .frame(width: 140)
+                                            .disabled(true)
+                                    }
+
                                 }
-                                .disabled(viewportOptions.count <= 1)
                             }
                         }
                     }
@@ -297,17 +317,16 @@ struct ContentView: View {
     
     private func refreshViewportOptions() {
         let duration = player.duration
-        let base: [TimeInterval] = [30, 60, 120, 300, 600]
         let maxViewport = max(minViewportDuration, duration)
 
-        var options = base.filter { $0 <= maxViewport }
-        if options.isEmpty {
-            options = [maxViewport]
-        } else if options.last != maxViewport {
-            options.append(maxViewport)
-        }
-
-        viewportOptions = options
+        viewportOptions = [
+            minViewportDuration,
+            60,
+            120,
+            300,
+            600,
+            maxViewport
+        ]
 
         // Re-select the closest option to the current duration.
         if let closestIndex = viewportOptions.enumerated().min(by: { abs($0.element - viewportDuration) < abs($1.element - viewportDuration) })?.offset {
@@ -323,7 +342,10 @@ struct ContentView: View {
         guard !viewportOptions.isEmpty else { return }
         let clampedIndex = min(max(selectedViewportIndex, 0), viewportOptions.count - 1)
         selectedViewportIndex = clampedIndex
-        viewportDuration = viewportOptions[clampedIndex]
+
+        let maxViewport = max(minViewportDuration, player.duration)
+        viewportDuration = min(viewportOptions[clampedIndex], maxViewport)
+
         shouldSnapViewport = true
         updateViewport()
     }
@@ -405,4 +427,10 @@ struct ContentView: View {
         }
     }
     return ContentTestView()
+}
+
+private extension Array {
+    subscript(safe index: Index) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
 }
