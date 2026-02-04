@@ -12,6 +12,9 @@ struct ChapterTableView: View {
     @State var selectedRow: Chapter?
     var radius: CGFloat
 
+    /// Called when a chapter row is selected.
+    var onSelect: ((Chapter) -> Void)? = nil
+
     var body: some View {
         HStack(alignment: .top) {
             VStack {
@@ -21,6 +24,9 @@ struct ChapterTableView: View {
                 }
                 .onChange(of: selectedRow) {
                     rowChanged(selectedRow)
+                    if let selectedRow {
+                        onSelect?(selectedRow)
+                    }
                 }
                 .refreshable {
                     addChapter()
@@ -129,4 +135,3 @@ struct ChapterTableView: View {
     }
     return ChapterTableViewTest().padding()
 }
-

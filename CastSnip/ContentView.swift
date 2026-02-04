@@ -17,8 +17,11 @@ struct ContentView: View {
     
     @StateObject private var player = AudioPlayerManager()
     
-    private let viewportDuration: TimeInterval = 20
+    private let minViewportDuration: TimeInterval = 30
+    @State private var viewportDuration: TimeInterval = 30
     @State private var viewportStart: TimeInterval = 0
+    @State private var viewportOptions: [TimeInterval] = []
+    @State private var selectedViewportIndex: Int = 0
 
     /// Set to true to snap the viewport immediately on the next `updateViewport()` call.
     @State private var shouldSnapViewport = true
@@ -88,7 +91,13 @@ struct ContentView: View {
                             Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (podcastAudioFile.podcast.durationInSeconds ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
                             Spacer()
                         }
-                        ChapterTableView(radius: radius).environment(podcastAudioFile)
+                        ChapterTableView(radius: radius, onSelect: { chapter in
+                            let time = TimeInterval(chapter.startTime) / 1000.0
+                            player.seek(to: time)
+                            shouldSnapViewport = true
+                            updateViewport()
+                        })
+                        .environment(podcastAudioFile)
                         
                         // Transport controls + waveform viewport
                         VStack(spacing: 8) {
@@ -128,12 +137,25 @@ struct ContentView: View {
                                     .foregroundStyle(.secondary)
                             }
                             
+                            let sortedChapters = podcastAudioFile.podcast.chapters.sorted()
+                            let nonZeroChapters = sortedChapters.filter { $0.startTime > 0 }
+                            let chapterMarkers: [WaveformView.Marker] = nonZeroChapters.enumerated().map { index, chapter in
+                                WaveformView.Marker(
+                                    id: chapter.id,
+                                    time: TimeInterval(chapter.startTime) / 1000.0,
+                                    color: .red,
+                                    lineWidth: 2,
+                                    label: "Chapter \(index + 1)"
+                                )
+                            }
+
                             WaveformView(
                                 audioFile: podcastAudioFile.podcast.file,
                                 sampleCount: 2000,
                                 viewportStart: viewportStart,
                                 viewportDuration: viewportDuration,
                                 currentTime: player.currentTime,
+                                markers: chapterMarkers,
                                 onSeek: { time in
                                     player.seek(to: time)
                                     // Snap viewport immediately after explicit seeks.
@@ -144,6 +166,20 @@ struct ContentView: View {
                             .background(Color(nsColor: .controlBackgroundColor))
                             .cornerRadius(radius)
                             .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
+
+                            HStack(spacing: 12) {
+                                Text("Window")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+
+                                Stepper(value: $selectedViewportIndex, in: 0...max(viewportOptions.count - 1, 0)) {
+                                    Text(viewportLabel(for: viewportDuration))
+                                        .font(.caption)
+                                        .monospaced()
+                                        .foregroundStyle(.secondary)
+                                }
+                                .disabled(viewportOptions.count <= 1)
+                            }
                         }
                     }
                 }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: insets))
@@ -152,13 +188,26 @@ struct ContentView: View {
                 player.load(url: podcastAudioFile.podcast.url)
                 viewportStart = 0
                 shouldSnapViewport = true
+                refreshViewportOptions()
+                clampViewportDuration()
                 updateViewport()
             }
             .onChange(of: podcastAudioFile.podcast.url) { _, newValue in
                 player.load(url: newValue)
                 viewportStart = 0
                 shouldSnapViewport = true
+                refreshViewportOptions()
+                clampViewportDuration()
                 updateViewport()
+            }
+            .onChange(of: player.duration) { _, _ in
+                refreshViewportOptions()
+                clampViewportDuration()
+                shouldSnapViewport = true
+                updateViewport()
+            }
+            .onChange(of: selectedViewportIndex) { _, _ in
+                applySelectedViewport()
             }
             .onChange(of: player.currentTime) { _, _ in
                 updateViewport()
@@ -246,6 +295,63 @@ struct ContentView: View {
     }
     #endif
     
+    private func refreshViewportOptions() {
+        let duration = player.duration
+        let base: [TimeInterval] = [30, 60, 120, 300, 600]
+        let maxViewport = max(minViewportDuration, duration)
+
+        var options = base.filter { $0 <= maxViewport }
+        if options.isEmpty {
+            options = [maxViewport]
+        } else if options.last != maxViewport {
+            options.append(maxViewport)
+        }
+
+        viewportOptions = options
+
+        // Re-select the closest option to the current duration.
+        if let closestIndex = viewportOptions.enumerated().min(by: { abs($0.element - viewportDuration) < abs($1.element - viewportDuration) })?.offset {
+            selectedViewportIndex = closestIndex
+        } else {
+            selectedViewportIndex = 0
+        }
+
+        applySelectedViewport()
+    }
+
+    private func applySelectedViewport() {
+        guard !viewportOptions.isEmpty else { return }
+        let clampedIndex = min(max(selectedViewportIndex, 0), viewportOptions.count - 1)
+        selectedViewportIndex = clampedIndex
+        viewportDuration = viewportOptions[clampedIndex]
+        shouldSnapViewport = true
+        updateViewport()
+    }
+
+    private func viewportLabel(for duration: TimeInterval) -> String {
+        let maxViewport = max(minViewportDuration, player.duration)
+        if abs(duration - maxViewport) < 0.5 {
+            return "Full"
+        }
+        if duration >= 60 {
+            let minutes = Int(duration / 60)
+            return "\(minutes)m"
+        }
+        return "\(Int(duration))s"
+    }
+
+    private func clampViewportDuration() {
+        let duration = player.duration
+        if duration <= 0 {
+            viewportDuration = minViewportDuration
+            return
+        }
+
+        let maxViewport = max(minViewportDuration, duration)
+        let effectiveMinViewport = min(minViewportDuration, maxViewport)
+        viewportDuration = min(max(viewportDuration, effectiveMinViewport), maxViewport)
+    }
+
     private func updateViewport() {
         let duration = player.duration
         guard duration > 0 else {

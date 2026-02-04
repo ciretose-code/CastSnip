@@ -37,12 +37,39 @@ struct WaveformView: View {
     @State private var isLoading = true
     @State private var audioDuration: TimeInterval = 0
 
+    /// Optional markers to draw as vertical bars over the waveform.
+    /// Times are seconds from start of audio.
+    let markers: [Marker]
+
+    struct Marker: Identifiable, Hashable {
+        let id: UUID
+        let time: TimeInterval
+        let color: Color
+        let lineWidth: CGFloat
+        let label: String?
+
+        init(
+            id: UUID = UUID(),
+            time: TimeInterval,
+            color: Color = .red,
+            lineWidth: CGFloat = 2,
+            label: String? = nil
+        ) {
+            self.id = id
+            self.time = time
+            self.color = color
+            self.lineWidth = lineWidth
+            self.label = label
+        }
+    }
+
     init(
         audioFile: AVAudioFile?,
         sampleCount: Int = 2000,
         viewportStart: TimeInterval,
         viewportDuration: TimeInterval,
         currentTime: TimeInterval,
+        markers: [Marker] = [],
         onSeek: @escaping (TimeInterval) -> Void = { _ in }
     ) {
         self.audioFile = audioFile
@@ -50,6 +77,7 @@ struct WaveformView: View {
         self.viewportStart = viewportStart
         self.viewportDuration = viewportDuration
         self.currentTime = currentTime
+        self.markers = markers
         self.onSeek = onSeek
     }
 
@@ -67,6 +95,7 @@ struct WaveformView: View {
                     VStack(spacing: 0) {
                         Canvas { context, size in
                             drawWaveform(context: context, size: size)
+                            drawMarkers(context: context, size: size)
                             drawPlayhead(context: context, size: size)
                         }
                         .frame(height: 80)
@@ -227,12 +256,12 @@ struct WaveformView: View {
 
         guard let window = viewportWindow() else { return }
 
-        // Ticks: minor every 0.5s, major every 1s, labels every 5s.
-        let minorInterval: TimeInterval = 0.5
-        let majorInterval: TimeInterval = 1.0
-        let labelInterval: TimeInterval = 5.0
+        let intervals = viewportTickIntervals()
+        let halfTickInterval = intervals.half
+        let majorInterval = intervals.major
+        let labelInterval = intervals.label
 
-        let firstTick = ceil(window.start / minorInterval) * minorInterval
+        let firstTick = ceil(window.start / halfTickInterval) * halfTickInterval
         var tick = firstTick
 
         while tick <= window.end + 0.0001 {
@@ -240,8 +269,6 @@ struct WaveformView: View {
 
             // Determine tick type.
             let isMajor = abs((tick / majorInterval).rounded() - (tick / majorInterval)) < 0.0001
-            let isLabel = abs((tick / labelInterval).rounded() - (tick / labelInterval)) < 0.0001
-
             let tickHeight: CGFloat = isMajor ? 6 : 3
 
             var tickPath = Path()
@@ -249,18 +276,81 @@ struct WaveformView: View {
             tickPath.addLine(to: CGPoint(x: x, y: tickHeight))
             context.stroke(tickPath, with: .color(.secondary), lineWidth: 1)
 
+            let isLabel = abs((tick / labelInterval).rounded() - (tick / labelInterval)) < 0.0001
             if isLabel {
                 let timeString = formatTimestamp(tick)
                 context.draw(
                     Text(timeString)
                         .font(.system(size: 9))
                         .foregroundColor(.secondary),
-                    at: CGPoint(x: x, y: height - 5),
+                    at: CGPoint(x: x, y: height - 1),
                     anchor: .bottom
                 )
             }
 
-            tick += minorInterval
+            tick += halfTickInterval
+        }
+    }
+
+    private func viewportTickIntervals() -> (half: TimeInterval, major: TimeInterval, label: TimeInterval) {
+        // Match the active viewport window size to the requested cadence.
+        // Prefer "full" when the viewport spans the whole audio duration.
+        if audioDuration > 0, abs(viewportDuration - audioDuration) < 0.5 {
+            return (half: 15, major: 30, label: 120)
+        }
+
+        if viewportDuration <= 30.5 {
+            return (half: 0.25, major: 0.5, label: 5)
+        }
+        if viewportDuration <= 60.5 {
+            return (half: 0.5, major: 1, label: 10)
+        }
+        if viewportDuration <= 120.5 {
+            return (half: 1, major: 2, label: 15)
+        }
+        if viewportDuration <= 300.5 {
+            return (half: 3, major: 6, label: 30)
+        }
+        if viewportDuration <= 600.5 {
+            return (half: 5, major: 10, label: 60)
+        }
+
+        // Fallback for longer windows (treat as full-width style).
+        return (half: 15, major: 30, label: 120)
+    }
+
+    private func drawMarkers(context: GraphicsContext, size: CGSize) {
+        guard let window = viewportWindow() else { return }
+        guard window.duration > 0 else { return }
+        guard !markers.isEmpty else { return }
+
+        let width = size.width
+        let height = size.height
+
+        for marker in markers {
+            guard marker.time >= window.start - 0.0001, marker.time <= window.end + 0.0001 else { continue }
+
+            let x = CGFloat((marker.time - window.start) / window.duration) * width
+            var path = Path()
+            path.move(to: CGPoint(x: x, y: 0))
+            path.addLine(to: CGPoint(x: x, y: height))
+
+            context.stroke(path, with: .color(marker.color), lineWidth: marker.lineWidth)
+
+            if let label = marker.label, !label.isEmpty {
+                // Draw the label above the waveform line, slightly to the right.
+                // Keep it inside bounds.
+                let padding: CGFloat = 4
+                let labelX = min(x + padding, width - padding)
+
+                context.draw(
+                    Text(label)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(marker.color),
+                    at: CGPoint(x: labelX, y: 2),
+                    anchor: .topLeading
+                )
+            }
         }
     }
 
@@ -296,7 +386,7 @@ struct WaveformView: View {
         let duration = Double(audioFile.length) / audioFile.processingFormat.sampleRate
 
         // Target count based on fixed 0.1s buckets.
-        let targetBucketCount = min(maxBucketCount, max(1, Int(ceil(duration / bucketDuration))))
+        let targetBucketCount: Int = min(maxBucketCount, max(1, Int(ceil(duration / bucketDuration))))
 
         // Perform heavy computation off main thread.
         // Capture the file in the closure to avoid any accidental actor-isolated access.
