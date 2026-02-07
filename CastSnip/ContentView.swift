@@ -17,13 +17,14 @@ struct ContentView: View {
     
     @StateObject private var player = AudioPlayerManager()
     
-    private let minViewportDuration: TimeInterval = 30
-    @State private var viewportDuration: TimeInterval = 30
+    private let minViewportDuration: TimeInterval = 10
+    @State private var viewportDuration: TimeInterval = 10
     @State private var viewportStart: TimeInterval = 0
     @State private var viewportOptions: [TimeInterval] = []
     @State private var selectedViewportIndex: Int = 0
+    @State private var suppressViewportUpdateAfterWaveformSeek = false
 
-    private let viewportStepLabels: [String] = ["30s", "1m", "2m", "5m", "10m", "Full"]
+    private let viewportStepLabels: [String] = ["10s", "30s", "1m", "2m", "5m", "10m", "Full"]
 
     /// Set to true to snap the viewport immediately on the next `updateViewport()` call.
     @State private var shouldSnapViewport = true
@@ -124,9 +125,9 @@ struct ContentView: View {
                                 markers: chapterMarkers,
                                 onSeek: { time in
                                     player.seek(to: time)
-                                    // Snap viewport immediately after explicit seeks.
-                                    shouldSnapViewport = true
-                                    updateViewport()
+                                    // Keep the current viewport fixed for this seek.
+                                    suppressViewportUpdateAfterWaveformSeek = true
+                                    shouldSnapViewport = false
                                 }
                             )
                             .background(Color(nsColor: .controlBackgroundColor))
@@ -175,7 +176,11 @@ struct ContentView: View {
 
                                 HStack(spacing: 8) {
 
-                                    Text(viewportStepLabels[safe: selectedViewportIndex] ?? "Full")
+                                    Text(
+                                        viewportOptions[safe: selectedViewportIndex]
+                                            .map(viewportLabel)
+                                        ?? "Full"
+                                    )
                                         .font(.caption)
                                         .monospaced()
                                         .foregroundStyle(.secondary)
@@ -317,16 +322,30 @@ struct ContentView: View {
     
     private func refreshViewportOptions() {
         let duration = player.duration
-        let maxViewport = max(minViewportDuration, duration)
+        guard duration > 0 else {
+            viewportOptions = []
+            selectedViewportIndex = 0
+            return
+        }
 
-        viewportOptions = [
+        var options: [TimeInterval] = []
+        let baseOptions: [TimeInterval] = [
             minViewportDuration,
+            30,
             60,
             120,
             300,
             600,
-            maxViewport
+            duration
         ]
+
+        for option in baseOptions where option <= duration + 0.0001 {
+            if !options.contains(option) {
+                options.append(option)
+            }
+        }
+
+        viewportOptions = options
 
         // Re-select the closest option to the current duration.
         if let closestIndex = viewportOptions.enumerated().min(by: { abs($0.element - viewportDuration) < abs($1.element - viewportDuration) })?.offset {
@@ -343,7 +362,7 @@ struct ContentView: View {
         let clampedIndex = min(max(selectedViewportIndex, 0), viewportOptions.count - 1)
         selectedViewportIndex = clampedIndex
 
-        let maxViewport = max(minViewportDuration, player.duration)
+        let maxViewport = player.duration
         viewportDuration = min(viewportOptions[clampedIndex], maxViewport)
 
         shouldSnapViewport = true
@@ -351,8 +370,8 @@ struct ContentView: View {
     }
 
     private func viewportLabel(for duration: TimeInterval) -> String {
-        let maxViewport = max(minViewportDuration, player.duration)
-        if abs(duration - maxViewport) < 0.5 {
+        let maxViewport = player.duration
+        if maxViewport > 0, abs(duration - maxViewport) < 0.5 {
             return "Full"
         }
         if duration >= 60 {
@@ -369,12 +388,16 @@ struct ContentView: View {
             return
         }
 
-        let maxViewport = max(minViewportDuration, duration)
+        let maxViewport = duration
         let effectiveMinViewport = min(minViewportDuration, maxViewport)
         viewportDuration = min(max(viewportDuration, effectiveMinViewport), maxViewport)
     }
 
     private func updateViewport() {
+        if suppressViewportUpdateAfterWaveformSeek {
+            suppressViewportUpdateAfterWaveformSeek = false
+            return
+        }
         let duration = player.duration
         guard duration > 0 else {
             viewportStart = 0
