@@ -141,6 +141,13 @@ struct ContentView: View {
                                     // Keep the current viewport fixed for this seek.
                                     suppressViewportUpdateAfterWaveformSeek = true
                                     shouldSnapViewport = false
+                                },
+                                onViewportPan: { deltaSeconds in
+                                    let duration = player.duration
+                                    guard duration > 0 else { return }
+                                    let maxStart = max(0, duration - viewportDuration)
+                                    viewportStart = min(max(viewportStart + deltaSeconds, 0), maxStart)
+                                    shouldSnapViewport = false
                                 }
                             )
                             .background(Color(nsColor: .controlBackgroundColor))

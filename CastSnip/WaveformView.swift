@@ -8,6 +8,9 @@
 import SwiftUI
 import AVFoundation
 import Accelerate
+#if os(macOS)
+import AppKit
+#endif
 
 struct WaveformView: View {
     let audioFile: AVAudioFile?
@@ -26,6 +29,9 @@ struct WaveformView: View {
 
     /// Called when the user clicks/taps the waveform to seek.
     let onSeek: (TimeInterval) -> Void
+
+    /// Called when the user scrolls to pan the viewport.
+    let onViewportPan: (TimeInterval) -> Void
 
     /// Each bar represents this many seconds of audio.
     private let bucketDuration: TimeInterval = 0.1
@@ -70,7 +76,8 @@ struct WaveformView: View {
         viewportDuration: TimeInterval,
         currentTime: TimeInterval,
         markers: [Marker] = [],
-        onSeek: @escaping (TimeInterval) -> Void = { _ in }
+        onSeek: @escaping (TimeInterval) -> Void = { _ in },
+        onViewportPan: @escaping (TimeInterval) -> Void = { _ in }
     ) {
         self.audioFile = audioFile
         self.sampleCount = sampleCount
@@ -79,6 +86,7 @@ struct WaveformView: View {
         self.currentTime = currentTime
         self.markers = markers
         self.onSeek = onSeek
+        self.onViewportPan = onViewportPan
     }
 
     var body: some View {
@@ -110,6 +118,11 @@ struct WaveformView: View {
                         .onTapGesture { location in
                             handleSeekTap(location: location, in: geo.size)
                         }
+                        .background(
+                            ScrollWheelView { dx, dy in
+                                handleViewportScroll(deltaX: dx, deltaY: dy, in: geo.size)
+                            }
+                        )
                         #endif
 
                         Canvas { context, size in
@@ -130,6 +143,15 @@ struct WaveformView: View {
     private func handleSeekTap(location: CGPoint, in totalSize: CGSize) {
         guard let target = targetSeekTime(for: location, in: totalSize) else { return }
         onSeek(target)
+    }
+
+    private func handleViewportScroll(deltaX: CGFloat, deltaY: CGFloat, in totalSize: CGSize) {
+        guard viewportDuration > 0, totalSize.width > 0 else { return }
+        guard deltaX != 0 else { return }
+
+        let secondsPerPoint = viewportDuration / totalSize.width
+        let deltaSeconds = -TimeInterval(deltaX) * secondsPerPoint
+        onViewportPan(deltaSeconds)
     }
     #endif
 
@@ -262,17 +284,18 @@ struct WaveformView: View {
         context.stroke(path, with: .color(.white.opacity(0.9)), lineWidth: 1.5)
         context.stroke(path, with: .color(.black.opacity(0.35)), lineWidth: 3) // subtle outline
 
-//        let timeLabel = formatTimestamp(t)
-//        let padding: CGFloat = 4
-//        let labelX = min(max(x + padding, padding), width - padding)
-//
-//        context.draw(
-//            Text(timeLabel)
-//                .font(.system(size: 10, weight: .semibold))
-//                .foregroundColor(.white.opacity(0.9)),
-//            at: CGPoint(x: labelX, y: height - 2),
-//            anchor: .topLeading
-//        )
+        let timeLabel = formatTimestamp(t)
+        let padding: CGFloat = 4
+        let labelX = min(max(x + padding, padding), width - padding)
+        let labelY = height - padding
+
+        context.draw(
+            Text(timeLabel)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.white.opacity(0.9)),
+            at: CGPoint(x: labelX, y: labelY),
+            anchor: .bottomLeading
+        )
     }
 
     private func drawViewportTimestamps(context: GraphicsContext, size: CGSize) {
@@ -427,6 +450,30 @@ struct WaveformView: View {
         }
     }
 }
+
+#if os(macOS)
+private struct ScrollWheelView: NSViewRepresentable {
+    let onScroll: (CGFloat, CGFloat) -> Void
+
+    func makeNSView(context: Context) -> ScrollCaptureView {
+        let view = ScrollCaptureView()
+        view.onScroll = onScroll
+        return view
+    }
+
+    func updateNSView(_ nsView: ScrollCaptureView, context: Context) {
+        nsView.onScroll = onScroll
+    }
+}
+
+private final class ScrollCaptureView: NSView {
+    var onScroll: ((CGFloat, CGFloat) -> Void)?
+
+    override func scrollWheel(with event: NSEvent) {
+        onScroll?(event.scrollingDeltaX, event.scrollingDeltaY)
+    }
+}
+#endif
 
 // MARK: - Audio Processing Helper
 nonisolated fileprivate func extractAudioSamples(from audioFile: AVAudioFile, targetSampleCount: Int) -> [Float] {
