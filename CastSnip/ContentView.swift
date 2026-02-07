@@ -97,7 +97,20 @@ struct ContentView: View {
                         ChapterTableView(radius: radius, onSelect: { chapter in
                             let time = TimeInterval(chapter.startTime) / 1000.0
                             player.seek(to: time)
-                            shouldSnapViewport = true
+
+                            // Center the selected chapter in the viewport when possible.
+                            let duration = player.duration
+                            if duration > 0 {
+                                viewportStart = ViewportMath.viewportStart(
+                                    currentTime: time,
+                                    duration: duration,
+                                    viewportDuration: viewportDuration
+                                )
+                            } else {
+                                viewportStart = 0
+                            }
+
+                            shouldSnapViewport = false
                             updateViewport()
                         })
                         .environment(podcastAudioFile)

@@ -261,6 +261,18 @@ struct WaveformView: View {
 
         context.stroke(path, with: .color(.white.opacity(0.9)), lineWidth: 1.5)
         context.stroke(path, with: .color(.black.opacity(0.35)), lineWidth: 3) // subtle outline
+
+//        let timeLabel = formatTimestamp(t)
+//        let padding: CGFloat = 4
+//        let labelX = min(max(x + padding, padding), width - padding)
+//
+//        context.draw(
+//            Text(timeLabel)
+//                .font(.system(size: 10, weight: .semibold))
+//                .foregroundColor(.white.opacity(0.9)),
+//            at: CGPoint(x: labelX, y: height - 2),
+//            anchor: .topLeading
+//        )
     }
 
     private func drawViewportTimestamps(context: GraphicsContext, size: CGSize) {
