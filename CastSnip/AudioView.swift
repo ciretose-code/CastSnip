@@ -141,9 +141,7 @@ struct AudioView: View {
 }
 
 
-struct AudioView_Previews: PreviewProvider {
-    static var previews: some View {
-        AudioView().previewLayout(.fixed(width: 500, height: 100))
-            .environment(AudioFile())
-    }
+#Preview(traits: .fixedLayout(width: 500, height: 100)) {
+    AudioView()
+        .environment(AudioFile())
 }
