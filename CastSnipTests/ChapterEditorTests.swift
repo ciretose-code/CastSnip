@@ -97,3 +97,65 @@ struct ChapterTimelineTests {
         #expect(Podcast.chaptersDoNotOverlap(chapters))
     }
 }
+
+struct ChapterBoundaryTests {
+
+    private func threeChapters() -> [Chapter] {
+        [
+            Chapter(title: "A", startTime: 0, endTime: 4_000, podcastDuration: 12_000),
+            Chapter(title: "B", startTime: 4_000, endTime: 8_000, podcastDuration: 12_000),
+            Chapter(title: "C", startTime: 8_000, endTime: 12_000, podcastDuration: 12_000)
+        ]
+    }
+
+    @Test func movingStartUpdatesPreviousEnd() {
+        let chapters = threeChapters()
+        let moved = ChapterTimeline.moveStart(of: chapters[1], to: 5_500, in: chapters, durationMillis: 12_000)
+
+        #expect(moved == 5_500)
+        #expect(chapters[1].startTime == 5_500)
+        #expect(chapters[0].endTime == 5_500)
+        #expect(Podcast.chaptersDoNotOverlap(chapters))
+    }
+
+    @Test func movingStartClampsBetweenNeighbors() {
+        let chapters = threeChapters()
+        ChapterTimeline.moveStart(of: chapters[1], to: 11_000, in: chapters, durationMillis: 12_000)
+        #expect(chapters[1].startTime == 7_000)
+        #expect(chapters[0].endTime == 7_000)
+
+        ChapterTimeline.moveStart(of: chapters[1], to: 0, in: chapters, durationMillis: 12_000)
+        #expect(chapters[1].startTime == 1_000)
+        #expect(chapters[0].endTime == 1_000)
+    }
+
+    @Test func movingLastStartStaysBeforeDuration() {
+        let chapters = threeChapters()
+        ChapterTimeline.moveStart(of: chapters[2], to: 20_000, in: chapters, durationMillis: 12_000)
+        #expect(chapters[2].startTime == 11_000)
+        #expect(chapters[1].endTime == 11_000)
+    }
+
+    @Test func removingMiddleChapterExtendsPrevious() {
+        var chapters = threeChapters()
+        ChapterTimeline.removeChapter(chapters[1], from: &chapters)
+
+        #expect(chapters.map(\.title) == ["A", "C"])
+        #expect(chapters[0].endTime == 8_000)
+    }
+
+    @Test func removingFirstChapterPullsNextToStart() {
+        var chapters = threeChapters()
+        ChapterTimeline.removeChapter(chapters[0], from: &chapters)
+
+        #expect(chapters.map(\.title) == ["B", "C"])
+        #expect(chapters[0].startTime == 0)
+    }
+
+    @Test func chapterAtTimeFindsContainingChapter() {
+        let chapters = threeChapters()
+        #expect(ChapterTimeline.chapter(at: 0, in: chapters)?.title == "A")
+        #expect(ChapterTimeline.chapter(at: 4_000, in: chapters)?.title == "B")
+        #expect(ChapterTimeline.chapter(at: 11_999, in: chapters)?.title == "C")
+    }
+}

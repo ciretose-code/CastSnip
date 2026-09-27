@@ -32,6 +32,48 @@ enum ChapterTimeline {
         }
     }
 
+    /// The chapter whose range contains `millis`, or the first chapter when `millis` precedes them all.
+    static func chapter(at millis: UInt32, in chapters: [Chapter]) -> Chapter? {
+        let sorted = chapters.sorted()
+        return sorted.last(where: { $0.startTime <= millis }) ?? sorted.first
+    }
+
+    /// Moves a chapter's start, keeping the timeline contiguous: the previous chapter ends where this one starts.
+    /// The new start is clamped so every chapter stays at least `minimumGap` long.
+    @discardableResult
+    static func moveStart(
+        of chapter: Chapter,
+        to millis: UInt32,
+        in chapters: [Chapter],
+        durationMillis: UInt32
+    ) -> UInt32 {
+        let sorted = chapters.sorted()
+        guard let index = sorted.firstIndex(where: { $0.id == chapter.id }) else { return chapter.startTime }
+        let previous = index > 0 ? sorted[index - 1] : nil
+        let next = index + 1 < sorted.count ? sorted[index + 1] : nil
+
+        let lower = previous.map { $0.startTime + minimumGap } ?? 0
+        let upperBound = next?.startTime ?? durationMillis
+        let upper = upperBound > minimumGap ? upperBound - minimumGap : 0
+        let clamped = lower <= upper ? min(max(millis, lower), upper) : chapter.startTime
+
+        chapter.startTime = clamped
+        previous?.endTime = clamped
+        return clamped
+    }
+
+    /// Removes a chapter and closes the gap it leaves behind.
+    static func removeChapter(_ chapter: Chapter, from chapters: inout [Chapter]) {
+        let sorted = chapters.sorted()
+        guard let index = sorted.firstIndex(where: { $0.id == chapter.id }) else { return }
+        if index > 0 {
+            sorted[index - 1].endTime = chapter.endTime
+        } else if sorted.count > 1 {
+            sorted[1].startTime = chapter.startTime
+        }
+        chapters.removeAll { $0.id == chapter.id }
+    }
+
     @discardableResult
     static func insertChapter(
         into chapters: inout [Chapter],

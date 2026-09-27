@@ -31,7 +31,12 @@ struct CastSnipApp: App {
                 .environment(podcastAudioFile)
                 .environment(\.openPodcast, requestOpen(url:))
                 .environment(\.openPodcastPanel, requestOpenFromPanel)
-                .frame(minWidth: 800, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
+                .environment(\.documentActions, DocumentActions(
+                    save: { _ = saveCurrentDocument() },
+                    encode: encodeToMP3,
+                    exportAirchecks: exportAirchecks
+                ))
+                .frame(minWidth: 900, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
                 .navigationTitle(windowTitle)
                 .task {
                     appDelegate.configure(
@@ -167,7 +172,7 @@ struct CastSnipApp: App {
                 }
             }
         }
-        .defaultSize(width: 800, height: 600)
+        .defaultSize(width: 1180, height: 760)
     }
 
     private enum PendingDocumentAction {

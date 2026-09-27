@@ -12,12 +12,13 @@ import AppKit
 struct ContentView: View {
     @Environment(AudioFile.self) var podcastAudioFile
     @Environment(\.openPodcast) private var openPodcast
-    
-    @State var radius: CGFloat = 6
-    @State var insets: CGFloat = 16
-    @State private var isDraggingOverCoverArt = false
+    @Environment(\.openPodcastPanel) private var openPodcastPanel
+    @Environment(\.documentActions) private var documentActions
+
     @State private var isDraggingAudio = false
-    
+    @State private var showInspector = true
+    @State private var inspectorPane: EditorInspector.Pane = .episode
+
     @StateObject private var player = AudioPlayerManager()
     
     private let minViewportDuration: TimeInterval = 10
@@ -26,14 +27,20 @@ struct ContentView: View {
     @State private var viewportOptions: [TimeInterval] = []
     @State private var selectedViewportIndex: Int = 0
     @State private var suppressViewportUpdateAfterWaveformSeek = false
-
-    private let viewportStepLabels: [String] = ["10s", "30s", "1m", "2m", "5m", "10m", "Full"]
+    /// Set when a selection change comes from the waveform, which already positioned the playhead.
+    @State private var suppressSeekOnNextSelection = false
 
     /// Set to true to snap the viewport immediately on the next `updateViewport()` call.
     @State private var shouldSnapViewport = true
 
     /// 0...1. Higher = faster response (less smoothing).
     private let viewportSmoothingAlpha: Double = 0.18
+
+    private var playheadMillis: UInt32 { UInt32(max(player.currentTime, 0) * 1000) }
+
+    private var durationMillis: UInt32 {
+        podcastAudioFile.podcast.durationInMillis ?? UInt32(player.duration * 1000)
+    }
 
     var body: some View {
         if podcastAudioFile.isLoading {
@@ -50,260 +57,314 @@ struct ContentView: View {
         } else if podcastAudioFile.podcast.url == nil {
             EmptyPodcastView()
         } else {
-            HStack {
-                VStack(alignment: .leading) {
-                    HStack(alignment: .top) {
-                        ZStack {
-                            if podcastAudioFile.hasCoverArt(), let coverArt = podcastAudioFile.getCoverArt() {
-                                coverArt
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .cornerRadius(radius*2)
-                                    .overlay(RoundedRectangle(cornerRadius: radius*2).stroke(.secondary, lineWidth: 1.5))
-                            } else {
-                                Image(systemName: "photo.badge.plus")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .font(.system(size: 20))
-                                    .foregroundStyle(.secondary)
-                                    .padding()
-                            }
-                        }
-                        .frame(width: 180, height: 180)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: radius*2)
-                                .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [5]))
-                                .foregroundColor(.accentColor)
-                                .opacity(isDraggingOverCoverArt ? 0.5 : 0)
-                        )
-                        .onTapGesture {
-                            selectCoverArtImage()
-                        }
-                        .onDrop(of: [.image], isTargeted: $isDraggingOverCoverArt) { providers in
-                            handleCoverArtDrop(providers: providers)
-                        }
-                        .accessibilityElement()
-                        .accessibilityLabel(EditorAccessibility.coverArt)
-                        .accessibilityHint(EditorAccessibility.coverArtHint)
-                        .accessibilityAddTraits(.isButton)
-                        
-                        VStack(alignment: .leading) {
-                            TitleView(radius: radius, title: podcastAudioFile.getTitle())
-                            EpisodeView(radius: radius, episode: podcastAudioFile.getEpisode())
-                            SummaryView(radius: radius, summary: podcastAudioFile.getSummary())
-                        }.frame(minHeight: 180, maxHeight: 180)
-                    }
-                    Spacer()
-                    VStack(spacing: 8) {
-                        HStack(spacing: 8) {
-                            Spacer()
-                            CopyableInfoBadge(label: "File Size", value: podcastAudioFile.podcast.getFileSizeFormatted(), minWidth: 160)
-                            CopyableInfoBadge(label: "Running Time", value: podcastAudioFile.podcast.getDurationFormatted())
-                            Spacer()
-                        }
-                        ChapterTableView(radius: radius, playheadMillis: UInt32(player.currentTime * 1000), onSelect: { chapter in
-                            let time = TimeInterval(chapter.startTime) / 1000.0
-                            player.seek(to: time)
+            editor
+        }
+    }
 
-                            // Center the selected chapter in the viewport when possible.
-                            let duration = player.duration
-                            if duration > 0 {
-                                viewportStart = ViewportMath.viewportStart(
-                                    currentTime: time,
-                                    duration: duration,
-                                    viewportDuration: viewportDuration
-                                )
-                            } else {
-                                viewportStart = 0
-                            }
-
-                            shouldSnapViewport = false
-                            updateViewport()
-                        })
-                        .environment(podcastAudioFile)
-                        
-                        // Transport controls + waveform viewport
-                        VStack(spacing: 8) {
-                            WaveformView(
-                                audioFile: podcastAudioFile.podcast.file,
-                                sampleCount: 2000,
-                                viewportStart: viewportStart,
-                                viewportDuration: viewportDuration,
-                                currentTime: player.currentTime,
-                                markers: WaveformView.makeMarkers(from: podcastAudioFile.podcast.chapters),
-                                onSeek: { time in
-                                    player.seek(to: time)
-                                    // Keep the current viewport fixed for this seek.
-                                    suppressViewportUpdateAfterWaveformSeek = true
-                                    shouldSnapViewport = false
-                                },
-                                onViewportPan: { deltaSeconds in
-                                    let duration = player.duration
-                                    guard duration > 0 else { return }
-                                    let maxStart = max(0, duration - viewportDuration)
-                                    viewportStart = min(max(viewportStart + deltaSeconds, 0), maxStart)
-                                    shouldSnapViewport = false
-                                }
-                            )
-                            .background(Color(nsColor: .controlBackgroundColor))
-                            .cornerRadius(radius)
-                            .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
-
-                            HStack(alignment: .center, spacing: 12) {
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("\(ID3Parser.toTrackTime(millis: UInt32(player.currentTime * 1000), showHours: true)) / \(ID3Parser.toTrackTime(millis: UInt32(player.duration * 1000), showHours: true))")
-                                        .font(.caption)
-                                        .monospaced()
-                                        .foregroundStyle(.secondary)
-                                    if let loadError = player.loadError {
-                                        Text(loadError)
-                                            .font(.caption2)
-                                            .foregroundStyle(.red)
-                                            .lineLimit(2)
-                                    }
-                                }
-
-                                Spacer()
-
-                                HStack(spacing: 16) {
-                                    Button {
-                                        player.jumpBackward(10)
-                                    } label: {
-                                        Label(EditorAccessibility.back10, systemImage: "gobackward.10")
-                                            .labelStyle(.iconOnly)
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .disabled(player.duration <= 0)
-                                    .accessibilityLabel(EditorAccessibility.back10)
-
-                                    Button {
-                                        player.togglePlayPause()
-                                    } label: {
-                                        Label(player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play, systemImage: player.isPlaying ? "pause.fill" : "play.fill")
-                                            .labelStyle(.iconOnly)
-                                    }
-                                    .buttonStyle(.borderedProminent)
-                                    .disabled(player.duration <= 0)
-                                    .keyboardShortcut(.space, modifiers: [])
-                                    .help(player.loadError ?? (player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play))
-                                    .accessibilityLabel(player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play)
-
-                                    Button {
-                                        player.jumpForward(10)
-                                    } label: {
-                                        Label(EditorAccessibility.forward10, systemImage: "goforward.10")
-                                            .labelStyle(.iconOnly)
-                                    }
-                                    .buttonStyle(.bordered)
-                                    .disabled(player.duration <= 0)
-                                    .accessibilityLabel(EditorAccessibility.forward10)
-                                }
-
-                                Spacer()
-
-                                HStack(spacing: 8) {
-
-                                    Text(
-                                        viewportOptions[safe: selectedViewportIndex]
-                                            .map(viewportLabel)
-                                        ?? "Full"
-                                    )
-                                        .font(.caption)
-                                        .monospaced()
-                                        .foregroundStyle(.secondary)
-
-                                    if viewportOptions.count > 1 {
-                                        Slider(
-                                            value: Binding(
-                                                get: { Double(selectedViewportIndex) },
-                                                set: { newValue in
-                                                    selectedViewportIndex = Int(newValue.rounded())
-                                                }
-                                            ),
-                                            in: 0...Double(viewportOptions.count - 1),
-                                            step: 1
-                                        )
-                                        .controlSize(.regular)
-                                        .frame(width: 140)
-                                        .accessibilityLabel(EditorAccessibility.viewport)
-                                    } else {
-                                        Slider(value: .constant(0), in: 0...1)
-                                            .controlSize(.regular)
-                                            .frame(width: 140)
-                                            .disabled(true)
-                                    }
-
-                                }
-                            }
-                        }
-                    }
-                }.padding(EdgeInsets(top: insets, leading: insets, bottom: insets, trailing: insets))
-            }
-            .onAppear {
-                player.load(url: podcastAudioFile.podcast.url)
-                viewportStart = 0
-                shouldSnapViewport = true
-                refreshViewportOptions()
-                clampViewportDuration()
-                updateViewport()
-            }
-            .onChange(of: podcastAudioFile.podcast.url) { _, newValue in
-                player.load(url: newValue)
-                viewportStart = 0
-                shouldSnapViewport = true
-                refreshViewportOptions()
-                clampViewportDuration()
-                updateViewport()
-            }
-            .onChange(of: player.duration) { _, _ in
-                refreshViewportOptions()
-                clampViewportDuration()
-                shouldSnapViewport = true
-                updateViewport()
-            }
-            .onChange(of: selectedViewportIndex) { _, _ in
-                applySelectedViewport()
-            }
-            .onChange(of: player.currentTime) { _, _ in
-                updateViewport()
-            }
-            .onDrop(of: [.mp3, .wav, .aiff, .mpeg4Audio, .audio], isTargeted: $isDraggingAudio) { providers in
-                handleAudioDrop(providers: providers)
-            }
-            .overlay(
-                RoundedRectangle(cornerRadius: radius)
-                    .strokeBorder(Color.accentColor, lineWidth: 3)
-                    .opacity(isDraggingAudio ? 0.7 : 0)
+    private var editor: some View {
+        VSplitView {
+            timelinePane
+                .frame(minHeight: 200, idealHeight: 320)
+            ChapterListView(
+                playheadMillis: playheadMillis,
+                onAdd: { addChapter(atMillis: playheadMillis) },
+                onSeek: { chapter in seekToChapter(chapter) }
             )
-            .alert("Error Loading Podcast", isPresented: OptionalAlert.isPresented(Bindable(podcastAudioFile).errorMessage)) {
-                Button("OK") {
-                    podcastAudioFile.errorMessage = nil
-                }
-            } message: {
-                Text(podcastAudioFile.errorMessage ?? "")
+            .frame(minHeight: 160)
+        }
+        .inspector(isPresented: $showInspector) {
+            EditorInspector(pane: $inspectorPane, playheadMillis: playheadMillis) { chapter, proposed in
+                let applied = ChapterTimeline.moveStart(of: chapter, to: proposed, in: podcastAudioFile.podcast.chapters, durationMillis: durationMillis)
+                podcastAudioFile.markAsModified()
+                return applied
+            }
+            .inspectorColumnWidth(min: 280, ideal: 320, max: 460)
+        }
+        .toolbar { toolbarContent }
+        .background {
+            // Menu-less shortcuts for the editor.
+            Group {
+                Button("Add Chapter") { addChapter(atMillis: playheadMillis) }
+                    .keyboardShortcut("n", modifiers: .command)
+                Button("Zoom In") { zoom(in: true) }
+                    .keyboardShortcut("=", modifiers: .command)
+                Button("Zoom Out") { zoom(in: false) }
+                    .keyboardShortcut("-", modifiers: .command)
+                Button("Zoom to Fit") { selectedViewportIndex = max(viewportOptions.count - 1, 0) }
+                    .keyboardShortcut("0", modifiers: .command)
+            }
+            .hidden()
+        }
+        .onAppear {
+            player.load(url: podcastAudioFile.podcast.url)
+            viewportStart = 0
+            shouldSnapViewport = true
+            refreshViewportOptions()
+            clampViewportDuration()
+            updateViewport()
+        }
+        .onChange(of: podcastAudioFile.podcast.url) { _, newValue in
+            player.load(url: newValue)
+            viewportStart = 0
+            shouldSnapViewport = true
+            refreshViewportOptions()
+            clampViewportDuration()
+            updateViewport()
+        }
+        .onChange(of: player.duration) { _, _ in
+            refreshViewportOptions()
+            clampViewportDuration()
+            shouldSnapViewport = true
+            updateViewport()
+        }
+        .onChange(of: selectedViewportIndex) { _, _ in
+            applySelectedViewport()
+        }
+        .onChange(of: player.currentTime) { _, _ in
+            updateViewport()
+        }
+        .onChange(of: podcastAudioFile.selectedChapter) { _, selected in
+            guard let selected else { return }
+            inspectorPane = .chapter
+            if suppressSeekOnNextSelection {
+                suppressSeekOnNextSelection = false
+            } else {
+                seekToChapter(selected)
             }
         }
-//#if os(macOS)
-//        .toolbar {
-//            Button(action: openPodcastFile){
-//                Label("Open MP3", systemImage: "plus")
-//            }.help("Open MP3")
-//            Button(action: savePodcastFile){
-//                Label("Save MP3", systemImage: "square.and.arrow.up")
-//            }.help("Save MP3")
-//        }
-//#endif
+        .onDrop(of: [.mp3, .wav, .aiff, .mpeg4Audio, .audio], isTargeted: $isDraggingAudio) { providers in
+            handleAudioDrop(providers: providers)
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .strokeBorder(Color.accentColor, lineWidth: 3)
+                .opacity(isDraggingAudio ? 0.7 : 0)
+                .allowsHitTesting(false)
+        )
+        .alert("Error Loading Podcast", isPresented: OptionalAlert.isPresented(Bindable(podcastAudioFile).errorMessage)) {
+            Button("OK") {
+                podcastAudioFile.errorMessage = nil
+            }
+        } message: {
+            Text(podcastAudioFile.errorMessage ?? "")
+        }
     }
-    
-    private func openPodcastFile() {
-        
+
+    // MARK: - Timeline
+
+    private var timelinePane: some View {
+        let chapters = podcastAudioFile.podcast.chapters
+        let current = ChapterTimeline.chapter(at: playheadMillis, in: chapters)
+
+        return VStack(spacing: 0) {
+            HStack(spacing: 10) {
+                if let current {
+                    Circle()
+                        .fill(WaveformView.chapterColor(at: chapters.sorted().firstIndex(of: current) ?? 0))
+                        .frame(width: 8, height: 8)
+                    Text(current.title.isEmpty ? Chapter.DEFAULT_TITLE : current.title)
+                        .font(.headline)
+                        .lineLimit(1)
+                } else {
+                    Text("No chapters yet").foregroundStyle(.secondary)
+                }
+                if let loadError = player.loadError {
+                    Label(loadError, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                        .lineLimit(1)
+                }
+                Spacer()
+                zoomControls
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+
+            WaveformView(
+                audioFile: podcastAudioFile.podcast.file,
+                viewportStart: viewportStart,
+                viewportDuration: viewportDuration,
+                currentTime: player.currentTime,
+                markers: WaveformView.makeMarkers(from: chapters, selectedID: podcastAudioFile.selectedChapter?.id),
+                onSeek: { time in
+                    player.seek(to: time)
+                    // Keep the current viewport fixed for this seek.
+                    suppressViewportUpdateAfterWaveformSeek = true
+                    shouldSnapViewport = false
+                },
+                onViewportPan: { deltaSeconds in
+                    let duration = player.duration
+                    guard duration > 0 else { return }
+                    let maxStart = max(0, duration - viewportDuration)
+                    viewportStart = min(max(viewportStart + deltaSeconds, 0), maxStart)
+                    shouldSnapViewport = false
+                }
+            )
+            .onMarkerMove { id, time in
+                guard let chapter = chapters.first(where: { $0.id == id }) else { return }
+                ChapterTimeline.moveStart(of: chapter, to: UInt32(max(time, 0) * 1000), in: chapters, durationMillis: durationMillis)
+            }
+            .onMarkerMoveEnded { id in
+                guard let chapter = chapters.first(where: { $0.id == id }) else { return }
+                podcastAudioFile.markAsModified()
+                // Park the playhead on the new boundary so it can be auditioned right away.
+                suppressViewportUpdateAfterWaveformSeek = true
+                player.seek(to: TimeInterval(chapter.startTime) / 1000)
+                if podcastAudioFile.selectedChapter != chapter {
+                    suppressSeekOnNextSelection = true
+                    podcastAudioFile.selectedChapter = chapter
+                }
+            }
+            .onAddChapter { time in
+                addChapter(atMillis: UInt32(max(time, 0) * 1000))
+            }
+            .onOverviewSeek { time in
+                shouldSnapViewport = true
+                player.seek(to: time)
+            }
+            .onZoom { zoomIn in
+                zoom(in: zoomIn)
+            }
+            .background(Color(nsColor: .textBackgroundColor).opacity(0.4))
+        }
     }
-    
-    private func savePodcastFile() {
-        
+
+    private var zoomControls: some View {
+        HStack(spacing: 4) {
+            Button { zoom(in: false) } label: {
+                Image(systemName: "minus.magnifyingglass")
+            }
+            .disabled(selectedViewportIndex >= viewportOptions.count - 1)
+            .help("Zoom out (⌘−)")
+            .accessibilityLabel("Zoom out")
+
+            Text(viewportOptions[safe: selectedViewportIndex].map(viewportLabel) ?? "Full")
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .frame(minWidth: 34)
+                .accessibilityLabel(EditorAccessibility.viewport)
+
+            Button { zoom(in: true) } label: {
+                Image(systemName: "plus.magnifyingglass")
+            }
+            .disabled(selectedViewportIndex <= 0)
+            .help("Zoom in (⌘=)")
+            .accessibilityLabel("Zoom in")
+
+            Button("Fit") { selectedViewportIndex = max(viewportOptions.count - 1, 0) }
+                .disabled(selectedViewportIndex == viewportOptions.count - 1)
+                .help("Show the whole episode (⌘0)")
+        }
+        .buttonStyle(.borderless)
+        .font(.callout)
     }
-    
+
+    // MARK: - Toolbar
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItemGroup(placement: .navigation) {
+            Button(action: openPodcastPanel) {
+                Label("Open", systemImage: "folder")
+            }
+            .help("Open an audio file (⌘O)")
+            Button(action: documentActions.save) {
+                Label("Save", systemImage: "square.and.arrow.down")
+            }
+            .help("Save (⌘S)")
+        }
+
+        ToolbarItem(placement: .principal) {
+            HStack(spacing: 14) {
+                Button { player.jumpBackward(10) } label: {
+                    Label(EditorAccessibility.back10, systemImage: "gobackward.10")
+                }
+                .disabled(player.duration <= 0)
+
+                Button { player.togglePlayPause() } label: {
+                    Label(player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play,
+                          systemImage: player.isPlaying ? "pause.fill" : "play.fill")
+                }
+                .disabled(player.duration <= 0)
+                .keyboardShortcut(.space, modifiers: [])
+                .help(player.loadError ?? (player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play))
+
+                Button { player.jumpForward(10) } label: {
+                    Label(EditorAccessibility.forward10, systemImage: "goforward.10")
+                }
+                .disabled(player.duration <= 0)
+
+                Text("\(ID3Parser.toTrackTime(millis: playheadMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true)) / \(ID3Parser.toTrackTime(millis: durationMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true))")
+                    .font(.callout)
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+            }
+            .labelStyle(.iconOnly)
+        }
+
+        ToolbarItemGroup(placement: .primaryAction) {
+            Button { addChapter(atMillis: playheadMillis) } label: {
+                Label("Add Chapter", systemImage: "plus")
+            }
+            .help("Add a chapter at the playhead (⌘N)")
+
+            Menu {
+                Button("Encode to MP3…", action: documentActions.encode)
+                Button("Export Airchecks…", action: documentActions.exportAirchecks)
+            } label: {
+                Label("Export", systemImage: "square.and.arrow.up")
+            }
+            .help("Encode or export")
+
+            Button { showInspector.toggle() } label: {
+                Label("Inspector", systemImage: "sidebar.trailing")
+            }
+            .help(showInspector ? "Hide inspector" : "Show inspector")
+        }
+    }
+
+    // MARK: - Actions
+
+    private func addChapter(atMillis millis: UInt32) {
+        let added = ChapterTimeline.insertChapter(
+            into: &podcastAudioFile.podcast.chapters,
+            atPlayhead: millis,
+            durationMillis: durationMillis
+        )
+        podcastAudioFile.markAsModified()
+        suppressViewportUpdateAfterWaveformSeek = true
+        player.seek(to: TimeInterval(added.startTime) / 1000)
+        suppressSeekOnNextSelection = true
+        podcastAudioFile.selectedChapter = added
+    }
+
+    private func seekToChapter(_ chapter: Chapter) {
+        let time = TimeInterval(chapter.startTime) / 1000.0
+        player.seek(to: time)
+
+        // Center the selected chapter in the viewport when possible.
+        let duration = player.duration
+        if duration > 0 {
+            viewportStart = ViewportMath.viewportStart(
+                currentTime: time,
+                duration: duration,
+                viewportDuration: viewportDuration
+            )
+        } else {
+            viewportStart = 0
+        }
+
+        shouldSnapViewport = false
+        updateViewport()
+    }
+
+    private func zoom(in zoomIn: Bool) {
+        guard !viewportOptions.isEmpty else { return }
+        let next = selectedViewportIndex + (zoomIn ? -1 : 1)
+        selectedViewportIndex = min(max(next, 0), viewportOptions.count - 1)
+    }
+
     private func handleAudioDrop(providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
         let types = ["public.mp3", "public.wav", "public.aiff-audio", "public.mpeg-4-audio", "public.audio"]
@@ -321,59 +382,8 @@ struct ContentView: View {
         return true
     }
 
-    // MARK: - Cover Art Management
     
-    private func handleCoverArtDrop(providers: [NSItemProvider]) -> Bool {
-        guard let provider = providers.first else { return false }
-        
-        if provider.hasItemConformingToTypeIdentifier("public.image") {
-            provider.loadItem(forTypeIdentifier: "public.image", options: nil) { item, error in
-                if let error = error {
-                    print("Error loading dropped image: \(error.localizedDescription)")
-                    return
-                }
-                
-                var nsImage: NSImage?
-                
-                if let url = item as? URL {
-                    nsImage = NSImage(contentsOf: url)
-                } else if let data = item as? Data {
-                    nsImage = NSImage(data: data)
-                } else if let image = item as? NSImage {
-                    nsImage = image
-                }
-                
-                if let image = nsImage {
-                    DispatchQueue.main.async {
-                        podcastAudioFile.podcast.logo = image
-                        podcastAudioFile.markAsModified()
-                    }
-                }
-            }
-            return true
-        }
-        
-        return false
-    }
-    
-    private func selectCoverArtImage() {
-        let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.canChooseFiles = true
-        panel.allowedContentTypes = [.image, .png, .jpeg]
-        panel.message = "Select a cover art image"
-        
-        panel.begin { response in
-            if response == .OK, let url = panel.url {
-                if let image = NSImage(contentsOf: url) {
-                    podcastAudioFile.podcast.logo = image
-                    podcastAudioFile.markAsModified()
-                }
-            }
-        }
-    }
-    
+
     private func refreshViewportOptions() {
         let duration = player.duration
         guard duration > 0 else {
