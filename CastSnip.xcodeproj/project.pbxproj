@@ -46,6 +46,7 @@
 		A11D3E01000100010000001C /* SilenceDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001B /* SilenceDetector.swift */; };
 		A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001D /* PodcastEncoder.swift */; };
 		A11D3E010001000100000020 /* AircheckExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001F /* AircheckExporter.swift */; };
+		A11D3E010001000100000024 /* WaveformSampling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000023 /* WaveformSampling.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,6 +103,7 @@
 		A11D3E01000100010000001B /* SilenceDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceDetector.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001D /* PodcastEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastEncoder.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001F /* AircheckExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircheckExporter.swift; sourceTree = "<group>"; };
+		A11D3E010001000100000023 /* WaveformSampling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformSampling.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -163,6 +165,7 @@
 				A11D3E010001000100000015 /* EmptyPodcastView.swift */,
 				7B16BD222F2E853900DFD7E8 /* PlatformImage.swift */,
 				7B16BD232F2E853900DFD7E8 /* WaveformView.swift */,
+				A11D3E010001000100000023 /* WaveformSampling.swift */,
 				7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */,
 				7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */,
 				7B7404522BDEBB5D001811B2 /* ID3Parser.swift */,
@@ -370,6 +373,7 @@
 				A11D3E01000100010000001C /* SilenceDetector.swift in Sources */,
 				A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */,
 				A11D3E010001000100000020 /* AircheckExporter.swift in Sources */,
+				A11D3E010001000100000024 /* WaveformSampling.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
