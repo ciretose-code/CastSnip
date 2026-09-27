@@ -65,6 +65,16 @@ struct ChapterView: View {
             .onChange(of: chapter.startTime) { podcastAudioFile.markAsModified() }
             .onChange(of: chapter.endTime) { podcastAudioFile.markAsModified() }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(chapterAccessibilityLabel)
+    }
+
+    private var chapterAccessibilityLabel: String {
+        EditorAccessibility.chapterRow(
+            title: chapter.title,
+            start: ID3Parser.toTrackTime(millis: chapter.startTime, showHours: showHours),
+            end: ID3Parser.toTrackTime(millis: chapter.endTime, showHours: showHours)
+        )
     }
 
     private var urlIsInvalid: Bool {

@@ -21,7 +21,7 @@ final class RecentFilesStore {
     }
 
     func remember(_ url: URL) {
-        guard !isBundledSample(url) else { return }
+        guard !SampleEpisode.isSample(url) else { return }
 
         var next = entries.filter { $0 != url.path }
         next.insert(url.path, at: 0)
@@ -45,7 +45,4 @@ final class RecentFilesStore {
         defaults.removeObject(forKey: Self.defaultsKey)
     }
 
-    private func isBundledSample(_ url: URL) -> Bool {
-        url.path.contains("/Contents/Resources/")
-    }
 }

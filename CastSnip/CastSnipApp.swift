@@ -18,7 +18,7 @@ struct CastSnipApp: App {
     @NSApplicationDelegateAdaptor(CastSnipAppDelegate.self) private var appDelegate
     
     @State var podcastAudioFile = AudioFile()
-    @State var fileURL: URL? = Bundle.main.url(forResource: "intro", withExtension: "mp3")
+    @State var fileURL: URL?
     @State private var recentFiles = RecentFilesStore.shared
     @State private var pendingAction: PendingDocumentAction?
     @State private var showDiscardAlert = false
@@ -29,6 +29,7 @@ struct CastSnipApp: App {
             ContentView()
                 .environment(podcastAudioFile)
                 .environment(\.openPodcast, requestOpen(url:))
+                .environment(\.openPodcastPanel, requestOpenFromPanel)
                 .frame(minWidth: 800, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
                 .navigationTitle(windowTitle)
                 .task {
@@ -44,6 +45,9 @@ struct CastSnipApp: App {
                 }
                 .onChange(of: podcastAudioFile.hasUnsavedChanges) {
                     NSApp.keyWindow?.isDocumentEdited = podcastAudioFile.hasUnsavedChanges
+                }
+                .onChange(of: fileURL) {
+                    NSApp.keyWindow?.representedURL = fileURL
                 }
                 .alert(discardAlertTitle, isPresented: $showDiscardAlert) {
                     Button("Save") {
@@ -79,6 +83,9 @@ struct CastSnipApp: App {
         }
         .commands {
             CommandGroup(replacing: .newItem) {
+                Button("New") {
+                    requestClose()
+                }
                 Button("Open...") {
                     requestOpenFromPanel()
                 }
@@ -137,6 +144,9 @@ struct CastSnipApp: App {
             CommandGroup(replacing: .help) {
                 Button("Keyboard Shortcuts") {
                     showShortcutsHelp = true
+                }
+                Button("Open Sample Episode") {
+                    openSampleEpisode()
                 }
                 Button("mostlysecurity.com") {
                     showMostlySecurityWebsite()
@@ -213,11 +223,19 @@ struct CastSnipApp: App {
         SecurityScopedBookmarkStore.shared.rememberAndAccess(url)
         RecentFilesStore.shared.remember(url)
         fileURL = url
+        NSApp.keyWindow?.representedURL = url
+    }
+
+    private func openSampleEpisode() {
+        guard let url = SampleEpisode.url() else { return }
+        requestOpen(url: url)
     }
 
     private func applyClose() {
         fileURL = nil
         podcastAudioFile.closeDocument()
+        NSApp.keyWindow?.representedURL = nil
+        NSApp.keyWindow?.isDocumentEdited = false
     }
 
     @discardableResult

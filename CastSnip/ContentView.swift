@@ -47,6 +47,8 @@ struct ContentView: View {
                     .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else if podcastAudioFile.podcast.url == nil {
+            EmptyPodcastView()
         } else {
             HStack {
                 VStack(alignment: .leading) {
@@ -59,11 +61,11 @@ struct ContentView: View {
                                     .cornerRadius(radius*2)
                                     .overlay(RoundedRectangle(cornerRadius: radius*2).stroke(.secondary, lineWidth: 1.5))
                             } else {
-                                Image(systemName: "waveform")
+                                Image(systemName: "photo.badge.plus")
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .font(.system(size: 20))
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(.secondary)
                                     .padding()
                             }
                         }
@@ -80,6 +82,10 @@ struct ContentView: View {
                         .onDrop(of: [.image], isTargeted: $isDraggingOverCoverArt) { providers in
                             handleCoverArtDrop(providers: providers)
                         }
+                        .accessibilityElement()
+                        .accessibilityLabel(EditorAccessibility.coverArt)
+                        .accessibilityHint(EditorAccessibility.coverArtHint)
+                        .accessibilityAddTraits(.isButton)
                         
                         VStack(alignment: .leading) {
                             TitleView(radius: radius, title: podcastAudioFile.getTitle())
@@ -164,31 +170,34 @@ struct ContentView: View {
                                     Button {
                                         player.jumpBackward(10)
                                     } label: {
-                                        Label("Back 10s", systemImage: "gobackward.10")
+                                        Label(EditorAccessibility.back10, systemImage: "gobackward.10")
                                             .labelStyle(.iconOnly)
                                     }
                                     .buttonStyle(.bordered)
                                     .disabled(player.duration <= 0)
+                                    .accessibilityLabel(EditorAccessibility.back10)
 
                                     Button {
                                         player.togglePlayPause()
                                     } label: {
-                                        Label(player.isPlaying ? "Pause" : "Play", systemImage: player.isPlaying ? "pause.fill" : "play.fill")
+                                        Label(player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play, systemImage: player.isPlaying ? "pause.fill" : "play.fill")
                                             .labelStyle(.iconOnly)
                                     }
                                     .buttonStyle(.borderedProminent)
                                     .disabled(player.duration <= 0)
                                     .keyboardShortcut(.space, modifiers: [])
-                                    .help(player.loadError ?? (player.isPlaying ? "Pause" : "Play"))
+                                    .help(player.loadError ?? (player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play))
+                                    .accessibilityLabel(player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play)
 
                                     Button {
                                         player.jumpForward(10)
                                     } label: {
-                                        Label("Forward 10s", systemImage: "goforward.10")
+                                        Label(EditorAccessibility.forward10, systemImage: "goforward.10")
                                             .labelStyle(.iconOnly)
                                     }
                                     .buttonStyle(.bordered)
                                     .disabled(player.duration <= 0)
+                                    .accessibilityLabel(EditorAccessibility.forward10)
                                 }
 
                                 Spacer()
@@ -216,6 +225,7 @@ struct ContentView: View {
                                             step: 1
                                         )
                                         .frame(width: 140)
+                                        .accessibilityLabel(EditorAccessibility.viewport)
                                     } else {
                                         Slider(value: .constant(0), in: 0...1)
                                             .frame(width: 140)
@@ -264,7 +274,7 @@ struct ContentView: View {
                     .strokeBorder(Color.accentColor, lineWidth: 3)
                     .opacity(isDraggingAudio ? 0.7 : 0)
             )
-            .alert("Error Loading Podcast", isPresented: .constant(podcastAudioFile.errorMessage != nil)) {
+            .alert("Error Loading Podcast", isPresented: OptionalAlert.isPresented(Bindable(podcastAudioFile).errorMessage)) {
                 Button("OK") {
                     podcastAudioFile.errorMessage = nil
                 }
