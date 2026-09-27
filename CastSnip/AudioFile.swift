@@ -34,6 +34,8 @@ class AudioFile: Identifiable {
         } else if podcast.durationInSeconds == 0 {
             errorMessage = "Warning: Could not determine audio duration."
         }
+
+        ShowAutofillStore.shared.applyToPodcastIfEmpty(podcast, filename: url.path)
         
         isLoading = false
         hasUnsavedChanges = false
@@ -48,6 +50,16 @@ class AudioFile: Identifiable {
         if let attributes = try? FileManager.default.attributesOfItem(atPath: destination.path),
            let size = attributes[.size] as? UInt64 {
             podcast.fileSizeInBytes = size
+        }
+        if !podcast.title.isEmpty,
+           !destination.path.contains("/Contents/Resources/"),
+           !SampleEpisode.isSample(destination),
+           let parsed = ShowAutofillStore.parse(destination.lastPathComponent) {
+            ShowAutofillStore.shared.rememberShow(
+                prefix: parsed.prefix,
+                title: podcast.title,
+                artwork: podcast.logo
+            )
         }
         markAsSaved()
     }
@@ -78,6 +90,19 @@ class AudioFile: Identifiable {
         hasUnsavedChanges = false
         errorMessage = nil
         isLoading = false
+    }
+
+    func silenceRanges(
+        thresholdDb: Double = SilenceDetector.defaultThresholdDb,
+        durationSeconds: TimeInterval = SilenceDetector.defaultDurationSeconds
+    ) -> [SilenceDetector.Range] {
+        guard let file = podcast.file else { return [] }
+        do {
+            return try SilenceDetector.detect(in: file, thresholdDb: thresholdDb, durationSeconds: durationSeconds)
+        } catch {
+            logger.error("Silence detection failed: \(error.localizedDescription)")
+            return []
+        }
     }
 
     func selectNeighbor(going direction: ChapterTimeline.NeighborDirection) {
@@ -215,6 +240,10 @@ class AudioFile: Identifiable {
         }
 
         ChapterVisibility.apply(tocChildIDs: tocChildIDs, to: pa.chapters)
+
+        if pa.chapters.isEmpty {
+            pa.chapters = AudioMarkerImporter.chapters(from: url, durationMillis: pa.durationInMillis ?? 0)
+        }
         
         return pa
     }

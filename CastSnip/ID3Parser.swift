@@ -20,8 +20,18 @@ enum ID3StringEncoding {
     case UTF8
 }
 
-enum ID3ParserError: Error {
+enum ID3ParserError: Error, LocalizedError {
     case missingTag
+    case unsupportedVersion(UInt8)
+
+    var errorDescription: String? {
+        switch self {
+        case .missingTag:
+            return "The file does not contain an ID3 tag."
+        case .unsupportedVersion(let version):
+            return "ID3v2.\(version) is not supported. CastSnip reads ID3v2.3 tags."
+        }
+    }
 }
 
 class ID3Parser {
@@ -156,6 +166,10 @@ class ID3Parser {
     static func readFrames(from mp3: Data) throws -> [(name: String, body: Data)] {
         guard mp3.count >= 10, String(data: mp3.prefix(3), encoding: .isoLatin1) == "ID3" else {
             throw ID3ParserError.missingTag
+        }
+        let version = mp3[3]
+        guard version == 3 else {
+            throw ID3ParserError.unsupportedVersion(version)
         }
         let tagSize = unsynchsafe(mp3.subdata(in: 6..<10))
         let tagEnd = min(10 + tagSize, mp3.count)

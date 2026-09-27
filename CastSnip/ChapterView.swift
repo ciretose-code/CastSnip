@@ -28,13 +28,17 @@ struct ChapterView: View {
                 .dropDestination(for: NSImage.self) { items, _ in
                     chapter.updateImage(items.first)
                     podcastAudioFile.markAsModified()
+                    rememberChapterIfFilled()
                     return true
                 }
             VStack(alignment: .leading) {
                 EditableTextField(text: $chapter.title, placeholderText: Chapter.DEFAULT_TITLE)
                     .font(.headline)
                     .lineLimit(1)
-                    .onChange(of: chapter.title) { podcastAudioFile.markAsModified() }
+                    .onChange(of: chapter.title) {
+                        podcastAudioFile.markAsModified()
+                        ShowAutofillStore.shared.applyToChapterIfEmpty(chapter)
+                    }
                 EditableTextField(text: $chapter.url, placeholderText: Chapter.DEFAULT_URL)
                     .font(.subheadline)
                     .lineLimit(1)
@@ -43,7 +47,10 @@ struct ChapterView: View {
                         RoundedRectangle(cornerRadius: 3)
                             .stroke(urlIsInvalid ? Color.red : Color.clear, lineWidth: 1)
                     )
-                    .onChange(of: chapter.url) { podcastAudioFile.markAsModified() }
+                    .onChange(of: chapter.url) {
+                        podcastAudioFile.markAsModified()
+                        rememberChapterIfFilled()
+                    }
             }
             Spacer()
             Button {
@@ -65,6 +72,9 @@ struct ChapterView: View {
             .onChange(of: chapter.startTime) { podcastAudioFile.markAsModified() }
             .onChange(of: chapter.endTime) { podcastAudioFile.markAsModified() }
         }
+        .onChange(of: chapter.image != nil) {
+            rememberChapterIfFilled()
+        }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(chapterAccessibilityLabel)
     }
@@ -79,6 +89,15 @@ struct ChapterView: View {
 
     private var urlIsInvalid: Bool {
         chapter.validate().contains(.invalidURL)
+    }
+
+    private func rememberChapterIfFilled() {
+        guard !chapter.url.isEmpty || chapter.image != nil else { return }
+        ShowAutofillStore.shared.rememberChapter(
+            title: chapter.title,
+            url: chapter.url,
+            image: chapter.image
+        )
     }
 
     func getImage() -> NSImage {
@@ -103,6 +122,7 @@ struct ChapterView: View {
             if response == .OK, let url = panel.url, let image = NSImage(contentsOf: url) {
                 chapter.updateImage(image)
                 podcastAudioFile.markAsModified()
+                rememberChapterIfFilled()
             }
         }
     }

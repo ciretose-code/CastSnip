@@ -41,6 +41,11 @@
 		A11D3E010001000100000012 /* KeyboardShortcutsHelp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */; };
 		A11D3E010001000100000014 /* EditorCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000013 /* EditorCopy.swift */; };
 		A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000015 /* EmptyPodcastView.swift */; };
+		A11D3E010001000100000018 /* AudioMarkerImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000017 /* AudioMarkerImporter.swift */; };
+		A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000019 /* ShowAutofillStore.swift */; };
+		A11D3E01000100010000001C /* SilenceDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001B /* SilenceDetector.swift */; };
+		A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001D /* PodcastEncoder.swift */; };
+		A11D3E010001000100000020 /* AircheckExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001F /* AircheckExporter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -92,6 +97,11 @@
 		A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsHelp.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000013 /* EditorCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorCopy.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000015 /* EmptyPodcastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyPodcastView.swift; sourceTree = "<group>"; };
+		A11D3E010001000100000017 /* AudioMarkerImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioMarkerImporter.swift; sourceTree = "<group>"; };
+		A11D3E010001000100000019 /* ShowAutofillStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowAutofillStore.swift; sourceTree = "<group>"; };
+		A11D3E01000100010000001B /* SilenceDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceDetector.swift; sourceTree = "<group>"; };
+		A11D3E01000100010000001D /* PodcastEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastEncoder.swift; sourceTree = "<group>"; };
+		A11D3E01000100010000001F /* AircheckExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircheckExporter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -147,6 +157,7 @@
 				A11D3E01000100010000000B /* CopyableInfoBadge.swift */,
 				A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */,
 				A11D3E01000100010000000F /* RecentFilesStore.swift */,
+				A11D3E010001000100000019 /* ShowAutofillStore.swift */,
 				A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */,
 				A11D3E010001000100000013 /* EditorCopy.swift */,
 				A11D3E010001000100000015 /* EmptyPodcastView.swift */,
@@ -205,6 +216,10 @@
 				7B5427BF2BEC519000314CDB /* Chapter.swift */,
 				A11D3E010001000100000007 /* ChapterTimeline.swift */,
 				A11D3E010001000100000009 /* ChapterVisibility.swift */,
+				A11D3E010001000100000017 /* AudioMarkerImporter.swift */,
+				A11D3E01000100010000001B /* SilenceDetector.swift */,
+				A11D3E01000100010000001D /* PodcastEncoder.swift */,
+				A11D3E01000100010000001F /* AircheckExporter.swift */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -262,7 +277,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2620;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 2700;
 				TargetAttributes = {
 					7B1D20B22BD36A83006D1AA4 = {
 						CreatedOnToolsVersion = 15.3;
@@ -350,6 +365,11 @@
 				A11D3E010001000100000012 /* KeyboardShortcutsHelp.swift in Sources */,
 				A11D3E010001000100000014 /* EditorCopy.swift in Sources */,
 				A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */,
+				A11D3E010001000100000018 /* AudioMarkerImporter.swift in Sources */,
+				A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */,
+				A11D3E01000100010000001C /* SilenceDetector.swift in Sources */,
+				A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */,
+				A11D3E010001000100000020 /* AircheckExporter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

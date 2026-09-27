@@ -20,7 +20,7 @@ struct TitleView: View {
             TextField("Podcast Title Goes Here", text: $title)
                 .textFieldStyle(.plain)
                 .padding(EdgeInsets(top: 4, leading: (radius/2), bottom: 4, trailing: (radius/2)))
-                .textFieldStyle(.roundedBorder)
+                .compatibleTextFieldBorder()
                 .background(Color(nsColor: .textBackgroundColor))
                 .cornerRadius(radius)
                 .overlay(RoundedRectangle(cornerRadius:radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
@@ -28,6 +28,16 @@ struct TitleView: View {
     }
 }
 
+extension View {
+    @ViewBuilder
+    func compatibleTextFieldBorder() -> some View {
+        if #available(macOS 27, *) {
+            self.textFieldStyle(.bordered)
+        } else {
+            self.textFieldStyle(.roundedBorder)
+        }
+    }
+}
 
 #Preview("Title") {
     
