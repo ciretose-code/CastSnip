@@ -101,12 +101,18 @@ final class AudioPlayerManager: ObservableObject {
         timer = nil
     }
 
-    private func tick() {
+    /// Tests call this after a real `AVAudioPlayer` finishes because `Timer` does not fire on the Swift Testing run loop.
+    func tick() {
         guard let player else { return }
-        if !player.isPlaying, player.duration > 0, player.currentTime >= player.duration - 0.05 {
-            stopTimer()
-            setPublished(isPlaying: false, currentTime: player.duration, duration: player.duration)
-            return
+        if !player.isPlaying, player.duration > 0 {
+            let atEnd = player.currentTime >= player.duration - 0.05
+            // AVAudioPlayer resets `currentTime` to 0 when the file ends.
+            let finishedAndWrapped = isPlaying && player.currentTime < 0.05
+            if atEnd || finishedAndWrapped {
+                stopTimer()
+                setPublished(isPlaying: false, currentTime: player.duration, duration: player.duration)
+                return
+            }
         }
         setPublished(isPlaying: player.isPlaying, currentTime: player.currentTime, duration: player.duration)
     }
