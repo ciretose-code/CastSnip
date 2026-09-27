@@ -224,10 +224,12 @@ struct ContentView: View {
                                             in: 0...Double(viewportOptions.count - 1),
                                             step: 1
                                         )
+                                        .controlSize(.regular)
                                         .frame(width: 140)
                                         .accessibilityLabel(EditorAccessibility.viewport)
                                     } else {
                                         Slider(value: .constant(0), in: 0...1)
+                                            .controlSize(.regular)
                                             .frame(width: 140)
                                             .disabled(true)
                                     }

@@ -20,7 +20,7 @@ struct EpisodeView: View {
             TextField("Episode Title Goes Here", text: $episode)
                 .textFieldStyle(.plain)
                 .padding(EdgeInsets(top: 4, leading: (radius/2), bottom: 4, trailing: (radius/2)))
-                .textFieldStyle(.roundedBorder)
+                .compatibleTextFieldBorder()
                 .background(Color(nsColor: .textBackgroundColor))
                 .cornerRadius(radius)
                 .overlay(RoundedRectangle(cornerRadius:radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
