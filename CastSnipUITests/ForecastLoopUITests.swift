@@ -86,8 +86,8 @@ final class ForecastLoopUITests: XCTestCase {
     }
 
     private func titleField(in app: XCUIApplication) -> XCUIElement {
-        let byIdentifier = app.textFields[EditorA11y.podcastTitle]
-        if byIdentifier.exists { return byIdentifier }
+        let field = app.textFields[EditorA11y.podcastTitle]
+        if field.waitForExistence(timeout: 15) { return field }
         return app.textViews[EditorA11y.podcastTitle]
     }
 
