@@ -67,6 +67,19 @@ struct WaveformView: View {
         }
     }
 
+    static func makeMarkers(from chapters: [Chapter]) -> [Marker] {
+        chapters.sorted().map { chapter in
+            let title = chapter.title.trimmingCharacters(in: .whitespacesAndNewlines)
+            return Marker(
+                id: chapter.id,
+                time: TimeInterval(chapter.startTime) / 1000.0,
+                color: .red,
+                lineWidth: 2,
+                label: title.isEmpty ? "Chapter" : title
+            )
+        }
+    }
+
     init(
         audioFile: AVAudioFile?,
         sampleCount: Int = 2000,
@@ -130,7 +143,10 @@ struct WaveformView: View {
             }
         }
         .frame(height: 100)
-        .task {
+        .task(id: audioFile?.url) {
+            isLoading = true
+            samples = []
+            audioDuration = 0
             await loadSamples()
         }
     }
@@ -421,6 +437,7 @@ struct WaveformView: View {
 
     private func loadSamples() async {
         guard let audioFile = audioFile else {
+            samples = []
             isLoading = false
             return
         }
