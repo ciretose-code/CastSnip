@@ -118,5 +118,32 @@ struct KeyboardShortcutsHelpTests {
         #expect(text.contains("⌘["))
         #expect(text.contains("⌘]"))
         #expect(text.contains("Open Recent"))
+        #expect(text.contains("Include ID3 tags"))
+    }
+}
+
+struct ID3TaggingStoreTests {
+
+    @Test func missingPreferenceDefaultsToIncludingTags() {
+        let suite = "CastSnip.ID3TaggingStoreTests.default.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+        let store = ID3TaggingStore(defaults: defaults)
+        #expect(store.includeTags)
+    }
+
+    @Test func togglingPersistsAcrossLoads() {
+        let suite = "CastSnip.ID3TaggingStoreTests.persist.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+
+        let first = ID3TaggingStore(defaults: defaults)
+        first.includeTags = false
+        let second = ID3TaggingStore(defaults: defaults)
+        #expect(!second.includeTags)
+
+        second.includeTags = true
+        let third = ID3TaggingStore(defaults: defaults)
+        #expect(third.includeTags)
     }
 }

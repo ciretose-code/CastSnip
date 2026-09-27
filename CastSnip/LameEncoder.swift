@@ -2,7 +2,8 @@
 //  LameEncoder.swift
 //  CastSnip
 //
-//  Thin Swift wrapper around the LAME C API (SPM product `LAME`).
+//  Thin Swift wrapper around the LAME 4.0 C API (SPM product `LAME`
+//  from https://github.com/ciretose-code/LAME).
 //  LAME remains a dynamic package product (LGPL); this file only configures
 //  and drives encode/flush.
 //

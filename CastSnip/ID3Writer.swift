@@ -84,7 +84,12 @@ enum ID3Writer {
         tagData(for: podcast) + mpegAudioPayload(from: source)
     }
 
-    static func write(podcast: Podcast, from sourceURL: URL, to destinationURL: URL) throws {
+    static func write(
+        podcast: Podcast,
+        from sourceURL: URL,
+        to destinationURL: URL,
+        includeTags: Bool = true
+    ) throws {
         let source: Data
         do {
             source = try Data(contentsOf: sourceURL)
@@ -97,7 +102,7 @@ enum ID3Writer {
             throw ID3WriterError.noAudioPayload
         }
 
-        let output = tagData(for: podcast) + audio
+        let output = includeTags ? tagData(for: podcast) + audio : audio
         do {
             try output.write(to: destinationURL, options: .atomic)
         } catch {

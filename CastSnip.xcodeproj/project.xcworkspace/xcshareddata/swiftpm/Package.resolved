@@ -1,13 +1,13 @@
 {
-  "originHash" : "559bb57fd20484b16da024cf43b71127ff301705a5ca39452bb6d0db37b8b03b",
+  "originHash" : "fb37d43b4c63faddb5c40b4c79baa959351895f67a5d3eece2210fd4660dd5cf",
   "pins" : [
     {
-      "identity" : "lame-xcframework",
+      "identity" : "lame",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/BB9z/LAME-xcframework.git",
+      "location" : "https://github.com/ciretose-code/LAME.git",
       "state" : {
-        "revision" : "3f906714cf8a8cf2a82a8cf5bc760e639febf7b2",
-        "version" : "3.100.3"
+        "revision" : "5703664900458b1168505cebe7224c6f292ae561",
+        "version" : "4.0.0"
       }
     }
   ],

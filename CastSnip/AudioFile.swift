@@ -41,11 +41,11 @@ class AudioFile: Identifiable {
         hasUnsavedChanges = false
     }
 
-    func save(to destination: URL) throws {
+    func save(to destination: URL, includeTags: Bool = true) throws {
         guard let source = podcast.url else {
             throw ID3WriterError.unreadableSource
         }
-        try ID3Writer.write(podcast: podcast, from: source, to: destination)
+        try ID3Writer.write(podcast: podcast, from: source, to: destination, includeTags: includeTags)
         podcast.url = destination
         if let attributes = try? FileManager.default.attributesOfItem(atPath: destination.path),
            let size = attributes[.size] as? UInt64 {
@@ -162,7 +162,7 @@ class AudioFile: Identifiable {
     }
     
     private func loadingPodcast(from url: URL) async -> Podcast {
-        var pa = Podcast()
+        let pa = Podcast()
         pa.url = url
         pa.file = getFile(from: url)
         
@@ -242,7 +242,7 @@ class AudioFile: Identifiable {
         ChapterVisibility.apply(tocChildIDs: tocChildIDs, to: pa.chapters)
 
         if pa.chapters.isEmpty {
-            pa.chapters = AudioMarkerImporter.chapters(from: url, durationMillis: pa.durationInMillis ?? 0)
+            pa.chapters = await AudioMarkerImporter.chapters(from: url, durationMillis: pa.durationInMillis ?? 0)
         }
         
         return pa
