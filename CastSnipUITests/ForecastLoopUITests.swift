@@ -93,7 +93,7 @@ final class ForecastLoopUITests: XCTestCase {
 
     private func playControl(in app: XCUIApplication) -> XCUIElement {
         let byIdentifier = app.buttons[EditorA11y.playPause]
-        if byIdentifier.exists { return byIdentifier }
+        if byIdentifier.waitForExistence(timeout: 15) { return byIdentifier }
         return app.buttons[EditorA11y.play]
     }
 
