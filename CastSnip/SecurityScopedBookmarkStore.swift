@@ -8,8 +8,13 @@ import Foundation
 final class SecurityScopedBookmarkStore {
     static let shared = SecurityScopedBookmarkStore()
 
+    private let defaults: UserDefaults
     private let defaultsKey = "securityScopedBookmarks"
     private var activeURLs: [URL] = []
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
 
     func rememberAndAccess(_ url: URL) {
         if url.startAccessingSecurityScopedResource() {
@@ -22,16 +27,16 @@ final class SecurityScopedBookmarkStore {
                 includingResourceValuesForKeys: nil,
                 relativeTo: nil
             )
-            var map = UserDefaults.standard.dictionary(forKey: defaultsKey) as? [String: Data] ?? [:]
+            var map = defaults.dictionary(forKey: defaultsKey) as? [String: Data] ?? [:]
             map[url.path] = data
-            UserDefaults.standard.set(map, forKey: defaultsKey)
+            defaults.set(map, forKey: defaultsKey)
         } catch {
             // Bookmarks can fail for bundle resources and test temp files.
         }
     }
 
     func resolveAndAccess(path: String) -> URL? {
-        let map = UserDefaults.standard.dictionary(forKey: defaultsKey) as? [String: Data] ?? [:]
+        let map = defaults.dictionary(forKey: defaultsKey) as? [String: Data] ?? [:]
         var stale = false
         if let data = map[path],
            let url = try? URL(

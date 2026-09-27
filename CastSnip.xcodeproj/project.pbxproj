@@ -46,6 +46,10 @@
 		A11D3E01000100010000001C /* SilenceDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001B /* SilenceDetector.swift */; };
 		A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001D /* PodcastEncoder.swift */; };
 		A11D3E010001000100000020 /* AircheckExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001F /* AircheckExporter.swift */; };
+		A11D3E010001000100000022 /* LameEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000021 /* LameEncoder.swift */; };
+		A11D3E010001000100000024 /* WaveformSampling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000023 /* WaveformSampling.swift */; };
+		A11LAME010001000100000003 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000002 /* LAME */; };
+		A11LAME010001000100000005 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000004 /* LAME */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,6 +106,8 @@
 		A11D3E01000100010000001B /* SilenceDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceDetector.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001D /* PodcastEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastEncoder.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001F /* AircheckExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircheckExporter.swift; sourceTree = "<group>"; };
+		A11D3E010001000100000021 /* LameEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LameEncoder.swift; sourceTree = "<group>"; };
+		A11D3E010001000100000023 /* WaveformSampling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformSampling.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -113,6 +119,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A11LAME010001000100000003 /* LAME in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -120,6 +127,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A11LAME010001000100000005 /* LAME in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -163,6 +171,7 @@
 				A11D3E010001000100000015 /* EmptyPodcastView.swift */,
 				7B16BD222F2E853900DFD7E8 /* PlatformImage.swift */,
 				7B16BD232F2E853900DFD7E8 /* WaveformView.swift */,
+				A11D3E010001000100000023 /* WaveformSampling.swift */,
 				7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */,
 				7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */,
 				7B7404522BDEBB5D001811B2 /* ID3Parser.swift */,
@@ -218,6 +227,7 @@
 				A11D3E010001000100000009 /* ChapterVisibility.swift */,
 				A11D3E010001000100000017 /* AudioMarkerImporter.swift */,
 				A11D3E01000100010000001B /* SilenceDetector.swift */,
+				A11D3E010001000100000021 /* LameEncoder.swift */,
 				A11D3E01000100010000001D /* PodcastEncoder.swift */,
 				A11D3E01000100010000001F /* AircheckExporter.swift */,
 			);
@@ -241,6 +251,7 @@
 			);
 			name = CastSnip;
 			packageProductDependencies = (
+				A11LAME010001000100000002 /* LAME */,
 			);
 			productName = CastSnip;
 			productReference = 7B1D20B32BD36A83006D1AA4 /* CastSnip.app */;
@@ -264,6 +275,7 @@
 			);
 			name = CastSnipTests;
 			packageProductDependencies = (
+				A11LAME010001000100000004 /* LAME */,
 			);
 			productName = CastSnipTests;
 			productReference = 7B2A958E2F2C74E600C924FB /* CastSnipTests.xctest */;
@@ -298,6 +310,7 @@
 			);
 			mainGroup = 7B1D20AA2BD36A83006D1AA4;
 			packageReferences = (
+				A11LAME010001000100000001 /* XCRemoteSwiftPackageReference "LAME-xcframework" */,
 			);
 			productRefGroup = 7B1D20B42BD36A83006D1AA4 /* Products */;
 			projectDirPath = "";
@@ -368,8 +381,10 @@
 				A11D3E010001000100000018 /* AudioMarkerImporter.swift in Sources */,
 				A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */,
 				A11D3E01000100010000001C /* SilenceDetector.swift in Sources */,
+				A11D3E010001000100000022 /* LameEncoder.swift in Sources */,
 				A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */,
 				A11D3E010001000100000020 /* AircheckExporter.swift in Sources */,
+				A11D3E010001000100000024 /* WaveformSampling.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -648,6 +663,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A11LAME010001000100000001 /* XCRemoteSwiftPackageReference "LAME-xcframework" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/BB9z/LAME-xcframework.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.100.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A11LAME010001000100000002 /* LAME */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A11LAME010001000100000001 /* XCRemoteSwiftPackageReference "LAME-xcframework" */;
+			productName = LAME;
+		};
+		A11LAME010001000100000004 /* LAME */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A11LAME010001000100000001 /* XCRemoteSwiftPackageReference "LAME-xcframework" */;
+			productName = LAME;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 7B1D20AB2BD36A83006D1AA4 /* Project object */;
 }

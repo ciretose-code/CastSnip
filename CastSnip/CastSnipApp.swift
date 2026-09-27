@@ -330,7 +330,7 @@ struct CastSnipApp: App {
     private func performEncode(from source: URL, to dest: URL) async {
         let alert = NSAlert()
         alert.messageText = "Encoding…"
-        alert.informativeText = "Creating a podcast-quality file (192 kbps CBR MP3 when lame is available)."
+        alert.informativeText = "Creating a podcast-quality file (192 kbps CBR stereo MP3 via in-process LAME)."
         let bar = NSProgressIndicator(frame: NSRect(x: 0, y: 0, width: 240, height: 16))
         bar.minValue = 0
         bar.maxValue = 1
@@ -356,7 +356,7 @@ struct CastSnipApp: App {
             await podcastAudioFile.loadPodcast(from: written)
             RecentFilesStore.shared.remember(written)
             if written.pathExtension.lowercased() != "mp3" {
-                podcastAudioFile.errorMessage = "Wrote AAC (.m4a) instead of MP3. Install lame (`brew install lame`) for 192 kbps CBR stereo."
+                podcastAudioFile.errorMessage = "Wrote AAC (.m4a) instead of MP3. In-process LAME encode failed; AAC is the fallback."
             }
         } catch {
             if let window {
