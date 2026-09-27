@@ -57,6 +57,20 @@ enum SilenceDetector {
         return result
     }
 
+    static func ranges(
+        in windows: [Window],
+        settings: SilenceSettingsStore
+    ) -> [Range] {
+        ranges(in: windows, thresholdDb: settings.thresholdDb, durationSeconds: settings.durationSeconds)
+    }
+
+    static func warningMessage(
+        for audioFile: AudioFile,
+        settings: SilenceSettingsStore = .shared
+    ) -> String? {
+        warningMessage(for: audioFile.silenceRanges(settings: settings))
+    }
+
     static func warningMessage(for ranges: [Range]) -> String? {
         guard !ranges.isEmpty else { return nil }
         let parts = ranges.map { range in

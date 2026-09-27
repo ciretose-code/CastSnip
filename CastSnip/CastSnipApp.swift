@@ -21,6 +21,7 @@ struct CastSnipApp: App {
     @State var fileURL: URL?
     @State private var recentFiles = RecentFilesStore.shared
     @State private var tagging = ID3TaggingStore.shared
+    @State private var silenceSettings = SilenceSettingsStore.shared
     @State private var pendingAction: PendingDocumentAction?
     @State private var showDiscardAlert = false
     @State private var showShortcutsHelp = false
@@ -168,6 +169,10 @@ struct CastSnipApp: App {
             }
         }
         .defaultSize(width: 800, height: 600)
+
+        Settings {
+            SilenceSettingsView(store: silenceSettings)
+        }
     }
 
     private enum PendingDocumentAction {
@@ -302,8 +307,7 @@ struct CastSnipApp: App {
 
     /// Warns on long accidental gaps. Detection failure logs and continues.
     private func confirmSilenceOrContinue() -> Bool {
-        let ranges = podcastAudioFile.silenceRanges()
-        guard let message = SilenceDetector.warningMessage(for: ranges) else {
+        guard let message = SilenceDetector.warningMessage(for: podcastAudioFile, settings: silenceSettings) else {
             return true
         }
         let alert = NSAlert()
