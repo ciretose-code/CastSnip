@@ -116,6 +116,34 @@ struct PodcastEncoderTests {
         #expect(progressValues.allSatisfy { $0 >= 0 && $0 <= 1 })
     }
 
+    @Test func defaultEncodeFallsBackToAACWhenLAMEThrows() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-encode-lame-fail-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let input = directory.appendingPathComponent("tone.wav")
+        try ProductionAudioFixtures.writeSineWAV(to: input, duration: 0.4)
+        let requested = directory.appendingPathComponent("episode.mp3")
+
+        var progressValues: [Double] = []
+        let written = try await PodcastEncoder.encode(
+            from: input,
+            to: requested,
+            includeTags: false,
+            encoder: { _, _, _ in
+                throw PodcastEncoder.EncodeError.failed("injected LAME failure")
+            },
+            progress: { progressValues.append($0) }
+        )
+
+        #expect(written.pathExtension == "m4a")
+        #expect(FileManager.default.fileExists(atPath: written.path))
+        #expect(progressValues.contains { $0 == 0 || $0 > 0 })
+        #expect(progressValues.contains { $0 >= 1 })
+        #expect(progressValues.allSatisfy { $0 >= 0 && $0 <= 1 })
+    }
+
     @Test func aacFallbackWritesM4AAndReportsProgress() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("castsnip-encode-\(UUID().uuidString)", isDirectory: true)

@@ -49,13 +49,18 @@ enum PodcastEncoder {
         using tool: Tool? = nil,
         tagging podcast: Podcast? = nil,
         includeTags: Bool = true,
+        encoder: ((URL, URL, ((Double) -> Void)?) throws -> Void)? = nil,
         progress: ((Double) -> Void)? = nil
     ) async throws -> URL {
         let resolved = tool ?? preferredTool()
         switch resolved {
         case .lameInProcess:
             do {
-                try LameEncoder.encode(from: input, to: output, progress: progress)
+                if let encoder {
+                    try encoder(input, output, progress)
+                } else {
+                    try LameEncoder.encode(from: input, to: output, progress: progress)
+                }
                 if includeTags, let podcast {
                     try ID3Writer.write(podcast: podcast, from: output, to: output, includeTags: true)
                 }
