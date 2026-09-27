@@ -101,7 +101,7 @@ final class ShowAutofillStore {
 
     static func parse(_ filename: String) -> (prefix: String, episode: String?)? {
         let name = URL(fileURLWithPath: filename).deletingPathExtension().lastPathComponent
-        guard let match = name.wholeMatch(of: /^([A-Za-z]+)[-_]?(\d+)?$/) else {
+        guard let match = name.wholeMatch(of: /^([A-Za-z]+(?:[-_][A-Za-z]+)*)[-_]?(\d+)?$/) else {
             return nil
         }
         let prefix = String(match.1).lowercased()

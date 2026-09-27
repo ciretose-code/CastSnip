@@ -24,6 +24,12 @@ struct ShowAutofillTests {
         #expect(suggestion.title == nil)
     }
 
+    @Test func parsesMultiHyphenShowFilename() {
+        let parsed = ShowAutofillStore.parse("the-talk-show-12.mp3")
+        #expect(parsed?.prefix == "the-talk-show")
+        #expect(parsed?.episode == "12")
+    }
+
     @Test func filenameWithoutTrailingNumberHasNoEpisode() {
         let store = isolatedStore()
         let suggestion = store.suggestion(forFilename: "episode.mp3")
