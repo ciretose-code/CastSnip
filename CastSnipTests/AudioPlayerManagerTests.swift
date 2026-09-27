@@ -106,6 +106,54 @@ struct AudioPlayerManagerTests {
         #expect(player.currentTime == 0)
         #expect(player.duration == 0)
     }
+
+    @Test func playPauseAndToggleUpdateIsPlayingAfterSuccessfulLoad() async throws {
+        let fixture = try PlayableAudioFixture.make(duration: 0.4)
+        defer { fixture.tearDown() }
+
+        let player = AudioPlayerManager()
+        player.load(url: fixture.url)
+        await waitForMainQueuePublishedUpdates()
+        #expect(player.duration > 0)
+        #expect(player.isPlaying == false)
+
+        player.play()
+        await waitForMainQueuePublishedUpdates()
+        #expect(player.isPlaying == true)
+
+        player.pause()
+        await waitForMainQueuePublishedUpdates()
+        #expect(player.isPlaying == false)
+
+        player.togglePlayPause()
+        await waitForMainQueuePublishedUpdates()
+        #expect(player.isPlaying == true)
+
+        player.togglePlayPause()
+        await waitForMainQueuePublishedUpdates()
+        #expect(player.isPlaying == false)
+    }
+
+    @Test func endOfTrackStopsPlaybackAndPinsCurrentTimeToDuration() async throws {
+        let fixture = try PlayableAudioFixture.make(duration: 0.25)
+        defer { fixture.tearDown() }
+
+        let player = AudioPlayerManager()
+        player.load(url: fixture.url)
+        await waitForMainQueuePublishedUpdates()
+        #expect(player.duration > 0)
+
+        player.play()
+        await waitForMainQueuePublishedUpdates()
+        #expect(player.isPlaying == true)
+
+        try await Task.sleep(for: .milliseconds(400))
+        player.tick()
+        await waitForMainQueuePublishedUpdates()
+
+        #expect(player.isPlaying == false)
+        #expect(abs(player.currentTime - player.duration) < 0.05)
+    }
 }
 
 /// Waits for work already queued on the main thread (published `currentTime` / `duration` / `loadError`).
@@ -127,24 +175,26 @@ private struct PlayableAudioFixture {
         try? FileManager.default.removeItem(at: url)
     }
 
-    static func make() throws -> PlayableAudioFixture {
-        if let bundled = Bundle(for: AudioFile.self).url(forResource: "intro", withExtension: "mp3") {
-            return PlayableAudioFixture(url: bundled, isTemporary: false)
-        }
-        if let main = Bundle.main.url(forResource: "intro", withExtension: "mp3") {
-            return PlayableAudioFixture(url: main, isTemporary: false)
-        }
-        let fromSource = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .appendingPathComponent("CastSnip/Samples/intro.mp3")
-        if FileManager.default.fileExists(atPath: fromSource.path) {
-            return PlayableAudioFixture(url: fromSource, isTemporary: false)
+    static func make(duration: TimeInterval = 2) throws -> PlayableAudioFixture {
+        if duration == 2 {
+            if let bundled = Bundle(for: AudioFile.self).url(forResource: "intro", withExtension: "mp3") {
+                return PlayableAudioFixture(url: bundled, isTemporary: false)
+            }
+            if let main = Bundle.main.url(forResource: "intro", withExtension: "mp3") {
+                return PlayableAudioFixture(url: main, isTemporary: false)
+            }
+            let fromSource = URL(fileURLWithPath: #filePath)
+                .deletingLastPathComponent()
+                .deletingLastPathComponent()
+                .appendingPathComponent("CastSnip/Samples/intro.mp3")
+            if FileManager.default.fileExists(atPath: fromSource.path) {
+                return PlayableAudioFixture(url: fromSource, isTemporary: false)
+            }
         }
 
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("castsnip-player-\(UUID().uuidString).wav")
-        try writePlayableWAV(to: url, duration: 2)
+        try writePlayableWAV(to: url, duration: duration)
         return PlayableAudioFixture(url: url, isTemporary: true)
     }
 }

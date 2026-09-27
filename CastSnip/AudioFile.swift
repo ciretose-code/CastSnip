@@ -20,7 +20,17 @@ class AudioFile: Identifiable {
     var isLoading = false
     var errorMessage: String?
     var hasUnsavedChanges = false
-    var selectedChapter: Chapter?
+    var selectedChapters: Set<Chapter> = []
+    var selectedChapter: Chapter? {
+        get { selectedChapters.min() }
+        set {
+            if let newValue {
+                selectedChapters = [newValue]
+            } else {
+                selectedChapters = []
+            }
+        }
+    }
     private let logger = Logger(subsystem: "com.castsnip", category: "AudioFile")
     
     @MainActor
@@ -31,7 +41,7 @@ class AudioFile: Identifiable {
         
         if podcast.asset == nil {
             errorMessage = "Failed to load audio file. The file may be corrupted or in an unsupported format."
-        } else if podcast.durationInSeconds == 0 {
+        } else if podcast.durationInSeconds == 0, errorMessage == nil {
             errorMessage = "Warning: Could not determine audio duration."
         }
 
@@ -93,12 +103,17 @@ class AudioFile: Identifiable {
     }
 
     func silenceRanges(
-        thresholdDb: Double = SilenceDetector.defaultThresholdDb,
-        durationSeconds: TimeInterval = SilenceDetector.defaultDurationSeconds
+        thresholdDb: Double? = nil,
+        durationSeconds: TimeInterval? = nil,
+        settings: SilenceSettingsStore = .shared
     ) -> [SilenceDetector.Range] {
         guard let file = podcast.file else { return [] }
         do {
-            return try SilenceDetector.detect(in: file, thresholdDb: thresholdDb, durationSeconds: durationSeconds)
+            return try SilenceDetector.detect(
+                in: file,
+                thresholdDb: thresholdDb ?? settings.thresholdDb,
+                durationSeconds: durationSeconds ?? settings.durationSeconds
+            )
         } catch {
             logger.error("Silence detection failed: \(error.localizedDescription)")
             return []
@@ -242,7 +257,11 @@ class AudioFile: Identifiable {
         ChapterVisibility.apply(tocChildIDs: tocChildIDs, to: pa.chapters)
 
         if pa.chapters.isEmpty {
-            pa.chapters = await AudioMarkerImporter.chapters(from: url, durationMillis: pa.durationInMillis ?? 0)
+            do {
+                pa.chapters = try await AudioMarkerImporter.chapters(from: url, durationMillis: pa.durationInMillis ?? 0)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
         
         return pa

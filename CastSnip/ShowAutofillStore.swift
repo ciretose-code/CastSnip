@@ -17,6 +17,22 @@ struct ChapterAutofillSuggestion {
     var image: NSImage?
 }
 
+struct StoredShowAutofill: Identifiable {
+    var prefix: String
+    var title: String
+    var artwork: NSImage?
+
+    var id: String { prefix }
+}
+
+struct StoredChapterAutofill: Identifiable {
+    var title: String
+    var url: String?
+    var image: NSImage?
+
+    var id: String { title }
+}
+
 final class ShowAutofillStore {
     static let shared = ShowAutofillStore()
     static let showsKey = "showAutofillShows"
@@ -94,6 +110,46 @@ final class ShowAutofillStore {
         }
     }
 
+    func storedShows() -> [StoredShowAutofill] {
+        loadShows()
+            .map { key, record in
+                StoredShowAutofill(
+                    prefix: key,
+                    title: record.title,
+                    artwork: image(from: record.artwork)
+                )
+            }
+            .sorted { $0.prefix < $1.prefix }
+    }
+
+    func storedChapters() -> [StoredChapterAutofill] {
+        loadChapters()
+            .map { key, record in
+                StoredChapterAutofill(
+                    title: key,
+                    url: record.url.isEmpty ? nil : record.url,
+                    image: image(from: record.image)
+                )
+            }
+            .sorted { $0.title < $1.title }
+    }
+
+    func deleteShow(prefix: String) {
+        let key = prefix.lowercased()
+        guard !key.isEmpty else { return }
+        var shows = loadShows()
+        shows.removeValue(forKey: key)
+        saveShows(shows)
+    }
+
+    func deleteChapter(title: String) {
+        let key = title.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !key.isEmpty else { return }
+        var chapters = loadChapters()
+        chapters.removeValue(forKey: key)
+        saveChapters(chapters)
+    }
+
     func clear() {
         defaults.removeObject(forKey: Self.showsKey)
         defaults.removeObject(forKey: Self.chaptersKey)
@@ -101,7 +157,7 @@ final class ShowAutofillStore {
 
     static func parse(_ filename: String) -> (prefix: String, episode: String?)? {
         let name = URL(fileURLWithPath: filename).deletingPathExtension().lastPathComponent
-        guard let match = name.wholeMatch(of: /^([A-Za-z]+)[-_]?(\d+)?$/) else {
+        guard let match = name.wholeMatch(of: /^([A-Za-z]+(?:[-_][A-Za-z]+)*)[-_]?(\d+)?$/) else {
             return nil
         }
         let prefix = String(match.1).lowercased()

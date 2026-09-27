@@ -24,8 +24,12 @@ enum AircheckExporter {
     }
 
     static func chaptersToExport(selected: Chapter?, all: [Chapter]) -> [Chapter] {
-        if let selected {
-            return [selected]
+        chaptersToExport(selected: selected.map { [$0] } ?? [], all: all)
+    }
+
+    static func chaptersToExport(selected: [Chapter], all: [Chapter]) -> [Chapter] {
+        if !selected.isEmpty {
+            return selected.sorted()
         }
         return all.filter { !$0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
     }

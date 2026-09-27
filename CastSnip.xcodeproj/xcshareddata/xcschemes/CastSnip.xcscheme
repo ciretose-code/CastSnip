@@ -46,6 +46,17 @@
                ReferencedContainer = "container:CastSnip.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "A11380010001000100000004"
+               BuildableName = "CastSnipUITests.xctest"
+               BlueprintName = "CastSnipUITests"
+               ReferencedContainer = "container:CastSnip.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

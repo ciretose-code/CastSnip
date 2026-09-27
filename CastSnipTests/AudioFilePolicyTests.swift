@@ -27,15 +27,59 @@ struct AudioFilePolicyTests {
         let chapter = Chapter(title: "Intro", startTime: 0, endTime: 4_000)
         audioFile.podcast.chapters = [chapter]
         audioFile.selectedChapter = chapter
+        audioFile.selectedChapters = [chapter]
         audioFile.errorMessage = "Failed to load audio file."
         audioFile.markAsModified()
 
         audioFile.closeDocument()
 
         #expect(audioFile.selectedChapter == nil)
+        #expect(audioFile.selectedChapters.isEmpty)
         #expect(audioFile.errorMessage == nil)
         #expect(audioFile.hasUnsavedChanges == false)
         #expect(audioFile.podcast.chapters.isEmpty)
+    }
+
+    @Test func selectedChaptersHoldsMultipleWhileSelectedChapterStaysThePrimary() {
+        let audioFile = AudioFile()
+        let intro = Chapter(title: "Intro", startTime: 0, endTime: 4_000)
+        let ads = Chapter(title: "Ads", startTime: 4_000, endTime: 8_000)
+        let talk = Chapter(title: "Talk", startTime: 8_000, endTime: 12_000)
+        audioFile.podcast.chapters = [intro, ads, talk]
+
+        audioFile.selectedChapters = [ads, intro]
+
+        #expect(audioFile.selectedChapters.count == 2)
+        #expect(audioFile.selectedChapters.contains(intro))
+        #expect(audioFile.selectedChapters.contains(ads))
+        #expect(audioFile.selectedChapter === intro)
+    }
+
+    @Test func settingSelectedChapterReplacesMultiSelectionWithOneChapter() {
+        let audioFile = AudioFile()
+        let intro = Chapter(title: "Intro", startTime: 0, endTime: 4_000)
+        let ads = Chapter(title: "Ads", startTime: 4_000, endTime: 8_000)
+        let talk = Chapter(title: "Talk", startTime: 8_000, endTime: 12_000)
+        audioFile.podcast.chapters = [intro, ads, talk]
+        audioFile.selectedChapters = [intro, ads]
+
+        audioFile.selectedChapter = talk
+
+        #expect(audioFile.selectedChapter === talk)
+        #expect(audioFile.selectedChapters == [talk])
+    }
+
+    @Test func clearingSelectedChapterClearsMultiSelection() {
+        let audioFile = AudioFile()
+        let intro = Chapter(title: "Intro", startTime: 0, endTime: 4_000)
+        let ads = Chapter(title: "Ads", startTime: 4_000, endTime: 8_000)
+        audioFile.podcast.chapters = [intro, ads]
+        audioFile.selectedChapters = [intro, ads]
+
+        audioFile.selectedChapter = nil
+
+        #expect(audioFile.selectedChapter == nil)
+        #expect(audioFile.selectedChapters.isEmpty)
     }
 
     @Test func selectNeighborMovesNextAndPreviousAcrossThreeChapters() {

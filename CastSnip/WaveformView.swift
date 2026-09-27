@@ -157,12 +157,23 @@ struct WaveformView: View {
     }
 
     private func handleViewportScroll(deltaX: CGFloat, deltaY: CGFloat, in totalSize: CGSize) {
-        guard viewportDuration > 0, totalSize.width > 0 else { return }
         guard deltaX != 0 else { return }
+        guard let deltaSeconds = ViewportMath.panDeltaSeconds(
+            deltaX: Double(deltaX),
+            width: Double(totalSize.width),
+            viewportDuration: viewportDuration
+        ) else { return }
 
-        let secondsPerPoint = viewportDuration / totalSize.width
-        let deltaSeconds = -TimeInterval(deltaX) * secondsPerPoint
-        onViewportPan(deltaSeconds)
+        if audioDuration > 0 {
+            let nextStart = ViewportMath.clampViewportStart(
+                viewportStart + deltaSeconds,
+                audioDuration: audioDuration,
+                viewportDuration: viewportDuration
+            )
+            onViewportPan(nextStart - viewportStart)
+        } else {
+            onViewportPan(deltaSeconds)
+        }
     }
 
     private func handleSeekDrag(location: CGPoint, in totalSize: CGSize) {
@@ -171,22 +182,16 @@ struct WaveformView: View {
     }
 
     private func targetSeekTime(for location: CGPoint, in totalSize: CGSize) -> TimeInterval? {
-        guard viewportDuration > 0, totalSize.width > 0 else { return nil }
-
         // Only the waveform canvas (80pt tall) should be interactive.
         guard location.y >= 0, location.y <= 80 else { return nil }
 
-        let progress = min(max(location.x / totalSize.width, 0), 1)
-        var target = viewportStart + (progress * viewportDuration)
-
-        // Clamp using the best duration we have locally.
-        if audioDuration > 0 {
-            target = min(max(target, 0), audioDuration)
-        } else {
-            target = max(target, 0)
-        }
-
-        return target
+        return ViewportMath.seekTime(
+            x: Double(location.x),
+            width: Double(totalSize.width),
+            viewportStart: viewportStart,
+            viewportDuration: viewportDuration,
+            audioDuration: audioDuration
+        )
     }
 
     private struct ViewportWindow {
@@ -260,18 +265,17 @@ struct WaveformView: View {
     }
 
     private func drawPlayhead(context: GraphicsContext, size: CGSize) {
-        guard viewportDuration > 0 else { return }
-        guard let window = viewportWindow() else { return }
-
         let width = size.width
         let height = size.height
 
-        let t = currentTime
-
-        // If time is out of window, don't draw (shouldn't happen if viewport follows playhead, but safe).
-        guard t >= window.start - 0.001, t <= window.end + 0.001 else { return }
-
-        let x = CGFloat((t - window.start) / window.duration) * width
+        guard let playheadX = ViewportMath.playheadX(
+            time: currentTime,
+            viewportStart: viewportStart,
+            viewportDuration: viewportDuration,
+            audioDuration: audioDuration,
+            width: Double(width)
+        ) else { return }
+        let x = CGFloat(playheadX)
 
         var path = Path()
         path.move(to: CGPoint(x: x, y: 0))
@@ -280,7 +284,7 @@ struct WaveformView: View {
         context.stroke(path, with: .color(.white.opacity(0.9)), lineWidth: 1.5)
         context.stroke(path, with: .color(.black.opacity(0.35)), lineWidth: 3) // subtle outline
 
-        let timeLabel = WaveformSampling.formatTimestamp(t)
+        let timeLabel = WaveformSampling.formatTimestamp(currentTime)
         let padding: CGFloat = 4
         let labelX = min(max(x + padding, padding), width - padding)
         let labelY = height - padding
