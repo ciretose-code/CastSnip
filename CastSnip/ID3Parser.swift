@@ -20,39 +20,70 @@ enum ID3StringEncoding {
     case UTF8
 }
 
+enum ID3ParserError: Error {
+    case missingTag
+}
+
 class ID3Parser {
-    
+
+    static func uint32Bytes(_ value: UInt32) -> [UInt8] {
+        [
+            UInt8((value >> 24) & 0xFF),
+            UInt8((value >> 16) & 0xFF),
+            UInt8((value >> 8) & 0xFF),
+            UInt8(value & 0xFF)
+        ]
+    }
+
+    static func synchsafeBytes(_ value: UInt32) -> [UInt8] {
+        [
+            UInt8((value >> 21) & 0x7F),
+            UInt8((value >> 14) & 0x7F),
+            UInt8((value >> 7) & 0x7F),
+            UInt8(value & 0x7F)
+        ]
+    }
+
+    static func unsynchsafe(_ data: Data) -> Int {
+        guard data.count >= 4 else { return 0 }
+        let bytes = [UInt8](data.prefix(4))
+        return (Int(bytes[0]) << 21) | (Int(bytes[1]) << 14) | (Int(bytes[2]) << 7) | Int(bytes[3])
+    }
+
     static func getTagHeader(_ data: Data, _ offset: inout Int) -> ID3TagHeader {
-        let end: Int = offset + 4
-        let name = String(decoding: data[offset..<end], as:UTF8.self)
+        guard offset >= 0, offset + 10 <= data.count else {
+            return ID3TagHeader()
+        }
+        let end = offset + 4
+        let name = String(decoding: data[offset..<end], as: UTF8.self)
         offset = end
         let length = getUInt32(data, &offset)
         let flags = getUInt16(data, &offset)
-        return ID3TagHeader(name:name, length:length, flags:flags)
+        return ID3TagHeader(name: name, length: length, flags: flags)
     }
     
     static func getUInt8(_ data: Data, _ offset: inout Int) -> UInt8 {
-        let end: Int = offset+1
-        let ib:[UInt8] = [UInt8](data[offset..<end])
-        let bigEndianUInt8 = UInt8(bigEndian: ib.withUnsafeBytes { $0.load(as: UInt8.self)})
-        offset = end
-        return bigEndianUInt8
+        guard offset >= 0, offset + 1 <= data.count else { return 0 }
+        let value = data[offset]
+        offset += 1
+        return value
     }
     
     static func getUInt16(_ data: Data, _ offset: inout Int) -> UInt16 {
-        let end: Int = offset+2
-        let ib:[UInt8] = [UInt8](data[offset..<end])
-        let bigEndianUInt16 = UInt16(bigEndian: ib.withUnsafeBytes { $0.load(as: UInt16.self)})
-        offset = end
-        return bigEndianUInt16
+        guard offset >= 0, offset + 2 <= data.count else { return 0 }
+        let value = UInt16(data[offset]) << 8 | UInt16(data[offset + 1])
+        offset += 2
+        return value
     }
     
     static func getUInt32(_ data: Data, _ offset: inout Int) -> UInt32 {
-        let end: Int = offset+4
-        let ib:[UInt8] = [UInt8](data[offset..<end])
-        let bigEndianUInt32 = UInt32(bigEndian: ib.withUnsafeBytes { $0.load(as: UInt32.self)})
-        offset = end
-        return bigEndianUInt32
+        guard offset >= 0, offset + 4 <= data.count else { return 0 }
+        let value = UInt32(data[offset]) << 24
+            | UInt32(data[offset + 1]) << 16
+            | UInt32(data[offset + 2]) << 8
+            | UInt32(data[offset + 3])
+        offset += 4
+        return value
     }
     
     static func decodeData(_ data: Data, _ encoding: ID3StringEncoding) -> String {
@@ -69,25 +100,66 @@ class ID3Parser {
     }
     
     static func getData(_ data: Data, _ offset: inout Int, _ length: UInt32) -> Data {
-//        let value = data[offset..<Int(length)]
-        let value = data.subdata(in: offset..<Int(length))
-        offset = data.count
+        guard offset >= 0, offset <= data.count else { return Data() }
+        let requested = Int(length)
+        let available = data.count - offset
+        let count = min(max(requested, 0), available)
+        let value = data.subdata(in: offset..<(offset + count))
+        offset += count
         return value
     }
     
     static func getString(_ data: Data, _ offset: inout Int, length: Int = 0) -> String {
+        guard offset < data.count else { return "" }
         let textEncoding = getUInt8(data, &offset)
         if length > 0 {
-            let end: Int = offset + length - 1 // -1 for the textEncoding
-            let str: String = decodeData(data[offset..<end], getEncoding(textEncoding))
+            let payloadLength = max(length - 1, 0)
+            let end = min(offset + payloadLength, data.count)
+            guard offset <= end else { return "" }
+            let str = decodeData(data[offset..<end], getEncoding(textEncoding))
             offset = end
             return str
         } else {
-            // Walk until 0x00
-            let value = data[offset..<data.count].prefix(while: {$0 != 0x00})
-            offset = offset + value.count + 1 // Add one for the 0x00
-            return decodeData(value, getEncoding(textEncoding))
+            let value = data[offset..<data.count].prefix(while: { $0 != 0x00 })
+            offset = min(offset + value.count + 1, data.count)
+            return decodeData(Data(value), getEncoding(textEncoding))
         }
+    }
+
+    static func decodeTextFrameBody(_ body: Data) -> String {
+        guard let encodingByte = body.first else { return "" }
+        let decoded = decodeData(body.dropFirst(), getEncoding(encodingByte))
+        return decoded
+            .replacingOccurrences(of: "\0", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func readFrames(from mp3: Data) throws -> [(name: String, body: Data)] {
+        guard mp3.count >= 10, String(data: mp3.prefix(3), encoding: .isoLatin1) == "ID3" else {
+            throw ID3ParserError.missingTag
+        }
+        let tagSize = unsynchsafe(mp3.subdata(in: 6..<10))
+        let tagEnd = min(10 + tagSize, mp3.count)
+        var offset = 10
+        var frames: [(name: String, body: Data)] = []
+
+        while offset + 10 <= tagEnd {
+            let nameData = mp3.subdata(in: offset..<(offset + 4))
+            if nameData.allSatisfy({ $0 == 0 }) {
+                break
+            }
+            let name = String(data: nameData, encoding: .isoLatin1) ?? ""
+            guard name.unicodeScalars.allSatisfy({ CharacterSet.alphanumerics.contains($0) }) else {
+                break
+            }
+            offset += 4
+            let length = Int(getUInt32(mp3, &offset))
+            _ = getUInt16(mp3, &offset)
+            let body = getData(mp3, &offset, UInt32(max(length, 0)))
+            frames.append((name, body))
+        }
+
+        return frames
     }
     
     static func getEncoding(_ encoding: UInt8) -> ID3StringEncoding {

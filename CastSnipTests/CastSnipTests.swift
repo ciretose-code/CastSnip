@@ -8,11 +8,7 @@
 import Testing
 import Foundation
 import SwiftUI
-#if os(macOS)
 import AppKit
-#else
-import UIKit
-#endif
 @testable import CastSnip
 
 struct ID3ParserTests {
@@ -330,7 +326,6 @@ struct ChapterTests {
         #expect(chapter.title == "New Title")
     }
     
-    #if os(macOS)
     @Test func testUpdateImage_ValidImage() {
         let chapter = Chapter()
         let image = NSImage(systemSymbolName: "star", accessibilityDescription: "Star")
@@ -349,7 +344,6 @@ struct ChapterTests {
         
         #expect(chapter.image != nil) // Should not update when nil
     }
-    #endif
 }
 
 struct PodcastTests {

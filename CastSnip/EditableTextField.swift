@@ -18,10 +18,8 @@ struct EditableTextField: View {
             .onTapGesture {
                 focused = true
             }
-        #if os(macOS)
             .onExitCommand {
                 focused = false
             }
-        #endif
     }
 }

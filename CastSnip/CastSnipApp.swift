@@ -7,88 +7,164 @@
 
 import SwiftUI
 import AVFoundation
+import AppKit
 import OSLog
-
 
 @main
 struct CastSnipApp: App {
     
     private let logger = Logger(subsystem: "com.castsnip", category: "App")
+    @NSApplicationDelegateAdaptor(CastSnipAppDelegate.self) private var appDelegate
     
     @State var podcastAudioFile = AudioFile()
-
-    @State var fileURL: URL? = Bundle.main.url(forResource:"intro", withExtension: "mp3")
+    @State var fileURL: URL? = Bundle.main.url(forResource: "intro", withExtension: "mp3")
+    @State private var pendingOpenURL: URL?
+    @State private var showDiscardAlert = false
     
     var body: some Scene {
         WindowGroup {
-            ContentView().environment(podcastAudioFile)
+            ContentView()
+                .environment(podcastAudioFile)
                 .frame(minWidth: 800, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
+                .navigationTitle(windowTitle)
                 .task {
+                    appDelegate.configure(
+                        audioFile: podcastAudioFile,
+                        currentURL: { fileURL },
+                        saveInPlace: { saveInPlace() },
+                        saveAs: { saveAs() }
+                    )
                     if let url = fileURL {
                         await podcastAudioFile.loadPodcast(from: url)
                     }
                 }
+                .onChange(of: podcastAudioFile.hasUnsavedChanges) {
+                    NSApp.keyWindow?.isDocumentEdited = podcastAudioFile.hasUnsavedChanges
+                }
+                .alert("Save changes before opening another file?", isPresented: $showDiscardAlert) {
+                    Button("Save") {
+                        if saveCurrentDocument() {
+                            if let pendingOpenURL {
+                                applyOpen(pendingOpenURL)
+                            }
+                        }
+                        pendingOpenURL = nil
+                    }
+                    Button("Don't Save", role: .destructive) {
+                        if let pendingOpenURL {
+                            applyOpen(pendingOpenURL)
+                        }
+                        pendingOpenURL = nil
+                    }
+                    Button("Cancel", role: .cancel) {
+                        pendingOpenURL = nil
+                    }
+                } message: {
+                    Text("Your chapter and metadata edits will be lost if you don't save.")
+                }
         }
         .onChange(of: fileURL) {
-            print("onChange")
             if let url = fileURL {
-                Task.detached(priority: .high) {
+                Task {
                     await podcastAudioFile.loadPodcast(from: url)
                 }
             }
         }
         .commands {
             CommandGroup(replacing: .newItem) {
-                
-            }
-            
-            
-            CommandGroup(after: .newItem) {
                 Button("Open...") {
-                    let url = openPodcastFile()
-                    print("URL: \(String(describing: url))")
-                    if url != nil {
-                        fileURL = url!
-                    }
+                    requestOpen()
                 }
                 .keyboardShortcut("O", modifiers: .command)
-                Button("Save As...") {
-                    savePodcastFile()
+            }
+
+            CommandGroup(replacing: .saveItem) {
+                Button("Save") {
+                    _ = saveCurrentDocument()
                 }
                 .keyboardShortcut("S", modifiers: .command)
+                Button("Save As...") {
+                    _ = saveAs()
+                }
+                .keyboardShortcut("S", modifiers: [.command, .shift])
             }
             
-            CommandGroup(before: .help){
-                #if os(iOS)
-                Link("mostlysecurity.com", destination: URL(string: "https://mostlysecurity.com")!)
-                #else
+            CommandGroup(before: .help) {
                 Button("mostlysecurity.com") {
                     showMostlySecurityWebsite()
                 }
-                .keyboardShortcut("/", modifiers: .command)
-                #endif
             }
         }
-    
         .defaultSize(width: 800, height: 600)
     }
-    
-    func openPodcastFile() -> URL? {
-        #if os(iOS)
-        return nil
-        #else
-        let openPanel = NSOpenPanel()
-        openPanel.allowedContentTypes = [.mp3]
-        openPanel.allowsMultipleSelection = false
-        openPanel.canChooseDirectories = false
-        openPanel.canChooseFiles = true
-        let response = openPanel.runModal()
-        return response == .OK ? openPanel.url : nil
-        #endif
+
+    private var windowTitle: String {
+        let name = fileURL?.lastPathComponent ?? "Untitled"
+        return podcastAudioFile.hasUnsavedChanges ? "\(name) — Edited" : name
     }
-    
-    func savePodcastFile() {
-        print("save podcast file")
+
+    private func requestOpen() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.mp3]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+
+        if podcastAudioFile.hasUnsavedChanges {
+            pendingOpenURL = url
+            showDiscardAlert = true
+        } else {
+            applyOpen(url)
+        }
+    }
+
+    private func applyOpen(_ url: URL) {
+        SecurityScopedBookmarkStore.shared.rememberAndAccess(url)
+        fileURL = url
+    }
+
+    @discardableResult
+    private func saveCurrentDocument() -> Bool {
+        if podcastAudioFile.canSaveInPlace(to: fileURL) {
+            return saveInPlace()
+        }
+        return saveAs()
+    }
+
+    @discardableResult
+    private func saveInPlace() -> Bool {
+        guard let url = fileURL else { return saveAs() }
+        return write(to: url)
+    }
+
+    @discardableResult
+    private func saveAs() -> Bool {
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.mp3]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = fileURL?.lastPathComponent ?? "episode.mp3"
+        panel.title = "Save Podcast MP3"
+        guard panel.runModal() == .OK, let url = panel.url else { return false }
+        SecurityScopedBookmarkStore.shared.rememberAndAccess(url)
+        let didWrite = write(to: url)
+        if didWrite {
+            fileURL = url
+        }
+        return didWrite
+    }
+
+    @discardableResult
+    private func write(to url: URL) -> Bool {
+        do {
+            try podcastAudioFile.save(to: url)
+            NSApp.keyWindow?.isDocumentEdited = false
+            return true
+        } catch {
+            logger.error("Save failed: \(error.localizedDescription)")
+            podcastAudioFile.errorMessage = error.localizedDescription
+            return false
+        }
     }
     
     func showMostlySecurityWebsite() {
@@ -97,11 +173,48 @@ struct CastSnipApp: App {
             logger.error("Invalid URL: \(address)")
             return
         }
-        #if os(iOS)
-        print(address)
-        #else
         NSWorkspace.shared.open(url)
-        #endif
     }
 }
 
+final class CastSnipAppDelegate: NSObject, NSApplicationDelegate {
+    private var audioFile: AudioFile?
+    private var currentURL: () -> URL? = { nil }
+    private var saveInPlace: () -> Bool = { false }
+    private var saveAs: () -> Bool = { false }
+
+    func configure(
+        audioFile: AudioFile,
+        currentURL: @escaping () -> URL?,
+        saveInPlace: @escaping () -> Bool,
+        saveAs: @escaping () -> Bool
+    ) {
+        self.audioFile = audioFile
+        self.currentURL = currentURL
+        self.saveInPlace = saveInPlace
+        self.saveAs = saveAs
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let audioFile, audioFile.hasUnsavedChanges else {
+            return .terminateNow
+        }
+
+        let alert = NSAlert()
+        alert.messageText = "Do you want to save the changes you made?"
+        alert.informativeText = "Your chapter and metadata edits will be lost if you don't save."
+        alert.addButton(withTitle: "Save")
+        alert.addButton(withTitle: "Don't Save")
+        alert.addButton(withTitle: "Cancel")
+
+        switch alert.runModal() {
+        case .alertFirstButtonReturn:
+            let saved = audioFile.canSaveInPlace(to: currentURL()) ? saveInPlace() : saveAs()
+            return saved ? .terminateNow : .terminateCancel
+        case .alertSecondButtonReturn:
+            return .terminateNow
+        default:
+            return .terminateCancel
+        }
+    }
+}

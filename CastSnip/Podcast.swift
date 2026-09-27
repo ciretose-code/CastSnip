@@ -7,16 +7,13 @@
 
 import SwiftUI
 import AVFoundation
+import AppKit
 
 
 @Observable
 class Podcast {
     var url:URL?
-    #if os(iOS)
-    var logo:UIImage?
-    #else
     var logo:NSImage?
-    #endif
     var durationInSeconds:CGFloat?
     var durationInMillis:UInt32?
     var fileSizeInBytes:UInt64?
@@ -26,6 +23,7 @@ class Podcast {
     var title:String = ""
     var episode:String = ""
     var summary:String = ""
+    var artist:String = ""
     
     func getFileSizeFormatted() -> String {
         guard let size = fileSizeInBytes else { return "Unknown" }
@@ -40,9 +38,10 @@ class Podcast {
     
     func validateChapters() -> Bool {
         let sorted = chapters.sorted()
-        for i in 0..<sorted.count - 1 {
+        guard sorted.count > 1 else { return true }
+        for i in 0..<(sorted.count - 1) {
             if sorted[i].endTime > sorted[i + 1].startTime {
-                return false // Overlapping chapters
+                return false
             }
         }
         return true

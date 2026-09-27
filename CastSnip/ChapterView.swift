@@ -1,31 +1,21 @@
 //
-//  ChapterListView.swift
+//  ChapterView.swift
 //  CastSnip
 //
 //  Created by Eric Wuehler on 4/19/24.
 //
 
 import SwiftUI
+import AppKit
 
 struct ChapterView: View {
+    @Environment(AudioFile.self) var podcastAudioFile
     @State var chapter: Chapter
-    #if os(iOS)
-    let defaultImage: UIImage?
-    #else
     let defaultImage: NSImage?
-    #endif
     let showHours: Bool
     
     var body: some View {
         HStack {
-            #if os(iOS)
-            Image(uiImage: getImage())
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .clipShape(.rect(cornerRadius: 4))
-                .frame(width: 48, height: 48)
-                .padding(.leading, 2)
-            #else
             Image(nsImage: getImage())
                 .resizable()
                 .aspectRatio(contentMode: .fit)
@@ -33,54 +23,56 @@ struct ChapterView: View {
                 .frame(width: 48, height: 48)
                 .padding(.leading, 2)
                 .onTapGesture {
-                    print("Image Picker")
+                    selectChapterImage()
                 }
-                .dropDestination(for: NSImage.self) {
-                    items, location in
-                    print(items)
+                .dropDestination(for: NSImage.self) { items, _ in
                     chapter.updateImage(items.first)
-                    print(location)
+                    podcastAudioFile.markAsModified()
                     return true
                 }
-            #endif
             VStack(alignment: .leading) {
                 EditableTextField(text: $chapter.title, placeholderText: Chapter.DEFAULT_TITLE)
                     .font(.headline)
                     .lineLimit(1)
+                    .onChange(of: chapter.title) { podcastAudioFile.markAsModified() }
                 EditableTextField(text: $chapter.url, placeholderText: Chapter.DEFAULT_URL)
                     .font(.subheadline)
                     .lineLimit(1)
+                    .onChange(of: chapter.url) { podcastAudioFile.markAsModified() }
             }
             Spacer()
             HStack(alignment: .top) {
-                TimeView(start:$chapter.startTime, radius: 6, showHours: showHours)
-                    
+                TimeView(start: $chapter.startTime, radius: 6, showHours: showHours)
+                    .onChange(of: chapter.startTime) { podcastAudioFile.markAsModified() }
             }
         }
-//        .padding(.vertical, 2)
     }
-    
-    #if os(iOS)
-    func getImage() -> UIImage {
-        if chapter.image != nil {
-            return chapter.image!
-        } else if defaultImage != nil {
-            return defaultImage!
-        } else {
-            return UIImage(systemName:"photo.badge.plus")!
-        }
-    }
-    #else
+
     func getImage() -> NSImage {
-        if chapter.image != nil {
-            return chapter.image!
-        } else if defaultImage != nil {
-            return defaultImage!
-        } else {
-            return NSImage(systemSymbolName:"photo.badge.plus", accessibilityDescription: "Add Image")!
+        if let image = chapter.image {
+            return image
+        }
+        if let defaultImage {
+            return defaultImage
+        }
+        return NSImage(systemSymbolName: "photo.badge.plus", accessibilityDescription: "Add Image")
+            ?? NSImage()
+    }
+
+    private func selectChapterImage() {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowedContentTypes = [.image, .png, .jpeg]
+        panel.message = "Select a chapter image"
+        panel.begin { response in
+            if response == .OK, let url = panel.url, let image = NSImage(contentsOf: url) {
+                chapter.updateImage(image)
+                podcastAudioFile.markAsModified()
+            }
         }
     }
-    #endif
 }
 
 
@@ -89,6 +81,7 @@ struct ChapterView: View {
         var chap = Chapter(title: "Title", url: "https://mostlysecurity.com", startTime: 4000, endTime: 7000)
         var body: some View {
             ChapterView(chapter: chap, defaultImage: nil, showHours: true)
+                .environment(AudioFile())
         }
     }
     return ChapterViewTest().padding()

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import AppKit
 
 struct ContentView: View {
     @Environment(AudioFile.self) var podcastAudioFile
@@ -74,11 +75,9 @@ struct ContentView: View {
                         .onTapGesture {
                             selectCoverArtImage()
                         }
-                        #if os(macOS)
                         .onDrop(of: [.image], isTargeted: $isDraggingOverCoverArt) { providers in
                             handleCoverArtDrop(providers: providers)
                         }
-                        #endif
                         
                         VStack(alignment: .leading) {
                             TitleView(radius: radius, title: podcastAudioFile.getTitle())
@@ -287,7 +286,6 @@ struct ContentView: View {
     
     // MARK: - Cover Art Management
     
-    #if os(macOS)
     private func handleCoverArtDrop(providers: [NSItemProvider]) -> Bool {
         guard let provider = providers.first else { return false }
         
@@ -311,7 +309,7 @@ struct ContentView: View {
                 if let image = nsImage {
                     DispatchQueue.main.async {
                         podcastAudioFile.podcast.logo = image
-                        print("Cover art updated via drag and drop")
+                        podcastAudioFile.markAsModified()
                     }
                 }
             }
@@ -333,12 +331,11 @@ struct ContentView: View {
             if response == .OK, let url = panel.url {
                 if let image = NSImage(contentsOf: url) {
                     podcastAudioFile.podcast.logo = image
-                    print("Cover art updated via file selection: \(url.lastPathComponent)")
+                    podcastAudioFile.markAsModified()
                 }
             }
         }
     }
-    #endif
     
     private func refreshViewportOptions() {
         let duration = player.duration

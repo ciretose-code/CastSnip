@@ -8,9 +8,7 @@
 import SwiftUI
 import AVFoundation
 import Accelerate
-#if os(macOS)
 import AppKit
-#endif
 
 struct WaveformView: View {
     let audioFile: AVAudioFile?
@@ -114,7 +112,6 @@ struct WaveformView: View {
                                     handleSeekDrag(location: value.location, in: geo.size)
                                 }
                         )
-                        #if os(macOS)
                         .onTapGesture { location in
                             handleSeekTap(location: location, in: geo.size)
                         }
@@ -123,7 +120,6 @@ struct WaveformView: View {
                                 handleViewportScroll(deltaX: dx, deltaY: dy, in: geo.size)
                             }
                         )
-                        #endif
 
                         Canvas { context, size in
                           drawViewportTimestamps(context: context, size: size)
@@ -139,7 +135,6 @@ struct WaveformView: View {
         }
     }
 
-    #if os(macOS)
     private func handleSeekTap(location: CGPoint, in totalSize: CGSize) {
         guard let target = targetSeekTime(for: location, in: totalSize) else { return }
         onSeek(target)
@@ -153,7 +148,6 @@ struct WaveformView: View {
         let deltaSeconds = -TimeInterval(deltaX) * secondsPerPoint
         onViewportPan(deltaSeconds)
     }
-    #endif
 
     private func handleSeekDrag(location: CGPoint, in totalSize: CGSize) {
         guard let target = targetSeekTime(for: location, in: totalSize) else { return }
@@ -451,7 +445,6 @@ struct WaveformView: View {
     }
 }
 
-#if os(macOS)
 private struct ScrollWheelView: NSViewRepresentable {
     let onScroll: (CGFloat, CGFloat) -> Void
 
@@ -473,7 +466,6 @@ private final class ScrollCaptureView: NSView {
         onScroll?(event.scrollingDeltaX, event.scrollingDeltaY)
     }
 }
-#endif
 
 // MARK: - Audio Processing Helper
 nonisolated fileprivate func extractAudioSamples(from audioFile: AVAudioFile, targetSampleCount: Int) -> [Float] {
