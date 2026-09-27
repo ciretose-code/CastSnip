@@ -35,6 +35,8 @@ struct ContentView: View {
     /// 0...1. Higher = faster response (less smoothing).
     private let viewportSmoothingAlpha: Double = 0.18
 
+    @State private var chapterSplitFraction = EditorSplitStore.load()
+
     var body: some View {
         if podcastAudioFile.isLoading {
             VStack {
@@ -93,14 +95,13 @@ struct ContentView: View {
                             SummaryView(radius: radius, summary: podcastAudioFile.getSummary())
                         }.frame(minHeight: 180, maxHeight: 180)
                     }
-                    Spacer()
-                    VStack(spacing: 8) {
-                        HStack(spacing: 8) {
-                            Spacer()
-                            CopyableInfoBadge(label: "File Size", value: podcastAudioFile.podcast.getFileSizeFormatted(), minWidth: 160)
-                            CopyableInfoBadge(label: "Running Time", value: podcastAudioFile.podcast.getDurationFormatted())
-                            Spacer()
-                        }
+                    HStack(spacing: 8) {
+                        Spacer()
+                        CopyableInfoBadge(label: "File Size", value: podcastAudioFile.podcast.getFileSizeFormatted(), minWidth: 160)
+                        CopyableInfoBadge(label: "Running Time", value: podcastAudioFile.podcast.getDurationFormatted())
+                        Spacer()
+                    }
+                    ChapterWaveformSplit(fraction: $chapterSplitFraction) {
                         ChapterTableView(radius: radius, playheadMillis: UInt32(player.currentTime * 1000), onSelect: { chapter in
                             let time = TimeInterval(chapter.startTime) / 1000.0
                             player.seek(to: time)
@@ -121,7 +122,7 @@ struct ContentView: View {
                             updateViewport()
                         })
                         .environment(podcastAudioFile)
-                        
+                    } waveform: {
                         // Transport controls + waveform viewport
                         VStack(spacing: 8) {
                             WaveformView(
@@ -145,6 +146,7 @@ struct ContentView: View {
                                     shouldSnapViewport = false
                                 }
                             )
+                            .frame(maxHeight: .infinity)
                             .background(Color(nsColor: .controlBackgroundColor))
                             .cornerRadius(radius)
                             .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
@@ -504,6 +506,42 @@ struct ContentView: View {
         }
     }
     return ContentTestView()
+}
+
+private struct ChapterPaneHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+private struct ChapterWaveformSplit<Chapter: View, Waveform: View>: View {
+    @Binding var fraction: Double
+    @ViewBuilder var chapter: Chapter
+    @ViewBuilder var waveform: Waveform
+
+    var body: some View {
+        GeometryReader { geo in
+            let total = max(geo.size.height, 1)
+            VSplitView {
+                chapter
+                    .frame(minHeight: total * EditorSplitStore.minimumFraction, idealHeight: total * fraction)
+                    .background {
+                        GeometryReader { chapterGeo in
+                            Color.clear.preference(key: ChapterPaneHeightKey.self, value: chapterGeo.size.height)
+                        }
+                    }
+                waveform
+                    .frame(minHeight: total * (1 - EditorSplitStore.maximumFraction))
+            }
+            .onPreferenceChange(ChapterPaneHeightKey.self) { height in
+                let next = EditorSplitStore.fraction(chapterHeight: Double(height), totalHeight: Double(total))
+                guard abs(next - fraction) > 0.001 else { return }
+                fraction = next
+                EditorSplitStore.save(next)
+            }
+        }
+    }
 }
 
 private extension Array {
