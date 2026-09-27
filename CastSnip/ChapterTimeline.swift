@@ -6,7 +6,31 @@
 import Foundation
 
 enum ChapterTimeline {
+    enum NeighborDirection {
+        case next
+        case previous
+    }
+
     private static let minimumGap: UInt32 = 1000
+
+    static func neighbor(
+        of selected: Chapter?,
+        in chapters: [Chapter],
+        going direction: NeighborDirection
+    ) -> Chapter? {
+        let sorted = chapters.sorted()
+        guard !sorted.isEmpty else { return nil }
+        guard let selected, let index = sorted.firstIndex(where: { $0.id == selected.id }) else {
+            return direction == .next ? sorted.first : sorted.last
+        }
+        switch direction {
+        case .next:
+            let next = index + 1
+            return next < sorted.count ? sorted[next] : nil
+        case .previous:
+            return index > 0 ? sorted[index - 1] : nil
+        }
+    }
 
     @discardableResult
     static func insertChapter(

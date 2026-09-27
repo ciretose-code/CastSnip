@@ -20,6 +20,7 @@ class AudioFile: Identifiable {
     var isLoading = false
     var errorMessage: String?
     var hasUnsavedChanges = false
+    var selectedChapter: Chapter?
     private let logger = Logger(subsystem: "com.castsnip", category: "AudioFile")
     
     @MainActor
@@ -69,6 +70,22 @@ class AudioFile: Identifiable {
     
     func markAsSaved() {
         hasUnsavedChanges = false
+    }
+
+    func closeDocument() {
+        podcast = Podcast()
+        selectedChapter = nil
+        hasUnsavedChanges = false
+        errorMessage = nil
+        isLoading = false
+    }
+
+    func selectNeighbor(going direction: ChapterTimeline.NeighborDirection) {
+        selectedChapter = ChapterTimeline.neighbor(
+            of: selectedChapter,
+            in: podcast.chapters,
+            going: direction
+        )
     }
     
     func hasCoverArt() -> Bool {

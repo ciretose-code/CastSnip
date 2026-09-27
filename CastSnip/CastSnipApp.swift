@@ -19,8 +19,10 @@ struct CastSnipApp: App {
     
     @State var podcastAudioFile = AudioFile()
     @State var fileURL: URL? = Bundle.main.url(forResource: "intro", withExtension: "mp3")
-    @State private var pendingOpenURL: URL?
+    @State private var recentFiles = RecentFilesStore.shared
+    @State private var pendingAction: PendingDocumentAction?
     @State private var showDiscardAlert = false
+    @State private var showShortcutsHelp = false
     
     var body: some Scene {
         WindowGroup {
@@ -43,26 +45,29 @@ struct CastSnipApp: App {
                 .onChange(of: podcastAudioFile.hasUnsavedChanges) {
                     NSApp.keyWindow?.isDocumentEdited = podcastAudioFile.hasUnsavedChanges
                 }
-                .alert("Save changes before opening another file?", isPresented: $showDiscardAlert) {
+                .alert(discardAlertTitle, isPresented: $showDiscardAlert) {
                     Button("Save") {
-                        if saveCurrentDocument() {
-                            if let pendingOpenURL {
-                                applyOpen(pendingOpenURL)
-                            }
+                        if saveCurrentDocument(), let pendingAction {
+                            perform(pendingAction)
                         }
-                        pendingOpenURL = nil
+                        pendingAction = nil
                     }
                     Button("Don't Save", role: .destructive) {
-                        if let pendingOpenURL {
-                            applyOpen(pendingOpenURL)
+                        if let pendingAction {
+                            perform(pendingAction)
                         }
-                        pendingOpenURL = nil
+                        pendingAction = nil
                     }
                     Button("Cancel", role: .cancel) {
-                        pendingOpenURL = nil
+                        pendingAction = nil
                     }
                 } message: {
                     Text("Your chapter and metadata edits will be lost if you don't save.")
+                }
+                .alert("Keyboard Shortcuts", isPresented: $showShortcutsHelp) {
+                    Button("OK", role: .cancel) {}
+                } message: {
+                    Text(KeyboardShortcutsHelp.text)
                 }
         }
         .onChange(of: fileURL) {
@@ -80,18 +85,59 @@ struct CastSnipApp: App {
                 .keyboardShortcut("O", modifiers: .command)
             }
 
+            CommandGroup(after: .newItem) {
+                Menu("Open Recent") {
+                    if recentFiles.paths().isEmpty {
+                        Button("No Recent Files") {}
+                            .disabled(true)
+                    } else {
+                        ForEach(recentFiles.urls(), id: \.path) { url in
+                            Button(url.lastPathComponent) {
+                                requestOpenRecent(url)
+                            }
+                        }
+                        Divider()
+                        Button("Clear Menu") {
+                            recentFiles.clear()
+                        }
+                    }
+                }
+            }
+
             CommandGroup(replacing: .saveItem) {
                 Button("Save") {
                     _ = saveCurrentDocument()
                 }
                 .keyboardShortcut("S", modifiers: .command)
+                .disabled(fileURL == nil && !podcastAudioFile.hasUnsavedChanges)
                 Button("Save As...") {
                     _ = saveAs()
                 }
                 .keyboardShortcut("S", modifiers: [.command, .shift])
+                Button("Close") {
+                    requestClose()
+                }
+                .keyboardShortcut("W", modifiers: .command)
+                .disabled(fileURL == nil && !podcastAudioFile.hasUnsavedChanges)
             }
-            
-            CommandGroup(before: .help) {
+
+            CommandMenu("Chapter") {
+                Button("Previous Chapter") {
+                    podcastAudioFile.selectNeighbor(going: .previous)
+                }
+                .keyboardShortcut("[", modifiers: .command)
+                .disabled(podcastAudioFile.podcast.chapters.isEmpty)
+                Button("Next Chapter") {
+                    podcastAudioFile.selectNeighbor(going: .next)
+                }
+                .keyboardShortcut("]", modifiers: .command)
+                .disabled(podcastAudioFile.podcast.chapters.isEmpty)
+            }
+
+            CommandGroup(replacing: .help) {
+                Button("Keyboard Shortcuts") {
+                    showShortcutsHelp = true
+                }
                 Button("mostlysecurity.com") {
                     showMostlySecurityWebsite()
                 }
@@ -100,9 +146,23 @@ struct CastSnipApp: App {
         .defaultSize(width: 800, height: 600)
     }
 
+    private enum PendingDocumentAction {
+        case open(URL)
+        case close
+    }
+
     private var windowTitle: String {
-        let name = fileURL?.lastPathComponent ?? "Untitled"
+        guard let name = fileURL?.lastPathComponent else { return "CastSnip" }
         return podcastAudioFile.hasUnsavedChanges ? "\(name) — Edited" : name
+    }
+
+    private var discardAlertTitle: String {
+        switch pendingAction {
+        case .close:
+            return "Save changes before closing?"
+        default:
+            return "Save changes before opening another file?"
+        }
     }
 
     private func requestOpenFromPanel() {
@@ -116,17 +176,48 @@ struct CastSnipApp: App {
     }
 
     private func requestOpen(url: URL) {
+        request(.open(url))
+    }
+
+    private func requestOpenRecent(_ url: URL) {
+        if let resolved = SecurityScopedBookmarkStore.shared.resolveAndAccess(path: url.path) {
+            requestOpen(url: resolved)
+        } else {
+            requestOpen(url: url)
+        }
+    }
+
+    private func requestClose() {
+        request(.close)
+    }
+
+    private func request(_ action: PendingDocumentAction) {
         if podcastAudioFile.hasUnsavedChanges {
-            pendingOpenURL = url
+            pendingAction = action
             showDiscardAlert = true
         } else {
+            perform(action)
+        }
+    }
+
+    private func perform(_ action: PendingDocumentAction) {
+        switch action {
+        case .open(let url):
             applyOpen(url)
+        case .close:
+            applyClose()
         }
     }
 
     private func applyOpen(_ url: URL) {
         SecurityScopedBookmarkStore.shared.rememberAndAccess(url)
+        RecentFilesStore.shared.remember(url)
         fileURL = url
+    }
+
+    private func applyClose() {
+        fileURL = nil
+        podcastAudioFile.closeDocument()
     }
 
     @discardableResult
@@ -154,6 +245,7 @@ struct CastSnipApp: App {
         SecurityScopedBookmarkStore.shared.rememberAndAccess(url)
         let didWrite = write(to: url)
         if didWrite {
+            RecentFilesStore.shared.remember(url)
             fileURL = url
         }
         return didWrite
