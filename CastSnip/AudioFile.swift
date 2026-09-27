@@ -155,6 +155,7 @@ class AudioFile: Identifiable {
             return pa
         }
         
+        var tocChildIDs: [String]?
         do {
             for item in try await asset.loadMetadata(for: .id3Metadata) {
                 let key = item.key?.description ?? "unknown"
@@ -175,7 +176,7 @@ class AudioFile: Identifiable {
                                 let c = Chapter(data: value, podcastDuration: pa.durationInMillis ?? 0)
                                 pa.chapters.append(c)
                             } else if key == "CTOC" {
-                                logger.debug("CTOC tag found")
+                                tocChildIDs = ID3Parser.ctocChildIDs(from: value)
                             } else if key == "APIC" {
                                 pa.logo = NSImage(data: value)
                             }
@@ -195,6 +196,8 @@ class AudioFile: Identifiable {
         } catch {
             logger.error("Error loading id3 metadata: \(error.localizedDescription)")
         }
+
+        ChapterVisibility.apply(tocChildIDs: tocChildIDs, to: pa.chapters)
         
         return pa
     }

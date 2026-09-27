@@ -31,12 +31,20 @@ class Podcast {
         formatter.countStyle = .file
         return formatter.string(fromByteCount: Int64(size))
     }
+
+    func getDurationFormatted() -> String {
+        ID3Parser.toTrackTime(millis: durationInMillis ?? UInt32((durationInSeconds ?? 0) * 1000), showHours: true)
+    }
     
     var shouldShowHours: Bool {
         return (durationInSeconds ?? 0) > 3600
     }
     
     func validateChapters() -> Bool {
+        Self.chaptersDoNotOverlap(chapters)
+    }
+
+    static func chaptersDoNotOverlap(_ chapters: [Chapter]) -> Bool {
         let sorted = chapters.sorted()
         guard sorted.count > 1 else { return true }
         for i in 0..<(sorted.count - 1) {

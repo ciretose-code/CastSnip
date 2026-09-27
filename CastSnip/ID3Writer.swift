@@ -58,11 +58,16 @@ enum ID3Writer {
         }
 
         let chapters = podcast.chapters.sorted()
+        var visibleElementIDs: [String] = []
         for (index, chapter) in chapters.enumerated() {
+            let elementID = "chp\(index)"
             frames.append(chapterFrame(chapter, index: index))
+            if !chapter.isHidden {
+                visibleElementIDs.append(elementID)
+            }
         }
         if !chapters.isEmpty {
-            frames.append(tocFrame(chapterCount: chapters.count))
+            frames.append(tocFrame(elementIDs: visibleElementIDs))
         }
 
         let padding = Data(repeating: 0, count: 256)
@@ -173,14 +178,14 @@ enum ID3Writer {
         return frame("CHAP", body: body)
     }
 
-    private static func tocFrame(chapterCount: Int) -> Data {
+    private static func tocFrame(elementIDs: [String]) -> Data {
         var body = Data()
         body.append(contentsOf: "toc".utf8)
         body.append(0x00)
         body.append(0x03)
-        body.append(UInt8(min(chapterCount, 255)))
-        for index in 0..<min(chapterCount, 255) {
-            body.append(contentsOf: "chp\(index)".utf8)
+        body.append(UInt8(min(elementIDs.count, 255)))
+        for elementID in elementIDs.prefix(255) {
+            body.append(contentsOf: elementID.utf8)
             body.append(0x00)
         }
         return frame("CTOC", body: body)

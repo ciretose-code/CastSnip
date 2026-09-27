@@ -8,6 +8,7 @@
 import SwiftUI
 import AVFoundation
 import AppKit
+import UniformTypeIdentifiers
 import OSLog
 
 @main
@@ -25,6 +26,7 @@ struct CastSnipApp: App {
         WindowGroup {
             ContentView()
                 .environment(podcastAudioFile)
+                .environment(\.openPodcast, requestOpen(url:))
                 .frame(minWidth: 800, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
                 .navigationTitle(windowTitle)
                 .task {
@@ -73,7 +75,7 @@ struct CastSnipApp: App {
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button("Open...") {
-                    requestOpen()
+                    requestOpenFromPanel()
                 }
                 .keyboardShortcut("O", modifiers: .command)
             }
@@ -103,14 +105,17 @@ struct CastSnipApp: App {
         return podcastAudioFile.hasUnsavedChanges ? "\(name) — Edited" : name
     }
 
-    private func requestOpen() {
+    private func requestOpenFromPanel() {
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = [.mp3]
+        panel.allowedContentTypes = [.mp3, .wav, .aiff, .mpeg4Audio]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.canChooseFiles = true
         guard panel.runModal() == .OK, let url = panel.url else { return }
+        requestOpen(url: url)
+    }
 
+    private func requestOpen(url: URL) {
         if podcastAudioFile.hasUnsavedChanges {
             pendingOpenURL = url
             showDiscardAlert = true

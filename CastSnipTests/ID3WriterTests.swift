@@ -185,6 +185,28 @@ struct ID3WriterTests {
         #expect(frames.contains { $0.name == "CTOC" })
     }
 
+    @Test func hiddenChaptersAreWrittenButOmittedFromTOC() throws {
+        let hidden = Chapter(title: "Sponsor art", startTime: 2000, endTime: 4000, podcastDuration: 10_000, isHidden: true)
+        let visible = Chapter(title: "Intro", startTime: 0, endTime: 2000, podcastDuration: 10_000)
+        let podcast = Podcast()
+        podcast.durationInMillis = 10_000
+        podcast.chapters = [visible, hidden]
+
+        let mp3 = ID3Writer.taggedMP3(from: Data([0xFF, 0xFB, 0x90, 0x00]), podcast: podcast)
+        let frames = try ID3Parser.readFrames(from: mp3)
+        #expect(frames.filter { $0.name == "CHAP" }.count == 2)
+
+        let toc = frames.first { $0.name == "CTOC" }
+        #expect(toc != nil)
+        let childIDs = ID3Parser.ctocChildIDs(from: toc!.body)
+        #expect(childIDs == ["chp0"])
+
+        let parsed = frames.filter { $0.name == "CHAP" }.map { Chapter(data: $0.body, podcastDuration: 10_000) }
+        ChapterVisibility.apply(tocChildIDs: childIDs, to: parsed)
+        #expect(parsed.first { $0.title.contains("Intro") }?.isHidden == false)
+        #expect(parsed.first { $0.title.contains("Sponsor") }?.isHidden == true)
+    }
+
     @Test func taggedMP3WritesCoverArt() throws {
         let podcast = Podcast()
         podcast.title = "Art Show"

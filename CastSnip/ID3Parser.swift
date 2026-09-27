@@ -134,6 +134,25 @@ class ID3Parser {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    static func ctocChildIDs(from body: Data) -> [String] {
+        let bytes = [UInt8](body)
+        guard let nullIndex = bytes.firstIndex(of: 0), nullIndex + 2 < bytes.count else { return [] }
+        var offset = nullIndex + 1
+        offset += 1
+        let count = Int(bytes[offset])
+        offset += 1
+        var ids: [String] = []
+        for _ in 0..<count {
+            guard offset < bytes.count else { break }
+            let idBytes = bytes[offset...].prefix(while: { $0 != 0 })
+            if let id = String(bytes: idBytes, encoding: .isoLatin1), !id.isEmpty {
+                ids.append(id)
+            }
+            offset += idBytes.count + 1
+        }
+        return ids
+    }
+
     static func readFrames(from mp3: Data) throws -> [(name: String, body: Data)] {
         guard mp3.count >= 10, String(data: mp3.prefix(3), encoding: .isoLatin1) == "ID3" else {
             throw ID3ParserError.missingTag
@@ -200,40 +219,39 @@ class ID3Parser {
         }
     }
     
-    static func trackToMillis(_ track: String) -> UInt32 {
-        let t = track.components(separatedBy: ":")
-        if (t.count == 1) {
-            if let seconds = Float(t[0]) {
-                return UInt32(seconds * 1000)
-            } else {
-                return 0
-            }
-        } else if (t.count == 2) {
-            if let minutes = UInt32(t[0]) {
-                if let seconds = Float(t[1]) {
-                    return (minutes * 60 * 1000) + UInt32(seconds * 1000)
-                } else {
-                    return (minutes * 60 * 1000)
-                }
-            } else {
-                return 0
-            }
-        } else if (t.count == 3) {
-            if let hours = UInt32(t[0]) {
-                if let minutes = UInt32(t[1]) {
-                    if let seconds = Float(t[2]) {
-                        return (hours * 60 * 60 * 1000) + (minutes * 60 * 1000) + UInt32(seconds * 1000)
-                    } else {
-                        return minutes * 60 * 1000
-                    }
-                } else {
-                    return (hours * 60 * 60 * 1000)
-                }
-            } else {
-                return 0
-            }
-        } else {
-            return 0
+    static func parseTrackTime(_ track: String) -> UInt32? {
+        let trimmed = track.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        let parts = trimmed.split(separator: ":", omittingEmptySubsequences: false).map(String.init)
+        guard (1...3).contains(parts.count) else { return nil }
+
+        func milliseconds(from secondsField: String) -> UInt32? {
+            guard let seconds = Float(secondsField), seconds >= 0 else { return nil }
+            return UInt32(seconds * 1000)
         }
+
+        if parts.count == 1 {
+            return milliseconds(from: parts[0])
+        }
+
+        if parts.count == 2 {
+            guard let minutes = UInt32(parts[0]), let secondMillis = milliseconds(from: parts[1]) else {
+                return nil
+            }
+            return (minutes * 60 * 1000) + secondMillis
+        }
+
+        guard let hours = UInt32(parts[0]),
+              let minutes = UInt32(parts[1]),
+              let secondMillis = milliseconds(from: parts[2])
+        else {
+            return nil
+        }
+        return (hours * 60 * 60 * 1000) + (minutes * 60 * 1000) + secondMillis
+    }
+
+    static func trackToMillis(_ track: String) -> UInt32 {
+        parseTrackTime(track) ?? 0
     }
 }

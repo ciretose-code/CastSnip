@@ -10,7 +10,9 @@ import SwiftUI
 struct ChapterTableView: View {
     @Environment(AudioFile.self) var podcastAudioFile
     @State var selectedRow: Chapter?
+    @State private var pendingDelete: Chapter?
     var radius: CGFloat
+    var playheadMillis: UInt32 = 0
 
     /// Called when a chapter row is selected.
     var onSelect: ((Chapter) -> Void)? = nil
@@ -18,18 +20,20 @@ struct ChapterTableView: View {
     var body: some View {
         HStack(alignment: .top) {
             VStack {
-                List(podcastAudioFile.podcast.chapters.sorted(), id: \.self, selection: $selectedRow) {
-                    chapter in
-                    ChapterView(chapter: chapter, defaultImage: podcastAudioFile.podcast.logo, showHours: showHours(podcastAudioFile.podcast.durationInSeconds ?? 0))
+                List(podcastAudioFile.podcast.chapters.sorted(), id: \.self, selection: $selectedRow) { chapter in
+                    ChapterView(
+                        chapter: chapter,
+                        defaultImage: podcastAudioFile.podcast.logo,
+                        showHours: showHours(podcastAudioFile.podcast.durationInSeconds ?? 0)
+                    )
                 }
                 .onChange(of: selectedRow) {
-                    rowChanged(selectedRow)
                     if let selectedRow {
                         onSelect?(selectedRow)
                     }
                 }
-                .refreshable {
-                    addChapter()
+                .onDeleteCommand {
+                    pendingDelete = selectedRow
                 }
                 .listStyle(.plain)
                 .scrollIndicators(.automatic)
@@ -37,64 +41,57 @@ struct ChapterTableView: View {
                 .overlay(RoundedRectangle(cornerRadius: radius).stroke(Color.primary.opacity(0.2), lineWidth: 1))
             Spacer()
             VStack(alignment: .leading) {
-                Button(action: addChapter){
+                Button(action: addChapter) {
                     Image(systemName: "plus.rectangle")
                     Text("Add")
                 }
                 .buttonStyle(LinkButtonStyle())
-                .help("Add Chapter")
+                .keyboardShortcut("n", modifiers: .command)
+                .help("Add a chapter at the playhead")
                 Button(action: {
-                    if let selectedRow {
-                        deleteChapter(selectedRow.id)
-                    }
+                    pendingDelete = selectedRow
                 }) {
                     Image(systemName: "minus.rectangle")
                     Text("Delete")
                 }
                 .buttonStyle(LinkButtonStyle())
                 .disabled(selectedRow == nil)
-                .help("Delete Chapter")
+                .help("Delete selected chapter")
             }
         }
+        .confirmationDialog(
+            "Delete this chapter?",
+            isPresented: Binding(
+                get: { pendingDelete != nil },
+                set: { if !$0 { pendingDelete = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let pendingDelete {
+                    deleteChapter(pendingDelete.id)
+                }
+                pendingDelete = nil
+            }
+            Button("Cancel", role: .cancel) {
+                pendingDelete = nil
+            }
+        } message: {
+            Text(pendingDelete?.title.isEmpty == false ? pendingDelete!.title : "This chapter will be removed.")
+        }
     }
-    
-    func rowChanged(_ row: Chapter?) {
-        print(row as Any)
-    }
-    
+
     func addChapter() {
-        let insertIndex: Int
-        let startTime: UInt32
-        
-        if let selected = selectedRow,
-           let currentIndex = podcastAudioFile.podcast.chapters.firstIndex(where: { $0.id == selected.id }) {
-            // Insert after the selected chapter
-            insertIndex = currentIndex + 1
-            startTime = selected.endTime
-        } else {
-            // Insert at the end
-            insertIndex = podcastAudioFile.podcast.chapters.count
-            if let lastChapter = podcastAudioFile.podcast.chapters.last {
-                startTime = lastChapter.endTime
-            } else {
-                startTime = 0
-            }
-        }
-        
-        // Create chapter with reasonable defaults
-        let newChapter = Chapter(
-            title: "New Chapter",
-            url: "",
-            startTime: startTime,
-            endTime: podcastAudioFile.podcast.durationInMillis ?? startTime,
-            podcastDuration: podcastAudioFile.podcast.durationInMillis ?? 0
+        let duration = podcastAudioFile.podcast.durationInMillis ?? 0
+        let added = ChapterTimeline.insertChapter(
+            into: &podcastAudioFile.podcast.chapters,
+            atPlayhead: playheadMillis,
+            durationMillis: duration
         )
-        
-        podcastAudioFile.podcast.chapters.insert(newChapter, at: insertIndex)
-        selectedRow = newChapter
+        selectedRow = added
         podcastAudioFile.markAsModified()
     }
-    
+
     func deleteChapter(_ id: UUID) {
         if let chapterIndex = podcastAudioFile.podcast.chapters.firstIndex(where: { $0.id == id }) {
             podcastAudioFile.podcast.chapters.remove(at: chapterIndex)
@@ -102,13 +99,9 @@ struct ChapterTableView: View {
             podcastAudioFile.markAsModified()
         }
     }
-    
-    func editChapter() {
-        print("Edit Button Pressed")
-    }
-    
+
     func showHours(_ duration: CGFloat = 0) -> Bool {
-        return duration > (60*60)
+        return duration > (60 * 60)
     }
 }
 
@@ -116,7 +109,7 @@ struct ChapterTableView: View {
 #Preview("Chapter Table View") {
     struct ChapterTableViewTest: View {
         var body: some View {
-            ChapterTableView(radius: 6).environment({
+            ChapterTableView(radius: 6, playheadMillis: 4000).environment({
                 () -> AudioFile in
                 let audioModel = AudioFile()
                 let chapters = [
@@ -128,6 +121,7 @@ struct ChapterTableView: View {
                 podcast.chapters = chapters
                 podcast.title = "Mostly Security"
                 podcast.durationInSeconds = 17000
+                podcast.durationInMillis = 17_000
                 audioModel.podcast = podcast
                 return audioModel
             }())

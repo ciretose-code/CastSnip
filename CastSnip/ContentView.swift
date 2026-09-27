@@ -11,10 +11,12 @@ import AppKit
 
 struct ContentView: View {
     @Environment(AudioFile.self) var podcastAudioFile
+    @Environment(\.openPodcast) private var openPodcast
     
     @State var radius: CGFloat = 6
     @State var insets: CGFloat = 16
     @State private var isDraggingOverCoverArt = false
+    @State private var isDraggingAudio = false
     
     @StateObject private var player = AudioPlayerManager()
     
@@ -87,13 +89,13 @@ struct ContentView: View {
                     }
                     Spacer()
                     VStack(spacing: 8) {
-                        HStack() {
+                        HStack(spacing: 8) {
                             Spacer()
-                            Text("File Size: \(podcastAudioFile.podcast.getFileSizeFormatted())").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule()).frame(minWidth:180)
-                            Text("Running Time: \(ID3Parser.toTrackTime(millis:UInt32( (podcastAudioFile.podcast.durationInSeconds ?? 0)*1000), showHours: true))").monospaced().padding(EdgeInsets(top:2, leading: 8, bottom: 2, trailing: 8)).background(.gray).foregroundColor(.white).clipShape(Capsule())
+                            CopyableInfoBadge(label: "File Size", value: podcastAudioFile.podcast.getFileSizeFormatted(), minWidth: 160)
+                            CopyableInfoBadge(label: "Running Time", value: podcastAudioFile.podcast.getDurationFormatted())
                             Spacer()
                         }
-                        ChapterTableView(radius: radius, onSelect: { chapter in
+                        ChapterTableView(radius: radius, playheadMillis: UInt32(player.currentTime * 1000), onSelect: { chapter in
                             let time = TimeInterval(chapter.startTime) / 1000.0
                             player.seek(to: time)
 
@@ -143,10 +145,18 @@ struct ContentView: View {
 
                             HStack(alignment: .center, spacing: 12) {
                                 
-                                Text("\(ID3Parser.toTrackTime(millis: UInt32(player.currentTime * 1000), showHours: true)) / \(ID3Parser.toTrackTime(millis: UInt32(player.duration * 1000), showHours: true))")
-                                    .font(.caption)
-                                    .monospaced()
-                                    .foregroundStyle(.secondary)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(ID3Parser.toTrackTime(millis: UInt32(player.currentTime * 1000), showHours: true)) / \(ID3Parser.toTrackTime(millis: UInt32(player.duration * 1000), showHours: true))")
+                                        .font(.caption)
+                                        .monospaced()
+                                        .foregroundStyle(.secondary)
+                                    if let loadError = player.loadError {
+                                        Text(loadError)
+                                            .font(.caption2)
+                                            .foregroundStyle(.red)
+                                            .lineLimit(2)
+                                    }
+                                }
 
                                 Spacer()
 
@@ -168,6 +178,8 @@ struct ContentView: View {
                                     }
                                     .buttonStyle(.borderedProminent)
                                     .disabled(player.duration <= 0)
+                                    .keyboardShortcut(.space, modifiers: [])
+                                    .help(player.loadError ?? (player.isPlaying ? "Pause" : "Play"))
 
                                     Button {
                                         player.jumpForward(10)
@@ -244,6 +256,14 @@ struct ContentView: View {
             .onChange(of: player.currentTime) { _, _ in
                 updateViewport()
             }
+            .onDrop(of: [.mp3, .wav, .aiff, .mpeg4Audio, .audio], isTargeted: $isDraggingAudio) { providers in
+                handleAudioDrop(providers: providers)
+            }
+            .overlay(
+                RoundedRectangle(cornerRadius: radius)
+                    .strokeBorder(Color.accentColor, lineWidth: 3)
+                    .opacity(isDraggingAudio ? 0.7 : 0)
+            )
             .alert("Error Loading Podcast", isPresented: .constant(podcastAudioFile.errorMessage != nil)) {
                 Button("OK") {
                     podcastAudioFile.errorMessage = nil
@@ -272,6 +292,23 @@ struct ContentView: View {
         
     }
     
+    private func handleAudioDrop(providers: [NSItemProvider]) -> Bool {
+        guard let provider = providers.first else { return false }
+        let types = ["public.mp3", "public.wav", "public.aiff-audio", "public.mpeg-4-audio", "public.audio"]
+        guard let type = types.first(where: { provider.hasItemConformingToTypeIdentifier($0) }) else {
+            return false
+        }
+        provider.loadItem(forTypeIdentifier: type, options: nil) { item, _ in
+            let url = item as? URL
+            if let url {
+                DispatchQueue.main.async {
+                    openPodcast(url)
+                }
+            }
+        }
+        return true
+    }
+
     // MARK: - Cover Art Management
     
     private func handleCoverArtDrop(providers: [NSItemProvider]) -> Bool {
