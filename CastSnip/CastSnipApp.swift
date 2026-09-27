@@ -24,6 +24,7 @@ struct CastSnipApp: App {
     @State private var pendingAction: PendingDocumentAction?
     @State private var showDiscardAlert = false
     @State private var showShortcutsHelp = false
+    @State private var showAutofillBrowser = false
     
     var body: some Scene {
         WindowGroup {
@@ -73,6 +74,9 @@ struct CastSnipApp: App {
                     Button("OK", role: .cancel) {}
                 } message: {
                     Text(KeyboardShortcutsHelp.text)
+                }
+                .sheet(isPresented: $showAutofillBrowser) {
+                    AutofillMemoryView()
                 }
         }
         .onChange(of: fileURL) {
@@ -162,8 +166,8 @@ struct CastSnipApp: App {
                 Button("mostlysecurity.com") {
                     showMostlySecurityWebsite()
                 }
-                Button("Clear Autofill Memory") {
-                    ShowAutofillStore.shared.clear()
+                Button(AutofillMemoryCopy.browseMenu) {
+                    showAutofillBrowser = true
                 }
             }
         }

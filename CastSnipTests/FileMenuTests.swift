@@ -105,6 +105,19 @@ struct CloseDocumentTests {
     }
 }
 
+struct AutofillMemoryCopyTests {
+
+    @Test func helpMenuBrowseTitleDoesNotWipeEverything() {
+        #expect(AutofillMemoryCopy.browseMenu.localizedCaseInsensitiveContains("browse"))
+        #expect(!AutofillMemoryCopy.browseMenu.localizedCaseInsensitiveContains("clear"))
+        #expect(AutofillMemoryCopy.windowTitle.localizedCaseInsensitiveContains("autofill"))
+        #expect(AutofillMemoryCopy.showsSection.localizedCaseInsensitiveContains("show"))
+        #expect(AutofillMemoryCopy.chaptersSection.localizedCaseInsensitiveContains("chapter"))
+        #expect(AutofillMemoryCopy.delete.localizedCaseInsensitiveContains("delete"))
+        #expect(AutofillMemoryCopy.clearAll.localizedCaseInsensitiveContains("clear"))
+    }
+}
+
 struct KeyboardShortcutsHelpTests {
 
     @Test func helpTextDocumentsFileAndChapterShortcuts() {
