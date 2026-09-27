@@ -20,7 +20,17 @@ class AudioFile: Identifiable {
     var isLoading = false
     var errorMessage: String?
     var hasUnsavedChanges = false
-    var selectedChapter: Chapter?
+    var selectedChapters: Set<Chapter> = []
+    var selectedChapter: Chapter? {
+        get { selectedChapters.min() }
+        set {
+            if let newValue {
+                selectedChapters = [newValue]
+            } else {
+                selectedChapters = []
+            }
+        }
+    }
     private let logger = Logger(subsystem: "com.castsnip", category: "AudioFile")
     
     @MainActor

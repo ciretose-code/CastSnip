@@ -382,7 +382,7 @@ struct CastSnipApp: App {
     private func exportAirchecks() {
         guard let source = fileURL ?? podcastAudioFile.podcast.url else { return }
         let chapters = AircheckExporter.chaptersToExport(
-            selected: podcastAudioFile.selectedChapter,
+            selected: Array(podcastAudioFile.selectedChapters),
             all: podcastAudioFile.podcast.chapters
         )
         guard !chapters.isEmpty else {
