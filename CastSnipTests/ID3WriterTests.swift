@@ -63,6 +63,137 @@ struct ID3ParserSafetyTests {
         #expect(chapter.endTime == 2000)
         #expect(chapter.url.isEmpty)
     }
+
+    @Test func readFramesRejectsID3v24WithClearError() {
+        var tag = Data("ID3".utf8)
+        tag.append(contentsOf: [0x04, 0x00, 0x00])
+        tag.append(contentsOf: ID3Parser.synchsafeBytes(0))
+
+        var thrown: Error?
+        do {
+            _ = try ID3Parser.readFrames(from: tag)
+        } catch {
+            thrown = error
+        }
+
+        guard let parserError = thrown as? ID3ParserError else {
+            Issue.record("expected ID3ParserError, got \(String(describing: thrown))")
+            return
+        }
+        guard case .unsupportedVersion(let version) = parserError else {
+            Issue.record("expected unsupportedVersion, got \(parserError)")
+            return
+        }
+        #expect(version == 4)
+        #expect(parserError.errorDescription?.contains("2.4") == true)
+    }
+
+    @Test func readFramesThrowsWhenTagMissing() {
+        var thrown: Error?
+        do {
+            _ = try ID3Parser.readFrames(from: Data([0xFF, 0xFB, 0x90, 0x00]))
+        } catch {
+            thrown = error
+        }
+        #expect(thrown is ID3ParserError)
+        if let parserError = thrown as? ID3ParserError {
+            guard case .missingTag = parserError else {
+                Issue.record("expected missingTag, got \(parserError)")
+                return
+            }
+        }
+    }
+
+    @Test func getStringReadsNullTerminatedText() {
+        var data = Data([0x00])
+        data.append(contentsOf: "Hello".utf8)
+        data.append(0x00)
+        data.append(contentsOf: "rest".utf8)
+        var offset = 0
+        #expect(ID3Parser.getString(data, &offset) == "Hello")
+        #expect(offset == 7)
+    }
+
+    @Test func getStringHonorsDeclaredLengthAndStopsAtBufferEnd() {
+        var data = Data([0x00])
+        data.append(contentsOf: "Title".utf8)
+        var offset = 0
+        #expect(ID3Parser.getString(data, &offset, length: 4) == "Tit")
+        #expect(offset == 4)
+
+        offset = 0
+        let truncated = ID3Parser.getString(Data([0x03, 0x41]), &offset, length: 80)
+        #expect(truncated == "A")
+        #expect(offset == 2)
+    }
+
+    @Test func chapterInitReadsTIT2AndWXXXFromCHAP() {
+        var body = chapFrameBody(id: "chp0", start: 1000, end: 4000)
+        body.append(id3Subframe("TIT2", Data([0x00]) + Data("Intro".utf8)))
+        body.append(id3Subframe("WXXX", Data([0x00, 0x00]) + Data("https://example.com/intro".utf8)))
+
+        let chapter = Chapter(data: body, podcastDuration: 10_000)
+        #expect(chapter.elementID == "chp0")
+        #expect(chapter.title == "Intro")
+        #expect(chapter.url == "https://example.com/intro")
+        #expect(chapter.startTime == 1000)
+        #expect(chapter.endTime == 4000)
+    }
+
+    @Test func chapterInitSurvivesTruncatedCHAP() {
+        let truncated = Data("chp0".utf8) + Data([0x00, 0x00, 0x03])
+        let chapter = Chapter(data: truncated, podcastDuration: 10_000)
+        #expect(chapter.elementID == "chp0")
+        #expect(chapter.startTime == 0)
+        #expect(chapter.endTime == 0)
+        #expect(chapter.title.isEmpty)
+        #expect(chapter.url.isEmpty)
+        #expect(chapter.image == nil)
+    }
+
+    @Test func chapterInitSurvivesTruncatedWXXXFrame() {
+        var body = chapFrameBody(id: "chp1", start: 0, end: 500)
+        body.append(contentsOf: Array("WXXX".utf8))
+        body.append(contentsOf: ID3Parser.uint32Bytes(40))
+        body.append(contentsOf: [0x00, 0x00])
+        body.append(0x00)
+
+        let chapter = Chapter(data: body, podcastDuration: 10_000)
+        #expect(chapter.startTime == 0)
+        #expect(chapter.endTime == 500)
+        #expect(chapter.url.isEmpty)
+    }
+
+    @Test func chapterInitSurvivesTruncatedAPICFrame() {
+        var body = chapFrameBody(id: "chp2", start: 10, end: 20)
+        body.append(contentsOf: Array("APIC".utf8))
+        body.append(contentsOf: ID3Parser.uint32Bytes(200))
+        body.append(contentsOf: [0x00, 0x00])
+        body.append(contentsOf: [0x00])
+        body.append(contentsOf: Array("im".utf8))
+
+        let chapter = Chapter(data: body, podcastDuration: 10_000)
+        #expect(chapter.startTime == 10)
+        #expect(chapter.endTime == 20)
+        #expect(chapter.image == nil)
+    }
+
+    @Test func chapterInitReadsAPICImage() throws {
+        let jpeg = try #require(ID3Writer.jpegData(from: makeSolidJPEGImage()))
+        var apicBody = Data([0x00])
+        apicBody.append(contentsOf: Array("image/jpeg".utf8))
+        apicBody.append(0x00)
+        apicBody.append(0x03)
+        apicBody.append(0x00)
+        apicBody.append(jpeg)
+
+        var body = chapFrameBody(id: "chp3", start: 0, end: 1000)
+        body.append(id3Subframe("APIC", apicBody))
+
+        let chapter = Chapter(data: body, podcastDuration: 10_000)
+        #expect(chapter.image != nil)
+        #expect((chapter.image?.size.width ?? 0) > 0)
+    }
 }
 
 struct PodcastValidationTests {
@@ -241,6 +372,128 @@ struct ID3WriterTests {
         #expect(frames.contains { $0.name == "TALB" && ID3Parser.decodeTextFrameBody($0.body) == "Written" })
         #expect(ID3Writer.mpegAudioPayload(from: written).starts(with: [0xFF, 0xFB]))
     }
+
+    @Test func saveThenReopenPreservesTitleChaptersAndArtwork() throws {
+        let source = FileManager.default.temporaryDirectory.appendingPathComponent("castsnip-roundtrip-src-\(UUID().uuidString).mp3")
+        let dest = FileManager.default.temporaryDirectory.appendingPathComponent("castsnip-roundtrip-dest-\(UUID().uuidString).mp3")
+        defer {
+            try? FileManager.default.removeItem(at: source)
+            try? FileManager.default.removeItem(at: dest)
+        }
+
+        try Data([0xFF, 0xFB, 0x90, 0x00, 0x11, 0x22]).write(to: source)
+
+        let podcast = Podcast()
+        podcast.title = "Mostly Security"
+        podcast.episode = "329: Cool"
+        podcast.durationInMillis = 10_000
+        podcast.logo = makeSolidJPEGImage()
+        podcast.chapters = [
+            Chapter(title: "Intro", url: "https://example.com/intro", startTime: 0, endTime: 4000, podcastDuration: 10_000),
+            Chapter(title: "Interview", url: "", startTime: 4000, endTime: 10_000, podcastDuration: 10_000)
+        ]
+        podcast.url = source
+
+        try ID3Writer.write(podcast: podcast, from: source, to: dest)
+
+        let reopened = try Data(contentsOf: dest)
+        let frames = try ID3Parser.readFrames(from: reopened)
+        let texts = Dictionary(uniqueKeysWithValues: frames.compactMap { frame -> (String, String)? in
+            guard ["TALB", "TIT2"].contains(frame.name) else { return nil }
+            return (frame.name, ID3Parser.decodeTextFrameBody(frame.body))
+        })
+        #expect(texts["TALB"] == "Mostly Security")
+        #expect(texts["TIT2"] == "329: Cool")
+
+        let chapters = frames.filter { $0.name == "CHAP" }.map { Chapter(data: $0.body, podcastDuration: 10_000) }.sorted()
+        #expect(chapters.count == 2)
+        #expect(chapters[0].title.contains("Intro"))
+        #expect(chapters[0].url == "https://example.com/intro")
+        #expect(chapters[0].startTime == 0)
+        #expect(chapters[0].endTime == 4000)
+        #expect(chapters[1].title.contains("Interview"))
+        #expect(chapters[1].startTime == 4000)
+
+        let apic = frames.first { $0.name == "APIC" }
+        #expect(apic != nil)
+        #expect(apic?.body.contains(0xFF) == true && apic?.body.contains(0xD8) == true)
+    }
+}
+
+@MainActor
+struct AudioFileLoadSaveTests {
+
+    @Test func loadPodcastReadsTaggedTempMP3() async throws {
+        let (url, cleanup) = try writeTaggedTempPodcast()
+        defer { cleanup() }
+
+        let audioFile = AudioFile()
+        await audioFile.loadPodcast(from: url)
+
+        #expect(audioFile.podcast.url == url)
+        #expect(audioFile.podcast.asset != nil)
+        #expect(audioFile.podcast.title == "Load Show")
+        #expect(audioFile.podcast.episode == "Load Episode")
+        #expect(audioFile.podcast.chapters.count == 2)
+        #expect(audioFile.podcast.chapters.sorted()[0].title.contains("Cold open"))
+        #expect(audioFile.podcast.chapters.sorted()[1].title.contains("Main"))
+        #expect(audioFile.podcast.logo != nil)
+        #expect(audioFile.errorMessage == nil)
+        #expect(!audioFile.hasUnsavedChanges)
+        #expect(!audioFile.isLoading)
+    }
+
+    @Test func loadPodcastMissingFileSetsError() async {
+        let missing = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-missing-\(UUID().uuidString).mp3")
+
+        let audioFile = AudioFile()
+        await audioFile.loadPodcast(from: missing)
+
+        #expect(audioFile.errorMessage != nil)
+        #expect(audioFile.podcast.file == nil)
+        #expect(audioFile.podcast.chapters.isEmpty)
+        #expect(!audioFile.isLoading)
+    }
+
+    @Test func loadPodcastUnknownDurationSetsWarning() async throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-noduration-\(UUID().uuidString).mp3")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Data("not an mpeg audio stream".utf8).write(to: url)
+
+        let audioFile = AudioFile()
+        await audioFile.loadPodcast(from: url)
+
+        #expect(audioFile.podcast.durationInSeconds == 0)
+        #expect(audioFile.errorMessage?.localizedCaseInsensitiveContains("duration") == true)
+    }
+
+    @Test func saveThenLoadPodcastPreservesTitleChaptersAndArtwork() async throws {
+        let (source, cleanupSource) = try writeTaggedTempPodcast()
+        let dest = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-save-reopen-\(UUID().uuidString).mp3")
+        defer {
+            cleanupSource()
+            try? FileManager.default.removeItem(at: dest)
+        }
+
+        let audioFile = AudioFile()
+        await audioFile.loadPodcast(from: source)
+        audioFile.podcast.title = "Edited Show"
+        audioFile.podcast.episode = "Edited Episode"
+        try audioFile.save(to: dest)
+
+        let reopened = AudioFile()
+        await reopened.loadPodcast(from: dest)
+
+        #expect(reopened.podcast.title == "Edited Show")
+        #expect(reopened.podcast.episode == "Edited Episode")
+        #expect(reopened.podcast.chapters.count == 2)
+        #expect(reopened.podcast.chapters.sorted()[0].title.contains("Cold open"))
+        #expect(reopened.podcast.logo != nil)
+        #expect(!reopened.hasUnsavedChanges)
+    }
 }
 
 struct AudioFileDirtyStateTests {
@@ -277,4 +530,56 @@ private func makeSolidJPEGImage() -> NSImage {
     NSBezierPath(rect: NSRect(x: 0, y: 0, width: 2, height: 2)).fill()
     image.unlockFocus()
     return image
+}
+
+private func chapFrameBody(id: String, start: UInt32, end: UInt32) -> Data {
+    var body = Data(id.utf8)
+    body.append(0x00)
+    body.append(contentsOf: ID3Parser.uint32Bytes(start))
+    body.append(contentsOf: ID3Parser.uint32Bytes(end))
+    body.append(contentsOf: [0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF])
+    return body
+}
+
+private func id3Subframe(_ name: String, _ body: Data) -> Data {
+    var data = Data(name.utf8)
+    data.append(contentsOf: ID3Parser.uint32Bytes(UInt32(body.count)))
+    data.append(contentsOf: [0x00, 0x00])
+    data.append(body)
+    return data
+}
+
+private func sampleAudioURL() -> URL? {
+    if let bundled = Bundle(for: AudioFile.self).url(forResource: "intro", withExtension: "mp3") {
+        return bundled
+    }
+    let fromSource = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .appendingPathComponent("CastSnip/Samples/intro.mp3")
+    return FileManager.default.fileExists(atPath: fromSource.path) ? fromSource : nil
+}
+
+private func writeTaggedTempPodcast() throws -> (URL, () -> Void) {
+    let url = FileManager.default.temporaryDirectory
+        .appendingPathComponent("castsnip-load-\(UUID().uuidString).mp3")
+    let audio: Data
+    if let sample = sampleAudioURL(), let data = try? Data(contentsOf: sample) {
+        audio = data
+    } else {
+        audio = Data([0xFF, 0xFB, 0x90, 0x00, 0x11, 0x22, 0x33, 0x44])
+    }
+
+    let podcast = Podcast()
+    podcast.title = "Load Show"
+    podcast.episode = "Load Episode"
+    podcast.durationInMillis = 10_000
+    podcast.logo = makeSolidJPEGImage()
+    podcast.chapters = [
+        Chapter(title: "Cold open", url: "https://example.com/cold", startTime: 0, endTime: 2000, podcastDuration: 10_000),
+        Chapter(title: "Main", url: "", startTime: 2000, endTime: 10_000, podcastDuration: 10_000)
+    ]
+
+    try ID3Writer.taggedMP3(from: audio, podcast: podcast).write(to: url)
+    return (url, { try? FileManager.default.removeItem(at: url) })
 }
