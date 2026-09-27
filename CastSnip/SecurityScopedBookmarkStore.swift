@@ -30,6 +30,28 @@ final class SecurityScopedBookmarkStore {
         }
     }
 
+    func resolveAndAccess(path: String) -> URL? {
+        let map = UserDefaults.standard.dictionary(forKey: defaultsKey) as? [String: Data] ?? [:]
+        var stale = false
+        if let data = map[path],
+           let url = try? URL(
+            resolvingBookmarkData: data,
+            options: [.withSecurityScope, .withoutUI],
+            relativeTo: nil,
+            bookmarkDataIsStale: &stale
+           ) {
+            if url.startAccessingSecurityScopedResource() {
+                activeURLs.append(url)
+            }
+            return url
+        }
+
+        let url = URL(fileURLWithPath: path)
+        guard FileManager.default.fileExists(atPath: path) else { return nil }
+        rememberAndAccess(url)
+        return url
+    }
+
     func stopAll() {
         for url in activeURLs {
             url.stopAccessingSecurityScopedResource()

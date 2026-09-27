@@ -37,6 +37,8 @@
 		A11D3E01000100010000000A /* ChapterVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000009 /* ChapterVisibility.swift */; };
 		A11D3E01000100010000000C /* CopyableInfoBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000000B /* CopyableInfoBadge.swift */; };
 		A11D3E01000100010000000E /* OpenPodcastEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */; };
+		A11D3E010001000100000010 /* RecentFilesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000000F /* RecentFilesStore.swift */; };
+		A11D3E010001000100000012 /* KeyboardShortcutsHelp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -84,6 +86,8 @@
 		A11D3E010001000100000009 /* ChapterVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterVisibility.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000000B /* CopyableInfoBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableInfoBadge.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPodcastEnvironment.swift; sourceTree = "<group>"; };
+		A11D3E01000100010000000F /* RecentFilesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentFilesStore.swift; sourceTree = "<group>"; };
+		A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsHelp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -138,6 +142,8 @@
 				7B1D20B82BD36A83006D1AA4 /* ContentView.swift */,
 				A11D3E01000100010000000B /* CopyableInfoBadge.swift */,
 				A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */,
+				A11D3E01000100010000000F /* RecentFilesStore.swift */,
+				A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */,
 				7B16BD222F2E853900DFD7E8 /* PlatformImage.swift */,
 				7B16BD232F2E853900DFD7E8 /* WaveformView.swift */,
 				7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */,
@@ -334,6 +340,8 @@
 				A11D3E01000100010000000A /* ChapterVisibility.swift in Sources */,
 				A11D3E01000100010000000C /* CopyableInfoBadge.swift in Sources */,
 				A11D3E01000100010000000E /* OpenPodcastEnvironment.swift in Sources */,
+				A11D3E010001000100000010 /* RecentFilesStore.swift in Sources */,
+				A11D3E010001000100000012 /* KeyboardShortcutsHelp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

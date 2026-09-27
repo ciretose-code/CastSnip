@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ChapterTableView: View {
     @Environment(AudioFile.self) var podcastAudioFile
-    @State var selectedRow: Chapter?
     @State private var pendingDelete: Chapter?
     var radius: CGFloat
     var playheadMillis: UInt32 = 0
@@ -20,20 +19,20 @@ struct ChapterTableView: View {
     var body: some View {
         HStack(alignment: .top) {
             VStack {
-                List(podcastAudioFile.podcast.chapters.sorted(), id: \.self, selection: $selectedRow) { chapter in
+                List(podcastAudioFile.podcast.chapters.sorted(), id: \.self, selection: Bindable(podcastAudioFile).selectedChapter) { chapter in
                     ChapterView(
                         chapter: chapter,
                         defaultImage: podcastAudioFile.podcast.logo,
                         showHours: showHours(podcastAudioFile.podcast.durationInSeconds ?? 0)
                     )
                 }
-                .onChange(of: selectedRow) {
-                    if let selectedRow {
-                        onSelect?(selectedRow)
+                .onChange(of: podcastAudioFile.selectedChapter) {
+                    if let selected = podcastAudioFile.selectedChapter {
+                        onSelect?(selected)
                     }
                 }
                 .onDeleteCommand {
-                    pendingDelete = selectedRow
+                    pendingDelete = podcastAudioFile.selectedChapter
                 }
                 .listStyle(.plain)
                 .scrollIndicators(.automatic)
@@ -49,13 +48,13 @@ struct ChapterTableView: View {
                 .keyboardShortcut("n", modifiers: .command)
                 .help("Add a chapter at the playhead")
                 Button(action: {
-                    pendingDelete = selectedRow
+                    pendingDelete = podcastAudioFile.selectedChapter
                 }) {
                     Image(systemName: "minus.rectangle")
                     Text("Delete")
                 }
                 .buttonStyle(LinkButtonStyle())
-                .disabled(selectedRow == nil)
+                .disabled(podcastAudioFile.selectedChapter == nil)
                 .help("Delete selected chapter")
             }
         }
@@ -88,14 +87,14 @@ struct ChapterTableView: View {
             atPlayhead: playheadMillis,
             durationMillis: duration
         )
-        selectedRow = added
+        podcastAudioFile.selectedChapter = added
         podcastAudioFile.markAsModified()
     }
 
     func deleteChapter(_ id: UUID) {
         if let chapterIndex = podcastAudioFile.podcast.chapters.firstIndex(where: { $0.id == id }) {
             podcastAudioFile.podcast.chapters.remove(at: chapterIndex)
-            selectedRow = nil
+            podcastAudioFile.selectedChapter = nil
             podcastAudioFile.markAsModified()
         }
     }
