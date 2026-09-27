@@ -41,6 +41,7 @@
 		A11D3E010001000100000012 /* KeyboardShortcutsHelp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */; };
 		A11D3E010001000100000014 /* EditorCopy.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000013 /* EditorCopy.swift */; };
 		A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000015 /* EmptyPodcastView.swift */; };
+		A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000019 /* ShowAutofillStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -92,6 +93,7 @@
 		A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsHelp.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000013 /* EditorCopy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorCopy.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000015 /* EmptyPodcastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyPodcastView.swift; sourceTree = "<group>"; };
+		A11D3E010001000100000019 /* ShowAutofillStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowAutofillStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -147,6 +149,7 @@
 				A11D3E01000100010000000B /* CopyableInfoBadge.swift */,
 				A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */,
 				A11D3E01000100010000000F /* RecentFilesStore.swift */,
+				A11D3E010001000100000019 /* ShowAutofillStore.swift */,
 				A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */,
 				A11D3E010001000100000013 /* EditorCopy.swift */,
 				A11D3E010001000100000015 /* EmptyPodcastView.swift */,
@@ -350,6 +353,7 @@
 				A11D3E010001000100000012 /* KeyboardShortcutsHelp.swift in Sources */,
 				A11D3E010001000100000014 /* EditorCopy.swift in Sources */,
 				A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */,
+				A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

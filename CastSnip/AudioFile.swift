@@ -34,6 +34,8 @@ class AudioFile: Identifiable {
         } else if podcast.durationInSeconds == 0 {
             errorMessage = "Warning: Could not determine audio duration."
         }
+
+        ShowAutofillStore.shared.applyToPodcastIfEmpty(podcast, filename: url.path)
         
         isLoading = false
         hasUnsavedChanges = false
@@ -48,6 +50,16 @@ class AudioFile: Identifiable {
         if let attributes = try? FileManager.default.attributesOfItem(atPath: destination.path),
            let size = attributes[.size] as? UInt64 {
             podcast.fileSizeInBytes = size
+        }
+        if !podcast.title.isEmpty,
+           !destination.path.contains("/Contents/Resources/"),
+           !SampleEpisode.isSample(destination),
+           let parsed = ShowAutofillStore.parse(destination.lastPathComponent) {
+            ShowAutofillStore.shared.rememberShow(
+                prefix: parsed.prefix,
+                title: podcast.title,
+                artwork: podcast.logo
+            )
         }
         markAsSaved()
     }
