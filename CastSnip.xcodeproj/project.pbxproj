@@ -43,6 +43,9 @@
 		A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000015 /* EmptyPodcastView.swift */; };
 		A11D3E010001000100000018 /* AudioMarkerImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000017 /* AudioMarkerImporter.swift */; };
 		A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000019 /* ShowAutofillStore.swift */; };
+		A11D3E01000100010000001C /* SilenceDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001B /* SilenceDetector.swift */; };
+		A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001D /* PodcastEncoder.swift */; };
+		A11D3E010001000100000020 /* AircheckExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001F /* AircheckExporter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -96,6 +99,9 @@
 		A11D3E010001000100000015 /* EmptyPodcastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyPodcastView.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000017 /* AudioMarkerImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioMarkerImporter.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000019 /* ShowAutofillStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowAutofillStore.swift; sourceTree = "<group>"; };
+		A11D3E01000100010000001B /* SilenceDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceDetector.swift; sourceTree = "<group>"; };
+		A11D3E01000100010000001D /* PodcastEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastEncoder.swift; sourceTree = "<group>"; };
+		A11D3E01000100010000001F /* AircheckExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircheckExporter.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -211,6 +217,9 @@
 				A11D3E010001000100000007 /* ChapterTimeline.swift */,
 				A11D3E010001000100000009 /* ChapterVisibility.swift */,
 				A11D3E010001000100000017 /* AudioMarkerImporter.swift */,
+				A11D3E01000100010000001B /* SilenceDetector.swift */,
+				A11D3E01000100010000001D /* PodcastEncoder.swift */,
+				A11D3E01000100010000001F /* AircheckExporter.swift */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -358,6 +367,9 @@
 				A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */,
 				A11D3E010001000100000018 /* AudioMarkerImporter.swift in Sources */,
 				A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */,
+				A11D3E01000100010000001C /* SilenceDetector.swift in Sources */,
+				A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */,
+				A11D3E010001000100000020 /* AircheckExporter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
