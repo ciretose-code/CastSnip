@@ -121,6 +121,14 @@ struct CastSnipApp: App {
                     _ = saveAs()
                 }
                 .keyboardShortcut("S", modifiers: [.command, .shift])
+                Button("Encode to MP3…") {
+                    encodeToMP3()
+                }
+                .disabled(fileURL == nil && podcastAudioFile.podcast.url == nil)
+                Button("Export Airchecks…") {
+                    exportAirchecks()
+                }
+                .disabled(fileURL == nil && podcastAudioFile.podcast.url == nil)
                 Button("Close") {
                     requestClose()
                 }
@@ -249,11 +257,13 @@ struct CastSnipApp: App {
     @discardableResult
     private func saveInPlace() -> Bool {
         guard let url = fileURL else { return saveAs() }
+        guard confirmSilenceOrContinue() else { return false }
         return write(to: url)
     }
 
     @discardableResult
     private func saveAs() -> Bool {
+        guard confirmSilenceOrContinue() else { return false }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.mp3]
         panel.canCreateDirectories = true
@@ -279,6 +289,108 @@ struct CastSnipApp: App {
             logger.error("Save failed: \(error.localizedDescription)")
             podcastAudioFile.errorMessage = error.localizedDescription
             return false
+        }
+    }
+
+    /// Warns on long accidental gaps. Detection failure logs and continues.
+    private func confirmSilenceOrContinue() -> Bool {
+        let ranges = podcastAudioFile.silenceRanges()
+        guard let message = SilenceDetector.warningMessage(for: ranges) else {
+            return true
+        }
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Long silence detected"
+        alert.informativeText = message
+        alert.addButton(withTitle: "Continue")
+        alert.addButton(withTitle: "Cancel")
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+
+    private func encodeToMP3() {
+        guard let source = fileURL ?? podcastAudioFile.podcast.url else { return }
+        guard confirmSilenceOrContinue() else { return }
+
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.mp3, .mpeg4Audio]
+        panel.canCreateDirectories = true
+        panel.nameFieldStringValue = source.deletingPathExtension().appendingPathExtension("mp3").lastPathComponent
+        panel.title = "Encode to MP3"
+        guard panel.runModal() == .OK, let dest = panel.url else { return }
+        SecurityScopedBookmarkStore.shared.rememberAndAccess(dest)
+
+        Task { @MainActor in
+            await performEncode(from: source, to: dest)
+        }
+    }
+
+    private func performEncode(from source: URL, to dest: URL) async {
+        let alert = NSAlert()
+        alert.messageText = "Encoding…"
+        alert.informativeText = "Creating a podcast-quality file (192 kbps CBR MP3 when lame is available)."
+        let bar = NSProgressIndicator(frame: NSRect(x: 0, y: 0, width: 240, height: 16))
+        bar.minValue = 0
+        bar.maxValue = 1
+        bar.isIndeterminate = false
+        bar.doubleValue = 0
+        alert.accessoryView = bar
+
+        let window = NSApp.keyWindow
+        if let window {
+            alert.beginSheetModal(for: window) { _ in }
+        }
+
+        do {
+            let written = try await PodcastEncoder.encode(from: source, to: dest) { value in
+                DispatchQueue.main.async {
+                    bar.doubleValue = value
+                }
+            }
+            if let window {
+                window.endSheet(alert.window)
+            }
+            fileURL = written
+            await podcastAudioFile.loadPodcast(from: written)
+            RecentFilesStore.shared.remember(written)
+            if written.pathExtension.lowercased() != "mp3" {
+                podcastAudioFile.errorMessage = "Wrote AAC (.m4a) instead of MP3. Install lame (`brew install lame`) for 192 kbps CBR stereo."
+            }
+        } catch {
+            if let window {
+                window.endSheet(alert.window)
+            }
+            logger.error("Encode failed: \(error.localizedDescription)")
+            podcastAudioFile.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func exportAirchecks() {
+        guard let source = fileURL ?? podcastAudioFile.podcast.url else { return }
+        let chapters = AircheckExporter.chaptersToExport(
+            selected: podcastAudioFile.selectedChapter,
+            all: podcastAudioFile.podcast.chapters
+        )
+        guard !chapters.isEmpty else {
+            podcastAudioFile.errorMessage = "No chapters to export. Select a chapter or give chapters a title."
+            return
+        }
+
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.canCreateDirectories = true
+        panel.prompt = "Export"
+        panel.title = "Export Airchecks"
+        guard panel.runModal() == .OK, let directory = panel.url else { return }
+        SecurityScopedBookmarkStore.shared.rememberAndAccess(directory)
+
+        Task { @MainActor in
+            do {
+                _ = try await AircheckExporter.export(from: source, chapters: chapters, to: directory)
+            } catch {
+                logger.error("Aircheck export failed: \(error.localizedDescription)")
+                podcastAudioFile.errorMessage = error.localizedDescription
+            }
         }
     }
     

@@ -80,6 +80,19 @@ class AudioFile: Identifiable {
         isLoading = false
     }
 
+    func silenceRanges(
+        thresholdDb: Double = SilenceDetector.defaultThresholdDb,
+        durationSeconds: TimeInterval = SilenceDetector.defaultDurationSeconds
+    ) -> [SilenceDetector.Range] {
+        guard let file = podcast.file else { return [] }
+        do {
+            return try SilenceDetector.detect(in: file, thresholdDb: thresholdDb, durationSeconds: durationSeconds)
+        } catch {
+            logger.error("Silence detection failed: \(error.localizedDescription)")
+            return []
+        }
+    }
+
     func selectNeighbor(going direction: ChapterTimeline.NeighborDirection) {
         selectedChapter = ChapterTimeline.neighbor(
             of: selectedChapter,
