@@ -211,13 +211,19 @@ struct WaveformView: View {
         let height = size.height
         let midHeight = height / 2
 
-        let visibleBuckets = samplesForViewport()
+        let visibleBuckets = WaveformSampling.samplesForViewport(
+            samples: samples,
+            audioDuration: audioDuration,
+            viewportStart: viewportStart,
+            viewportDuration: viewportDuration,
+            bucketDuration: bucketDuration
+        )
         guard !visibleBuckets.isEmpty else { return }
 
         // For a fixed ~20s viewport and 0.1s buckets, visibleBuckets is ~200.
         // Still, protect ourselves if viewportDuration changes in the future.
         let targetBarCount = max(1, Int(floor(width)))
-        let bars = downsampleBucketsToBars(buckets: visibleBuckets, maxBars: targetBarCount)
+        let bars = WaveformSampling.downsample(buckets: visibleBuckets, maxBars: targetBarCount)
 
         let barWidth = width / CGFloat(bars.count)
         let barSpacing: CGFloat = 0.5
@@ -253,26 +259,6 @@ struct WaveformView: View {
         )
     }
 
-    /// If we have more buckets than we can reasonably draw, aggregate buckets into N bars.
-    /// Uses max amplitude per bar so peaks remain visible.
-    private func downsampleBucketsToBars(buckets: [Float], maxBars: Int) -> [Float] {
-        guard buckets.count > maxBars, maxBars > 0 else { return buckets }
-
-        let stride = Double(buckets.count) / Double(maxBars)
-        var result: [Float] = []
-        result.reserveCapacity(maxBars)
-
-        for i in 0..<maxBars {
-            let start = Int(floor(Double(i) * stride))
-            let end = Int(floor(Double(i + 1) * stride))
-            if start >= buckets.count { break }
-            let safeEnd = max(start + 1, min(end, buckets.count))
-            result.append(buckets[start..<safeEnd].max() ?? 0)
-        }
-
-        return result
-    }
-
     private func drawPlayhead(context: GraphicsContext, size: CGSize) {
         guard viewportDuration > 0 else { return }
         guard let window = viewportWindow() else { return }
@@ -294,7 +280,7 @@ struct WaveformView: View {
         context.stroke(path, with: .color(.white.opacity(0.9)), lineWidth: 1.5)
         context.stroke(path, with: .color(.black.opacity(0.35)), lineWidth: 3) // subtle outline
 
-        let timeLabel = formatTimestamp(t)
+        let timeLabel = WaveformSampling.formatTimestamp(t)
         let padding: CGFloat = 4
         let labelX = min(max(x + padding, padding), width - padding)
         let labelY = height - padding
@@ -336,7 +322,7 @@ struct WaveformView: View {
 
             let isLabel = abs((tick / labelInterval).rounded() - (tick / labelInterval)) < 0.0001
             if isLabel {
-                let timeString = formatTimestamp(tick)
+                let timeString = WaveformSampling.formatTimestamp(tick)
                 context.draw(
                     Text(timeString)
                         .font(.system(size: 9))
@@ -412,29 +398,6 @@ struct WaveformView: View {
         }
     }
 
-    private func samplesForViewport() -> [Float] {
-        guard audioDuration > 0, !samples.isEmpty, viewportDuration > 0 else { return samples }
-        guard let window = viewportWindow() else { return [] }
-
-        // Each stored sample corresponds to `bucketDuration` seconds.
-        let startIndex = max(0, min(samples.count - 1, Int(floor(window.start / bucketDuration))))
-        let endIndexExclusive = max(startIndex + 1, min(samples.count, Int(ceil(window.end / bucketDuration))))
-
-        return Array(samples[startIndex..<endIndexExclusive])
-    }
-
-    private func formatTimestamp(_ seconds: TimeInterval) -> String {
-        let hours = Int(seconds) / 3600
-        let minutes = (Int(seconds) % 3600) / 60
-        let secs = Int(seconds) % 60
-
-        if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, secs)
-        } else {
-            return String(format: "%d:%02d", minutes, secs)
-        }
-    }
-
     private func loadSamples() async {
         guard let audioFile = audioFile else {
             samples = []
@@ -451,7 +414,7 @@ struct WaveformView: View {
         // Capture the file in the closure to avoid any accidental actor-isolated access.
         let file = audioFile
         let extractedSamples = await Task.detached(priority: .userInitiated) {
-            extractAudioSamples(from: file, targetSampleCount: targetBucketCount)
+            WaveformSampling.extractSamples(from: file, targetSampleCount: targetBucketCount)
         }.value
 
         await MainActor.run {
@@ -482,85 +445,4 @@ private final class ScrollCaptureView: NSView {
     override func scrollWheel(with event: NSEvent) {
         onScroll?(event.scrollingDeltaX, event.scrollingDeltaY)
     }
-}
-
-// MARK: - Audio Processing Helper
-nonisolated fileprivate func extractAudioSamples(from audioFile: AVAudioFile, targetSampleCount: Int) -> [Float] {
-    let totalFrames = AVAudioFrameCount(audioFile.length)
-
-    guard totalFrames > 0 else { return [] }
-
-    let format = audioFile.processingFormat
-    let channelCount = Int(format.channelCount)
-
-    // Calculate how many frames to skip for each sample
-    let frameStep = max(Int(totalFrames) / targetSampleCount, 1)
-
-    var samples: [Float] = []
-
-    // Read audio in chunks to avoid memory issues
-    let chunkSize: AVAudioFrameCount = 4096
-    var currentFrame: AVAudioFramePosition = 0
-
-    var sampleIndex = 0
-    var accumulatedSamples: [Float] = []
-
-    while currentFrame < audioFile.length && samples.count < targetSampleCount {
-        let framesToRead = min(chunkSize, AVAudioFrameCount(audioFile.length - currentFrame))
-
-        guard let buffer = AVAudioPCMBuffer(
-            pcmFormat: format,
-            frameCapacity: framesToRead
-        ) else { break }
-
-        audioFile.framePosition = currentFrame
-
-        do {
-            try audioFile.read(into: buffer)
-
-            guard let channelData = buffer.floatChannelData else { continue }
-
-            let frameCount = Int(buffer.frameLength)
-
-            // Process frames in this chunk
-            for frame in 0..<frameCount {
-                // Mix all channels to mono by averaging
-                var sum: Float = 0
-                for channel in 0..<channelCount {
-                    sum += channelData[channel][frame]
-                }
-                let sample = sum / Float(channelCount)
-                accumulatedSamples.append(abs(sample))
-
-                sampleIndex += 1
-
-                // When we've accumulated enough samples for one output sample
-                if sampleIndex >= frameStep {
-                    // Take the max of accumulated samples for this bucket
-                    if let maxSample = accumulatedSamples.max() {
-                        samples.append(maxSample)
-                    }
-                    accumulatedSamples.removeAll(keepingCapacity: true)
-                    sampleIndex = 0
-
-                    if samples.count >= targetSampleCount {
-                        break
-                    }
-                }
-            }
-
-        } catch {
-            print("Error reading audio buffer: \(error)")
-            break
-        }
-
-        currentFrame += AVAudioFramePosition(framesToRead)
-    }
-
-    // Normalize samples to 0...1 range
-    if let maxValue = samples.max(), maxValue > 0 {
-        samples = samples.map { $0 / maxValue }
-    }
-
-    return samples
 }
