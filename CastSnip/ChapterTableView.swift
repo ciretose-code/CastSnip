@@ -19,7 +19,7 @@ struct ChapterTableView: View {
     var body: some View {
         HStack(alignment: .top) {
             VStack {
-                List(podcastAudioFile.podcast.chapters.sorted(), id: \.self, selection: Bindable(podcastAudioFile).selectedChapter) { chapter in
+                List(podcastAudioFile.podcast.chapters.sorted(), id: \.self, selection: Bindable(podcastAudioFile).selectedChapters) { chapter in
                     ChapterView(
                         chapter: chapter,
                         defaultImage: podcastAudioFile.podcast.logo,
