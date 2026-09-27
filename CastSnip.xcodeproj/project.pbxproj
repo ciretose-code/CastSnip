@@ -45,18 +45,29 @@
 		A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000015 /* EmptyPodcastView.swift */; };
 		A11D3E010001000100000018 /* AudioMarkerImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000017 /* AudioMarkerImporter.swift */; };
 		A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000019 /* ShowAutofillStore.swift */; };
+		A1132000000000000000002 /* AutofillMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1132000000000000000001 /* AutofillMemoryView.swift */; };
 		A11D3E01000100010000001C /* SilenceDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001B /* SilenceDetector.swift */; };
 		A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001D /* PodcastEncoder.swift */; };
 		A11D3E010001000100000020 /* AircheckExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001F /* AircheckExporter.swift */; };
 		A11D3E010001000100000022 /* LameEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000021 /* LameEncoder.swift */; };
 		A11D3E010001000100000024 /* WaveformSampling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000023 /* WaveformSampling.swift */; };
 		A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000025 /* ID3TaggingStore.swift */; };
+		A11340010001000100000002 /* EditorSplitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11340010001000100000001 /* EditorSplitStore.swift */; };
+		A11290010001000100000002 /* SilenceSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11290010001000100000001 /* SilenceSettingsStore.swift */; };
+		A11290010001000100000004 /* SilenceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11290010001000100000003 /* SilenceSettingsView.swift */; };
 		A11LAME010001000100000003 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000002 /* LAME */; };
 		A11LAME010001000100000005 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000004 /* LAME */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		7B2A95922F2C74E600C924FB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7B1D20AB2BD36A83006D1AA4 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7B1D20B22BD36A83006D1AA4;
+			remoteInfo = CastSnip;
+		};
+		A11380010001000100000003 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7B1D20AB2BD36A83006D1AA4 /* Project object */;
 			proxyType = 1;
@@ -82,6 +93,7 @@
 		7B1F1CC52BE4AA4500B0A29B /* TimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeView.swift; sourceTree = "<group>"; };
 		7B1F1CC72BEAFC0D00B0A29B /* EditableTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableTextField.swift; sourceTree = "<group>"; };
 		7B2A958E2F2C74E600C924FB /* CastSnipTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CastSnipTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A11380010001000100000001 /* CastSnipUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CastSnipUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B390A302BD5C0F5009CEDEE /* AudioFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFile.swift; sourceTree = "<group>"; };
 		7B4015422BD443530060A2BF /* intro.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = intro.mp3; sourceTree = "<group>"; };
 		7B4015442BD44F5A0060A2BF /* AudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioView.swift; sourceTree = "<group>"; };
@@ -108,16 +120,21 @@
 		A11D3E010001000100000015 /* EmptyPodcastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyPodcastView.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000017 /* AudioMarkerImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioMarkerImporter.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000019 /* ShowAutofillStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowAutofillStore.swift; sourceTree = "<group>"; };
+		A1132000000000000000001 /* AutofillMemoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutofillMemoryView.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001B /* SilenceDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceDetector.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001D /* PodcastEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastEncoder.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001F /* AircheckExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircheckExporter.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000021 /* LameEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LameEncoder.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000023 /* WaveformSampling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformSampling.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000025 /* ID3TaggingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3TaggingStore.swift; sourceTree = "<group>"; };
+		A11340010001000100000001 /* EditorSplitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSplitStore.swift; sourceTree = "<group>"; };
+		A11290010001000100000001 /* SilenceSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceSettingsStore.swift; sourceTree = "<group>"; };
+		A11290010001000100000003 /* SilenceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceSettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7B2A958F2F2C74E600C924FB /* CastSnipTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = CastSnipTests; sourceTree = "<group>"; };
+		A11380010001000100000002 /* CastSnipUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = CastSnipUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -137,6 +154,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A11380010001000100000006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -146,6 +170,7 @@
 				7BD163DF2F2D2B230007DD6E /* CastSnip.xctestplan */,
 				7B1D20B52BD36A83006D1AA4 /* CastSnip */,
 				7B2A958F2F2C74E600C924FB /* CastSnipTests */,
+				A11380010001000100000002 /* CastSnipUITests */,
 				7B1D20B42BD36A83006D1AA4 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -155,6 +180,7 @@
 			children = (
 				7B1D20B32BD36A83006D1AA4 /* CastSnip.app */,
 				7B2A958E2F2C74E600C924FB /* CastSnipTests.xctest */,
+				A11380010001000100000001 /* CastSnipUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -171,7 +197,9 @@
 				A11D3E01000100010000000B /* CopyableInfoBadge.swift */,
 				A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */,
 				A11D3E01000100010000000F /* RecentFilesStore.swift */,
+				A11340010001000100000001 /* EditorSplitStore.swift */,
 				A11D3E010001000100000019 /* ShowAutofillStore.swift */,
+				A1132000000000000000001 /* AutofillMemoryView.swift */,
 				A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */,
 				A11D3E010001000100000013 /* EditorCopy.swift */,
 				A11D3E010001000100000015 /* EmptyPodcastView.swift */,
@@ -183,6 +211,8 @@
 				7B7404522BDEBB5D001811B2 /* ID3Parser.swift */,
 				A11D3E010001000100000001 /* ID3Writer.swift */,
 				A11D3E010001000100000025 /* ID3TaggingStore.swift */,
+				A11290010001000100000001 /* SilenceSettingsStore.swift */,
+				A11290010001000100000003 /* SilenceSettingsView.swift */,
 				A11D3E010001000100000003 /* ID3MetadataMapping.swift */,
 				A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */,
 				7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */,
@@ -290,6 +320,29 @@
 			productReference = 7B2A958E2F2C74E600C924FB /* CastSnipTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		A11380010001000100000004 /* CastSnipUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1138001000100010000000B /* Build configuration list for PBXNativeTarget "CastSnipUITests" */;
+			buildPhases = (
+				A11380010001000100000007 /* Sources */,
+				A11380010001000100000006 /* Frameworks */,
+				A11380010001000100000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A11380010001000100000005 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A11380010001000100000002 /* CastSnipUITests */,
+			);
+			name = CastSnipUITests;
+			packageProductDependencies = (
+			);
+			productName = CastSnipUITests;
+			productReference = A11380010001000100000001 /* CastSnipUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -304,6 +357,10 @@
 						CreatedOnToolsVersion = 15.3;
 					};
 					7B2A958D2F2C74E600C924FB = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = 7B1D20B22BD36A83006D1AA4;
+					};
+					A11380010001000100000004 = {
 						CreatedOnToolsVersion = 26.2;
 						TestTargetID = 7B1D20B22BD36A83006D1AA4;
 					};
@@ -327,6 +384,7 @@
 			targets = (
 				7B1D20B22BD36A83006D1AA4 /* CastSnip */,
 				7B2A958D2F2C74E600C924FB /* CastSnipTests */,
+				A11380010001000100000004 /* CastSnipUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -345,6 +403,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7B2A958C2F2C74E600C924FB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A11380010001000100000008 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -380,6 +445,8 @@
 				7BD56E9D2F2FD49F000F7D25 /* AudioPlayerManager.swift in Sources */,
 				A11D3E010001000100000002 /* ID3Writer.swift in Sources */,
 				A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */,
+				A11290010001000100000002 /* SilenceSettingsStore.swift in Sources */,
+				A11290010001000100000004 /* SilenceSettingsView.swift in Sources */,
 				A11D3E010001000100000004 /* ID3MetadataMapping.swift in Sources */,
 				A11D3E010001000100000006 /* SecurityScopedBookmarkStore.swift in Sources */,
 				A11D3E010001000100000008 /* ChapterTimeline.swift in Sources */,
@@ -387,11 +454,13 @@
 				A11D3E01000100010000000C /* CopyableInfoBadge.swift in Sources */,
 				A11D3E01000100010000000E /* OpenPodcastEnvironment.swift in Sources */,
 				A11D3E010001000100000010 /* RecentFilesStore.swift in Sources */,
+				A11340010001000100000002 /* EditorSplitStore.swift in Sources */,
 				A11D3E010001000100000012 /* KeyboardShortcutsHelp.swift in Sources */,
 				A11D3E010001000100000014 /* EditorCopy.swift in Sources */,
 				A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */,
 				A11D3E010001000100000018 /* AudioMarkerImporter.swift in Sources */,
 				A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */,
+				A1132000000000000000002 /* AutofillMemoryView.swift in Sources */,
 				A11D3E01000100010000001C /* SilenceDetector.swift in Sources */,
 				A11D3E010001000100000022 /* LameEncoder.swift in Sources */,
 				A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */,
@@ -407,6 +476,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A11380010001000100000007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -414,6 +490,11 @@
 			isa = PBXTargetDependency;
 			target = 7B1D20B22BD36A83006D1AA4 /* CastSnip */;
 			targetProxy = 7B2A95922F2C74E600C924FB /* PBXContainerItemProxy */;
+		};
+		A11380010001000100000005 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7B1D20B22BD36A83006D1AA4 /* CastSnip */;
+			targetProxy = A11380010001000100000003 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -646,6 +727,48 @@
 			};
 			name = Release;
 		};
+		A11380010001000100000009 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ciretose.util.CastSnipUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = CastSnip;
+			};
+			name = Debug;
+		};
+		A1138001000100010000000A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.6;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.ciretose.util.CastSnipUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SUPPORTED_PLATFORMS = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = CastSnip;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -672,6 +795,15 @@
 			buildConfigurations = (
 				7B2A95942F2C74E600C924FB /* Debug */,
 				7B2A95952F2C74E600C924FB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1138001000100010000000B /* Build configuration list for PBXNativeTarget "CastSnipUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A11380010001000100000009 /* Debug */,
+				A1138001000100010000000A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -280,6 +280,7 @@ struct ContentView: View {
                     Label(EditorAccessibility.back10, systemImage: "gobackward.10")
                 }
                 .disabled(player.duration <= 0)
+                .accessibilityIdentifier(EditorAccessibility.back10)
 
                 Button { player.togglePlayPause() } label: {
                     Label(player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play,
@@ -288,11 +289,13 @@ struct ContentView: View {
                 .disabled(player.duration <= 0)
                 .keyboardShortcut(.space, modifiers: [])
                 .help(player.loadError ?? (player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play))
+                .accessibilityIdentifier(EditorAccessibility.playPause)
 
                 Button { player.jumpForward(10) } label: {
                     Label(EditorAccessibility.forward10, systemImage: "goforward.10")
                 }
                 .disabled(player.duration <= 0)
+                .accessibilityIdentifier(EditorAccessibility.forward10)
 
                 Text("\(ID3Parser.toTrackTime(millis: playheadMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true)) / \(ID3Parser.toTrackTime(millis: durationMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true))")
                     .font(.callout)

@@ -22,6 +22,19 @@ struct AircheckEdgeTests {
         #expect(exported.map(\.title) == ["Acme Ad", "Sponsor"])
     }
 
+    @Test func chaptersToExportWithMultipleSelectedReturnsThoseChaptersInTimelineOrder() {
+        let titled = Chapter(title: "Acme Ad", startTime: 0, endTime: 4_000)
+        let blank = Chapter(title: "   ", startTime: 4_000, endTime: 8_000)
+        let sponsor = Chapter(title: "Sponsor", startTime: 12_000, endTime: 16_000)
+
+        let exported = AircheckExporter.chaptersToExport(
+            selected: [sponsor, blank],
+            all: [titled, blank, sponsor]
+        )
+
+        #expect(exported.map(\.title) == ["   ", "Sponsor"])
+    }
+
     @Test func sanitizedReplacesIllegalFilenameCharacters() {
         #expect(AircheckExporter.sanitized("Acme / Ads:30?") == "Acme - Ads-30-")
         #expect(AircheckExporter.sanitized("   ") == "chapter")

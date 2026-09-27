@@ -19,6 +19,8 @@ struct EpisodeView: View {
                 .font(.system(.subheadline).lowercaseSmallCaps())
             TextField("Episode Title Goes Here", text: $episode)
                 .textFieldStyle(.plain)
+                .accessibilityIdentifier(EditorAccessibility.episodeTitle)
+                .accessibilityLabel(EditorAccessibility.episodeTitle)
                 .padding(EdgeInsets(top: 4, leading: (radius/2), bottom: 4, trailing: (radius/2)))
                 .compatibleTextFieldBorder()
                 .background(Color(nsColor: .textBackgroundColor))

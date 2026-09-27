@@ -198,7 +198,9 @@ private struct EpisodeInspector: View {
 
             Section {
                 TextField("Show", text: audioFile.getTitle(), prompt: Text("Podcast title"))
+                    .accessibilityIdentifier(EditorAccessibility.podcastTitle)
                 TextField("Episode", text: audioFile.getEpisode(), prompt: Text("Episode title"))
+                    .accessibilityIdentifier(EditorAccessibility.episodeTitle)
             }
 
             Section("Summary") {

@@ -23,6 +23,13 @@
         "identifier" : "7B2A958D2F2C74E600C924FB",
         "name" : "CastSnipTests"
       }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:CastSnip.xcodeproj",
+        "identifier" : "A11380010001000100000004",
+        "name" : "CastSnipUITests"
+      }
     }
   ],
   "version" : 1

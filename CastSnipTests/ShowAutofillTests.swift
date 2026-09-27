@@ -24,6 +24,12 @@ struct ShowAutofillTests {
         #expect(suggestion.title == nil)
     }
 
+    @Test func parsesMultiHyphenShowFilename() {
+        let parsed = ShowAutofillStore.parse("the-talk-show-12.mp3")
+        #expect(parsed?.prefix == "the-talk-show")
+        #expect(parsed?.episode == "12")
+    }
+
     @Test func filenameWithoutTrailingNumberHasNoEpisode() {
         let store = isolatedStore()
         let suggestion = store.suggestion(forFilename: "episode.mp3")
@@ -165,6 +171,199 @@ struct ShowAutofillTests {
         let chapter = store.suggestion(forChapterTitle: "Sponsor")
         #expect(chapter.url == nil)
         #expect(chapter.image == nil)
+        #expect(store.storedShows().isEmpty)
+        #expect(store.storedChapters().isEmpty)
+    }
+
+    @Test func storedShowsListsPrefixTitleAndArtwork() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "atp", title: "Accidental Tech Podcast", artwork: swatch(.red))
+
+        let shows = store.storedShows()
+        #expect(shows.count == 1)
+        #expect(shows[0].prefix == "atp")
+        #expect(shows[0].title == "Accidental Tech Podcast")
+        #expect(shows[0].artwork != nil)
+    }
+
+    @Test func storedChaptersListsTitleURLAndImage() {
+        let store = isolatedStore()
+        store.rememberChapter(title: "Squarespace", url: "https://squarespace.com", image: swatch(.green))
+
+        let chapters = store.storedChapters()
+        #expect(chapters.count == 1)
+        #expect(chapters[0].title == "squarespace")
+        #expect(chapters[0].url == "https://squarespace.com")
+        #expect(chapters[0].image != nil)
+    }
+
+    @Test func storedChapterOmitsEmptyURL() {
+        let store = isolatedStore()
+        store.rememberChapter(title: "Logo Only", url: "", image: swatch(.blue))
+
+        let chapters = store.storedChapters()
+        #expect(chapters.count == 1)
+        #expect(chapters[0].url == nil)
+        #expect(chapters[0].image != nil)
+    }
+
+    @Test func storedShowsAndChaptersAreSortedByKey() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "zeta", title: "Z Show", artwork: nil)
+        store.rememberShow(prefix: "alpha", title: "A Show", artwork: nil)
+        store.rememberChapter(title: "Zebra", url: "https://z.example", image: nil)
+        store.rememberChapter(title: "Apple", url: "https://a.example", image: nil)
+
+        #expect(store.storedShows().map(\.prefix) == ["alpha", "zeta"])
+        #expect(store.storedChapters().map(\.title) == ["apple", "zebra"])
+    }
+
+    @Test func deleteShowRemovesOnePrefixAndLeavesChapters() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "atp", title: "Accidental Tech Podcast", artwork: nil)
+        store.rememberShow(prefix: "ms", title: "Mostly Security", artwork: nil)
+        store.rememberChapter(title: "Ad", url: "https://ads.example", image: nil)
+
+        store.deleteShow(prefix: "atp")
+
+        #expect(store.storedShows().map(\.prefix) == ["ms"])
+        #expect(store.suggestion(forFilename: "atp100.mp3").title == nil)
+        #expect(store.suggestion(forFilename: "ms1.mp3").title == "Mostly Security")
+        #expect(store.suggestion(forChapterTitle: "Ad").url == "https://ads.example")
+    }
+
+    @Test func deleteChapterRemovesOneTitleAndLeavesShows() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "atp", title: "Accidental Tech Podcast", artwork: nil)
+        store.rememberChapter(title: "Sponsor", url: "https://sponsor.example", image: nil)
+        store.rememberChapter(title: "Ad", url: "https://ads.example", image: nil)
+
+        store.deleteChapter(title: "Sponsor")
+
+        #expect(store.storedChapters().map(\.title) == ["ad"])
+        #expect(store.suggestion(forChapterTitle: "Sponsor").url == nil)
+        #expect(store.suggestion(forChapterTitle: "Ad").url == "https://ads.example")
+        #expect(store.suggestion(forFilename: "atp100.mp3").title == "Accidental Tech Podcast")
+    }
+
+    @Test func deleteShowMatchesPrefixCaseInsensitively() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "atp", title: "Accidental Tech Podcast", artwork: nil)
+
+        store.deleteShow(prefix: "ATP")
+
+        #expect(store.storedShows().isEmpty)
+        #expect(store.suggestion(forFilename: "atp100.mp3").title == nil)
+    }
+
+    @Test func deleteChapterNormalizesTitleLikeRemember() {
+        let store = isolatedStore()
+        store.rememberChapter(title: "  Squarespace  ", url: "https://squarespace.com", image: nil)
+
+        store.deleteChapter(title: "SQUARESPACE")
+
+        #expect(store.storedChapters().isEmpty)
+        #expect(store.suggestion(forChapterTitle: "squarespace").url == nil)
+    }
+
+    @Test func deleteOfUnknownKeyIsANoOp() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "atp", title: "Accidental Tech Podcast", artwork: nil)
+        store.rememberChapter(title: "Ad", url: "https://ads.example", image: nil)
+
+        store.deleteShow(prefix: "missing")
+        store.deleteChapter(title: "missing")
+
+        #expect(store.storedShows().map(\.prefix) == ["atp"])
+        #expect(store.storedChapters().map(\.title) == ["ad"])
+    }
+
+    @Test func browserDeleteSelectedRemovesOneShow() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "atp", title: "Accidental Tech Podcast", artwork: nil)
+        store.rememberShow(prefix: "ms", title: "Mostly Security", artwork: nil)
+        let browser = AutofillMemoryBrowser(store: store)
+        browser.selection = .show("atp")
+
+        browser.deleteSelected()
+
+        #expect(store.storedShows().map(\.prefix) == ["ms"])
+        #expect(browser.selection == nil)
+    }
+
+    @Test func browserDeleteSelectedRemovesOneChapter() {
+        let store = isolatedStore()
+        store.rememberChapter(title: "Sponsor", url: "https://sponsor.example", image: nil)
+        store.rememberChapter(title: "Ad", url: "https://ads.example", image: nil)
+        let browser = AutofillMemoryBrowser(store: store)
+        browser.selection = .chapter("sponsor")
+
+        browser.deleteSelected()
+
+        #expect(store.storedChapters().map(\.title) == ["ad"])
+        #expect(browser.selection == nil)
+    }
+
+    @Test func browserDeleteSelectedDoesNothingWithoutSelection() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "atp", title: "Accidental Tech Podcast", artwork: nil)
+        let browser = AutofillMemoryBrowser(store: store)
+
+        browser.deleteSelected()
+
+        #expect(store.storedShows().map(\.prefix) == ["atp"])
+        #expect(browser.selection == nil)
+    }
+
+    @Test func browserClearAllWipesStoreAndSelection() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "atp", title: "Accidental Tech Podcast", artwork: swatch(.red))
+        store.rememberChapter(title: "Ad", url: "https://ads.example", image: swatch(.blue))
+        let browser = AutofillMemoryBrowser(store: store)
+        browser.selection = .show("atp")
+
+        browser.clearAll()
+
+        #expect(store.storedShows().isEmpty)
+        #expect(store.storedChapters().isEmpty)
+        #expect(browser.selection == nil)
+    }
+
+    @Test func browserPreviewExposesArtworkAndURLForSelection() {
+        let store = isolatedStore()
+        store.rememberShow(prefix: "atp", title: "Accidental Tech Podcast", artwork: swatch(.red))
+        store.rememberChapter(title: "Sponsor", url: "https://squarespace.com", image: swatch(.green))
+        let browser = AutofillMemoryBrowser(store: store)
+
+        browser.selection = .show("atp")
+        #expect(browser.selectedShow?.title == "Accidental Tech Podcast")
+        #expect(browser.selectedShow?.artwork != nil)
+        #expect(browser.selectedChapter == nil)
+
+        browser.selection = .chapter("sponsor")
+        #expect(browser.selectedChapter?.url == "https://squarespace.com")
+        #expect(browser.selectedChapter?.image != nil)
+        #expect(browser.selectedShow == nil)
+    }
+
+    @Test func deleteSurvivesANewStoreOnTheSameDefaults() {
+        let suite = "CastSnip.ShowAutofillTests.delete.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defaults.removePersistentDomain(forName: suite)
+
+        let first = ShowAutofillStore(defaults: defaults)
+        first.rememberShow(prefix: "keep", title: "Keep", artwork: nil)
+        first.rememberShow(prefix: "drop", title: "Drop", artwork: nil)
+        first.rememberChapter(title: "Keep Ad", url: "https://keep.example", image: nil)
+        first.rememberChapter(title: "Drop Ad", url: "https://drop.example", image: nil)
+        first.deleteShow(prefix: "drop")
+        first.deleteChapter(title: "Drop Ad")
+
+        let second = ShowAutofillStore(defaults: defaults)
+        #expect(second.storedShows().map(\.prefix) == ["keep"])
+        #expect(second.storedChapters().map(\.title) == ["keep ad"])
+        #expect(second.suggestion(forFilename: "drop1.mp3").title == nil)
+        #expect(second.suggestion(forChapterTitle: "Drop Ad").url == nil)
     }
 
     private func isolatedStore() -> ShowAutofillStore {

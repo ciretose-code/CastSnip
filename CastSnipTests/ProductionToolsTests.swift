@@ -116,6 +116,34 @@ struct PodcastEncoderTests {
         #expect(progressValues.allSatisfy { $0 >= 0 && $0 <= 1 })
     }
 
+    @Test func defaultEncodeFallsBackToAACWhenLAMEThrows() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-encode-lame-fail-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let input = directory.appendingPathComponent("tone.wav")
+        try ProductionAudioFixtures.writeSineWAV(to: input, duration: 0.4)
+        let requested = directory.appendingPathComponent("episode.mp3")
+
+        var progressValues: [Double] = []
+        let written = try await PodcastEncoder.encode(
+            from: input,
+            to: requested,
+            includeTags: false,
+            encoder: { _, _, _ in
+                throw PodcastEncoder.EncodeError.failed("injected LAME failure")
+            },
+            progress: { progressValues.append($0) }
+        )
+
+        #expect(written.pathExtension == "m4a")
+        #expect(FileManager.default.fileExists(atPath: written.path))
+        #expect(progressValues.contains { $0 == 0 || $0 > 0 })
+        #expect(progressValues.contains { $0 >= 1 })
+        #expect(progressValues.allSatisfy { $0 >= 0 && $0 <= 1 })
+    }
+
     @Test func aacFallbackWritesM4AAndReportsProgress() async throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("castsnip-encode-\(UUID().uuidString)", isDirectory: true)
@@ -234,6 +262,32 @@ struct AircheckExporterTests {
         #expect(exported.map(\.title) == ["Acme Ad", "Sponsor"])
     }
 
+    @Test func exportsEverySelectedChapterWhenSeveralAreSelected() {
+        let ad = Chapter(title: "Acme Ad", startTime: 0, endTime: 4_000)
+        let talk = Chapter(title: "Talk", startTime: 4_000, endTime: 8_000)
+        let sponsor = Chapter(title: "Sponsor", startTime: 8_000, endTime: 12_000)
+
+        let exported = AircheckExporter.chaptersToExport(
+            selected: [sponsor, ad],
+            all: [ad, talk, sponsor]
+        )
+
+        #expect(exported.map(\.title) == ["Acme Ad", "Sponsor"])
+    }
+
+    @Test func emptySelectedArrayExportsEveryTitledChapter() {
+        let ad = Chapter(title: "Acme Ad", startTime: 0, endTime: 4_000)
+        let untitled = Chapter(title: "   ", startTime: 4_000, endTime: 8_000)
+        let sponsor = Chapter(title: "Sponsor", startTime: 8_000, endTime: 12_000)
+
+        let exported = AircheckExporter.chaptersToExport(
+            selected: [Chapter](),
+            all: [ad, untitled, sponsor]
+        )
+
+        #expect(exported.map(\.title) == ["Acme Ad", "Sponsor"])
+    }
+
     @Test func filenameUsesSanitizedTitleAndStartTime() {
         let chapter = Chapter(title: "Acme / Ads:30?", startTime: 12_000, endTime: 18_000)
         let name = AircheckExporter.filename(for: chapter)
@@ -267,6 +321,38 @@ struct AircheckExporterTests {
         let exported = try AVAudioFile(forReading: urls[0])
         let seconds = Double(exported.length) / exported.processingFormat.sampleRate
         #expect(abs(seconds - 1.0) < 0.15)
+    }
+
+    @Test func writesOneWAVForEachSelectedChapter() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-aircheck-multi-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let source = directory.appendingPathComponent("source.wav")
+        try ProductionAudioFixtures.writeSineWAV(to: source, duration: 3)
+
+        let intro = Chapter(title: "Intro", startTime: 0, endTime: 500)
+        let midroll = Chapter(title: "Midroll", startTime: 500, endTime: 1_500)
+        let closer = Chapter(title: "Closer", startTime: 1_500, endTime: 2_500)
+        let chapters = AircheckExporter.chaptersToExport(
+            selected: [midroll, closer],
+            all: [intro, midroll, closer]
+        )
+        let urls = try await AircheckExporter.export(
+            from: source,
+            chapters: chapters,
+            to: directory
+        )
+
+        #expect(urls.count == 2)
+        #expect(urls.map(\.lastPathComponent).sorted() == [
+            AircheckExporter.filename(for: closer),
+            AircheckExporter.filename(for: midroll)
+        ].sorted())
+        for url in urls {
+            #expect(FileManager.default.fileExists(atPath: url.path))
+        }
     }
 }
 
