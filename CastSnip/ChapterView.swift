@@ -38,14 +38,37 @@ struct ChapterView: View {
                 EditableTextField(text: $chapter.url, placeholderText: Chapter.DEFAULT_URL)
                     .font(.subheadline)
                     .lineLimit(1)
+                    .padding(.horizontal, 2)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 3)
+                            .stroke(urlIsInvalid ? Color.red : Color.clear, lineWidth: 1)
+                    )
                     .onChange(of: chapter.url) { podcastAudioFile.markAsModified() }
             }
             Spacer()
-            HStack(alignment: .top) {
-                TimeView(start: $chapter.startTime, radius: 6, showHours: showHours)
-                    .onChange(of: chapter.startTime) { podcastAudioFile.markAsModified() }
+            Button {
+                chapter.isHidden.toggle()
+                podcastAudioFile.markAsModified()
+            } label: {
+                Image(systemName: chapter.isHidden ? "eye.slash" : "eye")
+                    .foregroundStyle(chapter.isHidden ? .secondary : .primary)
             }
+            .buttonStyle(.plain)
+            .help(chapter.isHidden ? "Hidden from the player chapter list" : "Visible in the player chapter list")
+            TimeView(
+                start: $chapter.startTime,
+                end: $chapter.endTime,
+                radius: 6,
+                showHours: showHours,
+                maxTime: chapter.podcastDuration
+            )
+            .onChange(of: chapter.startTime) { podcastAudioFile.markAsModified() }
+            .onChange(of: chapter.endTime) { podcastAudioFile.markAsModified() }
         }
+    }
+
+    private var urlIsInvalid: Bool {
+        chapter.validate().contains(.invalidURL)
     }
 
     func getImage() -> NSImage {

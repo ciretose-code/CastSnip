@@ -19,10 +19,12 @@ final class AudioPlayerManager: ObservableObject {
     @Published var isPlaying: Bool = false
     @Published var currentTime: TimeInterval = 0
     @Published var duration: TimeInterval = 0
+    @Published var loadError: String?
 
     func load(url: URL?) {
         stopTimer()
         player = nil
+        loadError = nil
         setPublished(isPlaying: false, currentTime: 0, duration: 0)
         self.url = url
 
@@ -35,6 +37,9 @@ final class AudioPlayerManager: ObservableObject {
             setPublished(isPlaying: p.isPlaying, currentTime: p.currentTime, duration: p.duration)
         } catch {
             logger.error("Failed to create AVAudioPlayer: \(error.localizedDescription)")
+            DispatchQueue.main.async { [weak self] in
+                self?.loadError = "Could not play this file. \(error.localizedDescription)"
+            }
         }
     }
 
@@ -98,6 +103,11 @@ final class AudioPlayerManager: ObservableObject {
 
     private func tick() {
         guard let player else { return }
+        if !player.isPlaying, player.duration > 0, player.currentTime >= player.duration - 0.05 {
+            stopTimer()
+            setPublished(isPlaying: false, currentTime: player.duration, duration: player.duration)
+            return
+        }
         setPublished(isPlaying: player.isPlaying, currentTime: player.currentTime, duration: player.duration)
     }
 

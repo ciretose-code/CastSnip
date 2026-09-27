@@ -33,6 +33,10 @@
 		A11D3E010001000100000002 /* ID3Writer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000001 /* ID3Writer.swift */; };
 		A11D3E010001000100000004 /* ID3MetadataMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000003 /* ID3MetadataMapping.swift */; };
 		A11D3E010001000100000006 /* SecurityScopedBookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */; };
+		A11D3E010001000100000008 /* ChapterTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000007 /* ChapterTimeline.swift */; };
+		A11D3E01000100010000000A /* ChapterVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000009 /* ChapterVisibility.swift */; };
+		A11D3E01000100010000000C /* CopyableInfoBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000000B /* CopyableInfoBadge.swift */; };
+		A11D3E01000100010000000E /* OpenPodcastEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -76,6 +80,10 @@
 		A11D3E010001000100000001 /* ID3Writer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3Writer.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000003 /* ID3MetadataMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3MetadataMapping.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityScopedBookmarkStore.swift; sourceTree = "<group>"; };
+		A11D3E010001000100000007 /* ChapterTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterTimeline.swift; sourceTree = "<group>"; };
+		A11D3E010001000100000009 /* ChapterVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterVisibility.swift; sourceTree = "<group>"; };
+		A11D3E01000100010000000B /* CopyableInfoBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableInfoBadge.swift; sourceTree = "<group>"; };
+		A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPodcastEnvironment.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -128,6 +136,8 @@
 				7B4015412BD4423A0060A2BF /* Samples */,
 				7B1D20B62BD36A83006D1AA4 /* CastSnipApp.swift */,
 				7B1D20B82BD36A83006D1AA4 /* ContentView.swift */,
+				A11D3E01000100010000000B /* CopyableInfoBadge.swift */,
+				A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */,
 				7B16BD222F2E853900DFD7E8 /* PlatformImage.swift */,
 				7B16BD232F2E853900DFD7E8 /* WaveformView.swift */,
 				7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */,
@@ -181,6 +191,8 @@
 				7B390A302BD5C0F5009CEDEE /* AudioFile.swift */,
 				7B5427C12BEC51ED00314CDB /* Podcast.swift */,
 				7B5427BF2BEC519000314CDB /* Chapter.swift */,
+				A11D3E010001000100000007 /* ChapterTimeline.swift */,
+				A11D3E010001000100000009 /* ChapterVisibility.swift */,
 			);
 			name = Model;
 			sourceTree = "<group>";
@@ -318,6 +330,10 @@
 				A11D3E010001000100000002 /* ID3Writer.swift in Sources */,
 				A11D3E010001000100000004 /* ID3MetadataMapping.swift in Sources */,
 				A11D3E010001000100000006 /* SecurityScopedBookmarkStore.swift in Sources */,
+				A11D3E010001000100000008 /* ChapterTimeline.swift in Sources */,
+				A11D3E01000100010000000A /* ChapterVisibility.swift in Sources */,
+				A11D3E01000100010000000C /* CopyableInfoBadge.swift in Sources */,
+				A11D3E01000100010000000E /* OpenPodcastEnvironment.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

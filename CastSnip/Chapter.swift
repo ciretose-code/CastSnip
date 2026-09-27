@@ -29,6 +29,8 @@ class Chapter: Identifiable, Equatable, Comparable, Hashable, CustomStringConver
     var podcastDuration: UInt32 = 0
     var image: NSImage? = nil
     var imageDescription: String = ""
+    var elementID: String = ""
+    var isHidden: Bool = false
     
     var description: String {
         return "\nUUID: \(id)\nTitle: \(title)\nURL: \(url)\nStart: \(startTime)\nEnd: \(endTime)\nPodcast: \(podcastDuration)\nImage: \(String(describing: image))\nImage Description: \(imageDescription)\n"
@@ -39,19 +41,20 @@ class Chapter: Identifiable, Equatable, Comparable, Hashable, CustomStringConver
     }
     
     init() {}
-    
-    init(title: String = "", url: String = "", startTime: UInt32 = 1, endTime: UInt32 = 0, podcastDuration: UInt32 = 0) {
+
+    init(title: String = "", url: String = "", startTime: UInt32 = 1, endTime: UInt32 = 0, podcastDuration: UInt32 = 0, isHidden: Bool = false) {
         self.title = title
         self.url = url
         self.startTime = startTime
         self.endTime = endTime
         self.podcastDuration = podcastDuration
+        self.isHidden = isHidden
     }
     
     init(data: Data, podcastDuration: UInt32 = 0) {
         self.podcastDuration = podcastDuration
-//        print("Podcast Duration: \(podcastDuration)")
         let toc = data.prefix(while: {$0 != 0x00})
+        elementID = String(data: Data(toc), encoding: .isoLatin1) ?? ""
         var offset = toc.count+1
         startTime = ID3Parser.getUInt32(data, &offset)
         endTime = ID3Parser.getUInt32(data, &offset)
