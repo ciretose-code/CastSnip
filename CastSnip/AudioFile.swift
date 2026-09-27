@@ -215,6 +215,10 @@ class AudioFile: Identifiable {
         }
 
         ChapterVisibility.apply(tocChildIDs: tocChildIDs, to: pa.chapters)
+
+        if pa.chapters.isEmpty {
+            pa.chapters = AudioMarkerImporter.chapters(from: url, durationMillis: pa.durationInMillis ?? 0)
+        }
         
         return pa
     }
