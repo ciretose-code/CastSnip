@@ -31,7 +31,7 @@ class AudioFile: Identifiable {
         
         if podcast.asset == nil {
             errorMessage = "Failed to load audio file. The file may be corrupted or in an unsupported format."
-        } else if podcast.durationInSeconds == 0 {
+        } else if podcast.durationInSeconds == 0, errorMessage == nil {
             errorMessage = "Warning: Could not determine audio duration."
         }
 
@@ -242,7 +242,11 @@ class AudioFile: Identifiable {
         ChapterVisibility.apply(tocChildIDs: tocChildIDs, to: pa.chapters)
 
         if pa.chapters.isEmpty {
-            pa.chapters = await AudioMarkerImporter.chapters(from: url, durationMillis: pa.durationInMillis ?? 0)
+            do {
+                pa.chapters = try await AudioMarkerImporter.chapters(from: url, durationMillis: pa.durationInMillis ?? 0)
+            } catch {
+                errorMessage = error.localizedDescription
+            }
         }
         
         return pa

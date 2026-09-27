@@ -7,15 +7,23 @@ import Foundation
 import AVFoundation
 
 enum AudioMarkerImporter {
-    static func chapters(from url: URL, durationMillis: UInt32) async -> [Chapter] {
+    enum Error: Swift.Error, LocalizedError {
+        case unreadableRF64
+
+        var errorDescription: String? {
+            "Could not import RF64 markers. The file is missing a valid ds64 size table."
+        }
+    }
+
+    static func chapters(from url: URL, durationMillis: UInt32) async throws -> [Chapter] {
         guard let header = fileHeader(url), header.count >= 12 else {
             return await movieChapters(from: url, durationMillis: durationMillis)
         }
 
         let magic = fourCC(header, 0)
         let form = fourCC(header, 8)
-        if magic == "RIFF", form == "WAVE" {
-            return waveChapters(from: url, durationMillis: durationMillis)
+        if magic == "RIFF" || magic == "RF64", form == "WAVE" {
+            return try waveChapters(from: url, durationMillis: durationMillis, isRF64: magic == "RF64")
         }
         if magic == "FORM", form == "AIFF" || form == "AIFC" {
             return aiffChapters(from: url, durationMillis: durationMillis)
@@ -23,17 +31,26 @@ enum AudioMarkerImporter {
         return await movieChapters(from: url, durationMillis: durationMillis)
     }
 
-    // MARK: - WAVE cue + LIST/adtl
+    // MARK: - WAVE cue + LIST/adtl + iXML / RF64
 
-    private static func waveChapters(from url: URL, durationMillis: UInt32) -> [Chapter] {
+    private static func waveChapters(from url: URL, durationMillis: UInt32, isRF64: Bool) throws -> [Chapter] {
         guard let walker = try? ChunkWalker(url: url, littleEndian: true) else { return [] }
         defer { walker.close() }
+
+        if isRF64 {
+            try applyRF64Sizes(walker)
+        }
 
         var sampleRate: UInt32 = 0
         var cues: [CuePoint] = []
         var labels: [UInt32: String] = [:]
+        var ixmlCues: [CuePoint] = []
+        var ixmlLabels: [UInt32: String] = [:]
 
         while let chunk = walker.nextChunk() {
+            if isRF64, chunk.size == 0xFFFF_FFFF {
+                throw Error.unreadableRF64
+            }
             switch chunk.id {
             case "fmt ":
                 if let payload = walker.readPayload(of: chunk, limit: 16), payload.count >= 8 {
@@ -47,13 +64,70 @@ enum AudioMarkerImporter {
                 if let payload = walker.readPayload(of: chunk) {
                     mergeLabels(parseAdtlLabels(payload), into: &labels)
                 }
+            case "iXML":
+                if let payload = walker.readPayload(of: chunk) {
+                    parseIXML(payload, cues: &ixmlCues, labels: &ixmlLabels)
+                }
             default:
                 break
             }
             walker.skip(chunk)
         }
 
-        return makeChapters(cues: cues, labels: labels, sampleRate: sampleRate, durationMillis: durationMillis)
+        let fromCues = makeChapters(cues: cues, labels: labels, sampleRate: sampleRate, durationMillis: durationMillis)
+        if !fromCues.isEmpty {
+            return fromCues
+        }
+        return makeChapters(cues: ixmlCues, labels: ixmlLabels, sampleRate: sampleRate, durationMillis: durationMillis)
+    }
+
+    private static func applyRF64Sizes(_ walker: ChunkWalker) throws {
+        guard let chunk = walker.nextChunk(), chunk.id == "ds64" else {
+            throw Error.unreadableRF64
+        }
+        guard let payload = walker.readPayload(of: chunk), let ds64 = parseDs64(payload) else {
+            throw Error.unreadableRF64
+        }
+        walker.sizeOverrides["data"] = ds64.dataSize
+        for (id, size) in ds64.table {
+            walker.sizeOverrides[id] = size
+        }
+        walker.skip(chunk)
+    }
+
+    private static func parseDs64(_ data: Data) -> (dataSize: UInt64, table: [String: UInt64])? {
+        guard data.count >= 28 else { return nil }
+        let dataSize = u64LE(data, 8)
+        let tableLength = Int(u32LE(data, 24))
+        var table: [String: UInt64] = [:]
+        var offset = 28
+        for _ in 0..<tableLength {
+            guard offset + 12 <= data.count else { return nil }
+            table[fourCC(data, offset)] = u64LE(data, offset + 4)
+            offset += 12
+        }
+        return (dataSize, table)
+    }
+
+    private static func parseIXML(_ data: Data, cues: inout [CuePoint], labels: inout [UInt32: String]) {
+        let trimmed = data.prefix { $0 != 0 }
+        guard !trimmed.isEmpty, let document = try? XMLDocument(data: Data(trimmed)) else { return }
+        let nodes = (try? document.nodes(forXPath: "//SYNC_POINT")) ?? []
+        for (index, node) in nodes.enumerated() {
+            guard let element = node as? XMLElement else { continue }
+            let low = UInt64(child(element, "SYNC_POINT_LOW") ?? "0") ?? 0
+            let high = UInt64(child(element, "SYNC_POINT_HIGH") ?? "0") ?? 0
+            let id = UInt32(index + 1)
+            cues.append(CuePoint(id: id, sample: low | (high << 32)))
+            if let name = child(element, "SYNC_POINT_COMMENT"), !name.isEmpty {
+                labels[id] = name
+            }
+        }
+    }
+
+    private static func child(_ element: XMLElement, _ name: String) -> String? {
+        element.elements(forName: name).first?.stringValue?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private static func parseCueChunk(_ data: Data) -> [CuePoint] {
@@ -66,7 +140,7 @@ enum AudioMarkerImporter {
             let id = u32LE(data, offset)
             let position = u32LE(data, offset + 4)
             let sampleOffset = u32LE(data, offset + 20)
-            cues.append(CuePoint(id: id, sample: sampleOffset != 0 ? sampleOffset : position))
+            cues.append(CuePoint(id: id, sample: UInt64(sampleOffset != 0 ? sampleOffset : position)))
             offset += 24
         }
         return cues
@@ -141,7 +215,7 @@ enum AudioMarkerImporter {
             let sample = u32BE(data, offset + 2)
             offset += 6
             guard offset < data.count else {
-                cues.append(CuePoint(id: id, sample: sample))
+                cues.append(CuePoint(id: id, sample: UInt64(sample)))
                 break
             }
             let length = Int(data[offset])
@@ -154,7 +228,7 @@ enum AudioMarkerImporter {
             if (1 + length) % 2 == 1 {
                 offset += 1
             }
-            cues.append(CuePoint(id: id, sample: sample))
+            cues.append(CuePoint(id: id, sample: UInt64(sample)))
             if !name.isEmpty {
                 labels[id] = name
             }
@@ -250,8 +324,10 @@ enum AudioMarkerImporter {
         }
     }
 
-    private static func millis(samples: UInt32, sampleRate: UInt32) -> UInt32 {
-        UInt32((UInt64(samples) * 1_000) / UInt64(sampleRate))
+    private static func millis(samples: UInt64, sampleRate: UInt32) -> UInt32 {
+        guard sampleRate > 0 else { return 0 }
+        let value = (samples * 1_000) / UInt64(sampleRate)
+        return value > UInt64(UInt32.max) ? .max : UInt32(value)
     }
 
     private static func mergeLabels(_ extra: [UInt32: String], into labels: inout [UInt32: String]) {
@@ -289,6 +365,10 @@ enum AudioMarkerImporter {
             | UInt32(data[offset + 3]) << 24
     }
 
+    private static func u64LE(_ data: Data, _ offset: Int) -> UInt64 {
+        UInt64(u32LE(data, offset)) | UInt64(u32LE(data, offset + 4)) << 32
+    }
+
     private static func u32BE(_ data: Data, _ offset: Int) -> UInt32 {
         UInt32(data[offset]) << 24
             | UInt32(data[offset + 1]) << 16
@@ -315,7 +395,7 @@ enum AudioMarkerImporter {
 
 private struct CuePoint {
     var id: UInt32
-    var sample: UInt32
+    var sample: UInt64
 }
 
 /// Walks RIFF/IFF chunks without loading the audio payload into memory.
@@ -323,6 +403,7 @@ private final class ChunkWalker {
     private let handle: FileHandle
     private let fileSize: UInt64
     private let littleEndian: Bool
+    var sizeOverrides: [String: UInt64] = [:]
 
     init(url: URL, littleEndian: Bool) throws {
         handle = try FileHandle(forReadingFrom: url)
@@ -336,15 +417,16 @@ private final class ChunkWalker {
         try? handle.close()
     }
 
-    func nextChunk() -> (id: String, size: UInt32, payloadStart: UInt64)? {
+    func nextChunk() -> (id: String, size: UInt64, payloadStart: UInt64)? {
         do {
             let offset = try handle.offset()
             guard offset + 8 <= fileSize else { return nil }
             guard let header = try handle.read(upToCount: 8), header.count == 8 else { return nil }
             let id = String(bytes: header[0..<4], encoding: .isoLatin1) ?? ""
-            let size = littleEndian
+            let rawSize = littleEndian
                 ? UInt32(header[4]) | UInt32(header[5]) << 8 | UInt32(header[6]) << 16 | UInt32(header[7]) << 24
                 : UInt32(header[4]) << 24 | UInt32(header[5]) << 16 | UInt32(header[6]) << 8 | UInt32(header[7])
+            let size = resolvedSize(id: id, raw: rawSize)
             let payloadStart = try handle.offset()
             return (id, size, payloadStart)
         } catch {
@@ -352,10 +434,10 @@ private final class ChunkWalker {
         }
     }
 
-    func readPayload(of chunk: (id: String, size: UInt32, payloadStart: UInt64), limit: Int? = nil) -> Data? {
+    func readPayload(of chunk: (id: String, size: UInt64, payloadStart: UInt64), limit: Int? = nil) -> Data? {
         do {
             try handle.seek(toOffset: chunk.payloadStart)
-            let count = Int(min(UInt64(chunk.size), UInt64(limit ?? Int(chunk.size))))
+            let count = Int(min(chunk.size, UInt64(limit ?? Int.max), UInt64(Int.max)))
             guard count > 0 else { return Data() }
             return try handle.read(upToCount: count)
         } catch {
@@ -363,11 +445,18 @@ private final class ChunkWalker {
         }
     }
 
-    func skip(_ chunk: (id: String, size: UInt32, payloadStart: UInt64)) {
-        var next = chunk.payloadStart + UInt64(chunk.size)
+    func skip(_ chunk: (id: String, size: UInt64, payloadStart: UInt64)) {
+        var next = chunk.payloadStart + chunk.size
         if chunk.size % 2 == 1 {
             next += 1
         }
         try? handle.seek(toOffset: min(next, fileSize))
+    }
+
+    private func resolvedSize(id: String, raw: UInt32) -> UInt64 {
+        if raw == 0xFFFF_FFFF, let override = sizeOverrides[id] {
+            return override
+        }
+        return UInt64(raw)
     }
 }
