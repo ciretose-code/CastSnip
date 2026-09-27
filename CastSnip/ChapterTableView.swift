@@ -41,21 +41,19 @@ struct ChapterTableView: View {
                     Image(systemName: "plus.rectangle")
                     Text("Add")
                 }
-                #if os(macOS)
                 .buttonStyle(LinkButtonStyle())
                 .help("Add Chapter")
-                #endif
                 Button(action: {
-                    if selectedRow != nil {
-                        deleteChapter(selectedRow!.id)
+                    if let selectedRow {
+                        deleteChapter(selectedRow.id)
                     }
                 }) {
                     Image(systemName: "minus.rectangle")
                     Text("Delete")
                 }
-                #if os(macOS)
                 .buttonStyle(LinkButtonStyle())
-                #endif
+                .disabled(selectedRow == nil)
+                .help("Delete Chapter")
             }
         }
     }
@@ -94,12 +92,14 @@ struct ChapterTableView: View {
         
         podcastAudioFile.podcast.chapters.insert(newChapter, at: insertIndex)
         selectedRow = newChapter
+        podcastAudioFile.markAsModified()
     }
     
     func deleteChapter(_ id: UUID) {
         if let chapterIndex = podcastAudioFile.podcast.chapters.firstIndex(where: { $0.id == id }) {
             podcastAudioFile.podcast.chapters.remove(at: chapterIndex)
             selectedRow = nil
+            podcastAudioFile.markAsModified()
         }
     }
     

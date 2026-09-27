@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AppKit
 
 enum ChapterValidationError {
     case invalidTimeRange
@@ -26,11 +27,7 @@ class Chapter: Identifiable, Equatable, Comparable, Hashable, CustomStringConver
     var startTime: UInt32 = 0
     var endTime: UInt32 = 0
     var podcastDuration: UInt32 = 0
-#if os(iOS)
-    var image: UIImage? = nil
-#else
     var image: NSImage? = nil
-#endif
     var imageDescription: String = ""
     
     var description: String {
@@ -63,48 +60,48 @@ class Chapter: Identifiable, Equatable, Comparable, Hashable, CustomStringConver
         
         while offset < data.count {
             let tag = ID3Parser.getTagHeader(data, &offset)
+            if tag.name.isEmpty {
+                break
+            }
             if "TIT2" == tag.name {
                 // Loop through Title details
                 let tit2Info = ID3Parser.getString(data, &offset, length: Int(tag.length))
-                title = tit2Info
+                title = tit2Info.trimmingCharacters(in: CharacterSet(charactersIn: "\0")).trimmingCharacters(in: .whitespacesAndNewlines)
             }
             if "WXXX" == tag.name {
                 let wxxxInfo = ID3Parser.getString(data, &offset, length: Int(tag.length))
-                url = wxxxInfo.components(separatedBy: "\0")[1]
+                let parts = wxxxInfo.components(separatedBy: "\0")
+                if parts.count > 1 {
+                    url = parts[1]
+                } else if parts.count == 1, parts[0].contains("://") {
+                    url = parts[0]
+                } else {
+                    url = ""
+                }
             }
             if "APIC" == tag.name {
                 _ = ID3Parser.getString(data, &offset)
                 _ = ID3Parser.getUInt8(data, &offset)
                 var checkOffset = offset
-                if ID3Parser.getUInt8(data, &checkOffset) == 0x00 {
+                if offset < data.count, ID3Parser.getUInt8(data, &checkOffset) == 0x00 {
                     // No description, skip it
                     offset = offset + 1
-                } else {
+                } else if offset < data.count {
                     let apicDescription = ID3Parser.getString(data, &offset)
                     imageDescription = apicDescription
                 }
-                let apicImageData = ID3Parser.getData(data, &offset, UInt32(data.count))
-#if os(iOS)
-                image = UIImage(data: apicImageData)
-#else
+                let remaining = UInt32(max(data.count - offset, 0))
+                let apicImageData = ID3Parser.getData(data, &offset, remaining)
                 image = NSImage(data: apicImageData)
-#endif
             }
         }
     }
-    #if os(iOS)
-    func updateImage(_ newImage: UIImage?) {
-        if newImage != nil {
-            self.image = newImage
-        }
-    }
-    #else
+
     func updateImage(_ newImage: NSImage?) {
         if newImage != nil {
             self.image = newImage
         }
     }
-    #endif
     
     func updateTitle(_ newTitle: String) {
         self.title = newTitle

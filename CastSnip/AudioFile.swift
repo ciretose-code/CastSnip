@@ -1,5 +1,5 @@
 //
-//  AudioModel.swift
+//  AudioFile.swift
 //  CastSnip
 //
 //  Created by ewuehler on 4/21/24.
@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import AppKit
 import OSLog
 
 @Observable
@@ -27,7 +28,6 @@ class AudioFile: Identifiable {
         errorMessage = nil
         podcast = await loadingPodcast(from: url)
         
-        // Check for loading failures
         if podcast.asset == nil {
             errorMessage = "Failed to load audio file. The file may be corrupted or in an unsupported format."
         } else if podcast.durationInSeconds == 0 {
@@ -35,6 +35,32 @@ class AudioFile: Identifiable {
         }
         
         isLoading = false
+        hasUnsavedChanges = false
+    }
+
+    func save(to destination: URL) throws {
+        guard let source = podcast.url else {
+            throw ID3WriterError.unreadableSource
+        }
+        try ID3Writer.write(podcast: podcast, from: source, to: destination)
+        podcast.url = destination
+        if let attributes = try? FileManager.default.attributesOfItem(atPath: destination.path),
+           let size = attributes[.size] as? UInt64 {
+            podcast.fileSizeInBytes = size
+        }
+        markAsSaved()
+    }
+
+    func canSaveInPlace(to url: URL?) -> Bool {
+        guard let url else { return false }
+        if url.path.contains("/Contents/Resources/") {
+            return false
+        }
+        if let resourceURL = Bundle.main.resourceURL,
+           url.standardizedFileURL.path.hasPrefix(resourceURL.standardizedFileURL.path) {
+            return false
+        }
+        return true
     }
     
     func markAsModified() {
@@ -50,36 +76,39 @@ class AudioFile: Identifiable {
     }
     
     func getCoverArt() -> Image? {
-        if (hasCoverArt()) {
-            #if os(iOS)
-            return Image(uiImage: podcast.logo!)
-            #else
-            return Image(nsImage: podcast.logo!)
-            #endif
-        } else {
-            return nil
+        if let logo = podcast.logo {
+            return Image(nsImage: logo)
         }
+        return nil
     }
     
     func getTitle() -> Binding<String> {
-        return Binding(get: { self.podcast.title }, set: { self.podcast.title = $0 })
+        dirtyBinding(\.title)
     }
     
     func getEpisode() -> Binding<String> {
-        return Binding(get: { self.podcast.episode }, set: { self.podcast.episode = $0 })
+        dirtyBinding(\.episode)
     }
     
     func getSummary() -> Binding<String> {
-        return Binding(get: { self.podcast.summary }, set: { self.podcast.summary = $0 })
+        dirtyBinding(\.summary)
     }
     
     func getChapterIndex(_ id: UUID) -> Int {
-        var chapterIndex: Int {
-            podcast.chapters.firstIndex(where: {$0.id == id}) ?? 0
-        }
-        return chapterIndex
+        podcast.chapters.firstIndex(where: { $0.id == id }) ?? 0
     }
-    
+
+    private func dirtyBinding(_ keyPath: ReferenceWritableKeyPath<Podcast, String>) -> Binding<String> {
+        Binding(
+            get: { self.podcast[keyPath: keyPath] },
+            set: { newValue in
+                if self.podcast[keyPath: keyPath] != newValue {
+                    self.podcast[keyPath: keyPath] = newValue
+                    self.markAsModified()
+                }
+            }
+        )
+    }
     
     private func getFile(from url: URL) -> AVAudioFile? {
         do {
@@ -95,7 +124,6 @@ class AudioFile: Identifiable {
         pa.url = url
         pa.file = getFile(from: url)
         
-        // Get file size
         do {
             let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
             if let fileSize = attributes[.size] as? UInt64 {
@@ -108,9 +136,14 @@ class AudioFile: Identifiable {
         pa.asset = AVURLAsset(url: url, options: nil)
         do {
             let dur = try await pa.asset?.load(.duration)
-            // Convert the duration to seconds
-            pa.durationInSeconds = CGFloat(dur?.value ?? 1)/CGFloat(dur?.timescale ?? 1)
-            pa.durationInMillis = UInt32((pa.durationInSeconds ?? 0)*1000)
+            let timescale = dur?.timescale ?? 1
+            if timescale == 0 {
+                pa.durationInSeconds = 0
+                pa.durationInMillis = 0
+            } else {
+                pa.durationInSeconds = CGFloat(dur?.value ?? 1) / CGFloat(timescale)
+                pa.durationInMillis = UInt32((pa.durationInSeconds ?? 0) * 1000)
+            }
         } catch {
             logger.error("Failed to load duration: \(error.localizedDescription)")
             pa.durationInSeconds = 0
@@ -129,18 +162,8 @@ class AudioFile: Identifiable {
                     do {
                         let value = try await item.load(.stringValue)
                         logger.debug("\(key) = \(value ?? "nil")")
-                        if ("TALB" == key) || ("TPE1" == key) {
-                            pa.title = value ?? ""
-                        } else if ("TIT2" == key) {
-                            pa.episode = value ?? ""
-                        } else if ("COMM" == key) || ("USLT" == key) {
-                            pa.summary = value ?? ""
-                        } else if ("TLEN" == key) {
-                            if let tlen = UInt32(value ?? "0") {
-                                if tlen > 0 && pa.durationInMillis == 0 {
-                                    pa.durationInMillis = tlen
-                                }
-                            }
+                        if let value {
+                            ID3MetadataMapping.applyString(key: key, value: value, to: pa)
                         }
                     } catch {
                         logger.error("Failed to load string value for key \(key): \(error.localizedDescription)")
@@ -148,18 +171,13 @@ class AudioFile: Identifiable {
                 } else if id3Data.contains(key) {
                     do {
                         if let value = try await item.load(.dataValue) {
-                            if ("CHAP" == key) {
+                            if key == "CHAP" {
                                 let c = Chapter(data: value, podcastDuration: pa.durationInMillis ?? 0)
                                 pa.chapters.append(c)
-                            } else if ("CTOC" == key) {
-                                // Table of contents - future implementation
+                            } else if key == "CTOC" {
                                 logger.debug("CTOC tag found")
-                            } else if ("APIC" == key) {
-                                #if os(iOS)
-                                pa.logo = UIImage(data: value)
-                                #else
+                            } else if key == "APIC" {
                                 pa.logo = NSImage(data: value)
-                                #endif
                             }
                         }
                     } catch {
@@ -178,20 +196,6 @@ class AudioFile: Identifiable {
             logger.error("Error loading id3 metadata: \(error.localizedDescription)")
         }
         
-//        do {
-//            print("itunes metadata")
-//            for item in try await pa.asset!.loadMetadata(for: .iTunesMetadata) {
-//                let key = item.key?.description ?? "unknown"
-//                print("key: \(key)")
-//
-//            }
-//        } catch {
-//            print("error itunes metadata: \(error)")
-//        }
-        
         return pa
     }
-    
 }
-
-
