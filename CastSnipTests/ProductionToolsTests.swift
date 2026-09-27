@@ -85,45 +85,34 @@ struct SilenceDetectorTests {
 
 struct PodcastEncoderTests {
 
-    @Test func prefersHomebrewLameWhenPresent() {
-        let tool = PodcastEncoder.preferredTool(
-            executableExists: { $0 == "/opt/homebrew/bin/lame" },
-            resolveOnPATH: { _ in nil }
-        )
-
-        #expect(tool == .lame(executable: "/opt/homebrew/bin/lame"))
+    @Test func preferredToolIsInProcessLAME() {
+        #expect(PodcastEncoder.preferredTool() == .lameInProcess)
     }
 
-    @Test func prefersLameOnPATHWhenHomebrewIsMissing() {
-        let tool = PodcastEncoder.preferredTool(
-            executableExists: { $0 == "/usr/local/bin/lame" },
-            resolveOnPATH: { $0 == "lame" ? "/usr/local/bin/lame" : nil }
+    @Test func defaultEncodeWritesMP3ViaInProcessLAME() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-encode-mp3-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let input = directory.appendingPathComponent("tone.wav")
+        try ProductionAudioFixtures.writeSineWAV(to: input, duration: 0.4)
+        let requested = directory.appendingPathComponent("episode.mp3")
+
+        var progressValues: [Double] = []
+        let written = try await PodcastEncoder.encode(
+            from: input,
+            to: requested,
+            progress: { progressValues.append($0) }
         )
 
-        #expect(tool == .lame(executable: "/usr/local/bin/lame"))
-    }
-
-    @Test func fallsBackToAACM4AWhenLameIsMissing() {
-        let tool = PodcastEncoder.preferredTool(
-            executableExists: { _ in false },
-            resolveOnPATH: { _ in nil }
-        )
-
-        #expect(tool == .aacM4A)
-    }
-
-    @Test func lameArgumentsAre192CBRStereo() {
-        let input = URL(fileURLWithPath: "/tmp/in.wav")
-        let output = URL(fileURLWithPath: "/tmp/out.mp3")
-        let args = PodcastEncoder.lameArguments(input: input, output: output)
-
-        #expect(args.contains("-b"))
-        #expect(args.contains("192"))
-        #expect(args.contains("-m"))
-        #expect(args.contains("s"))
-        #expect(args.contains("--cbr"))
-        #expect(args.contains(input.path))
-        #expect(args.contains(output.path))
+        #expect(written.pathExtension == "mp3")
+        #expect(FileManager.default.fileExists(atPath: written.path))
+        let data = try Data(contentsOf: written)
+        #expect(data.count > 128)
+        #expect(progressValues.contains { $0 == 0 || $0 > 0 })
+        #expect(progressValues.contains { $0 >= 1 })
+        #expect(progressValues.allSatisfy { $0 >= 0 && $0 <= 1 })
     }
 
     @Test func aacFallbackWritesM4AAndReportsProgress() async throws {
@@ -209,7 +198,7 @@ struct AircheckExporterTests {
     }
 }
 
-private enum ProductionAudioFixtures {
+enum ProductionAudioFixtures {
     static func writeSineWAV(to url: URL, duration: TimeInterval, sampleRate: Double = 44_100) throws {
         try writeWAV(to: url, duration: duration, sampleRate: sampleRate) { index, rate in
             Float(sin(2 * Double.pi * 440 * Double(index) / rate))
