@@ -42,6 +42,7 @@ struct EmptyPodcastView: View {
                 .opacity(isDraggingAudio ? 0.7 : 0)
         )
         .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(EditorAccessibility.emptyEditor)
         .accessibilityLabel(EmptyEditorCopy.title)
         .accessibilityHint(EmptyEditorCopy.detail)
     }

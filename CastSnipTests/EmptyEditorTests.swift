@@ -54,6 +54,12 @@ struct EditorAccessibilityTests {
         #expect(EditorAccessibility.back10.contains("10"))
         #expect(EditorAccessibility.forward10.contains("10"))
         #expect(EditorAccessibility.viewport.localizedCaseInsensitiveContains("zoom"))
+        #expect(EditorAccessibility.podcastTitle.localizedCaseInsensitiveContains("title"))
+        #expect(EditorAccessibility.episodeTitle.localizedCaseInsensitiveContains("episode"))
+        #expect(EditorAccessibility.playPause == "PlayPause")
+        #expect(EditorAccessibility.emptyEditor == "Empty editor")
+        #expect(EditorAccessibility.encoding == "Encoding")
+        #expect(EditorAccessibility.addChapter.localizedCaseInsensitiveContains("chapter"))
     }
 
     @Test func chapterRowNamesUntitledWhenTitleIsEmpty() {

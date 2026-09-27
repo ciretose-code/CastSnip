@@ -83,6 +83,7 @@ struct ContentView: View {
                             handleCoverArtDrop(providers: providers)
                         }
                         .accessibilityElement()
+                        .accessibilityIdentifier(EditorAccessibility.coverArt)
                         .accessibilityLabel(EditorAccessibility.coverArt)
                         .accessibilityHint(EditorAccessibility.coverArtHint)
                         .accessibilityAddTraits(.isButton)
@@ -175,6 +176,7 @@ struct ContentView: View {
                                     }
                                     .buttonStyle(.bordered)
                                     .disabled(player.duration <= 0)
+                                    .accessibilityIdentifier(EditorAccessibility.back10)
                                     .accessibilityLabel(EditorAccessibility.back10)
 
                                     Button {
@@ -187,6 +189,7 @@ struct ContentView: View {
                                     .disabled(player.duration <= 0)
                                     .keyboardShortcut(.space, modifiers: [])
                                     .help(player.loadError ?? (player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play))
+                                    .accessibilityIdentifier(EditorAccessibility.playPause)
                                     .accessibilityLabel(player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play)
 
                                     Button {
@@ -197,6 +200,7 @@ struct ContentView: View {
                                     }
                                     .buttonStyle(.bordered)
                                     .disabled(player.duration <= 0)
+                                    .accessibilityIdentifier(EditorAccessibility.forward10)
                                     .accessibilityLabel(EditorAccessibility.forward10)
                                 }
 
@@ -226,6 +230,7 @@ struct ContentView: View {
                                         )
                                         .controlSize(.regular)
                                         .frame(width: 140)
+                                        .accessibilityIdentifier(EditorAccessibility.viewport)
                                         .accessibilityLabel(EditorAccessibility.viewport)
                                     } else {
                                         Slider(value: .constant(0), in: 0...1)

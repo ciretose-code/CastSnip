@@ -57,6 +57,8 @@ struct ChapterTableView: View {
                 .buttonStyle(LinkButtonStyle())
                 .keyboardShortcut("n", modifiers: .command)
                 .help("Add a chapter at the playhead")
+                .accessibilityIdentifier(EditorAccessibility.addChapter)
+                .accessibilityLabel(EditorAccessibility.addChapter)
                 Button(action: {
                     pendingDelete = podcastAudioFile.selectedChapter
                 }) {

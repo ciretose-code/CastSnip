@@ -40,6 +40,9 @@ struct CastSnipApp: App {
                         saveInPlace: { saveInPlace() },
                         saveAs: { saveAs() }
                     )
+                    if let url = UITestLaunchArguments().resolvedOpenURL() {
+                        applyOpen(url)
+                    }
                     if let url = fileURL {
                         await podcastAudioFile.loadPodcast(from: url)
                     }
@@ -269,7 +272,13 @@ struct CastSnipApp: App {
 
     @discardableResult
     private func saveAs() -> Bool {
-        guard confirmSilenceOrContinue() else { return false }
+        let uiTest = UITestLaunchArguments()
+        if !uiTest.isActive {
+            guard confirmSilenceOrContinue() else { return false }
+        }
+        if let dest = uiTest.saveAsURL {
+            return writeSaveDestination(dest)
+        }
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.mp3]
         panel.canCreateDirectories = true
@@ -278,6 +287,15 @@ struct CastSnipApp: App {
         let tagsCheckbox = tagging.attachCheckbox(to: panel)
         guard panel.runModal() == .OK, let url = panel.url else { return false }
         tagging.apply(from: tagsCheckbox)
+        return writeSaveDestination(url)
+    }
+
+    @discardableResult
+    private func writeSaveDestination(_ url: URL) -> Bool {
+        let directory = url.deletingLastPathComponent()
+        if !FileManager.default.fileExists(atPath: directory.path) {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
         SecurityScopedBookmarkStore.shared.rememberAndAccess(url)
         let didWrite = write(to: url)
         if didWrite {
@@ -317,7 +335,15 @@ struct CastSnipApp: App {
 
     private func encodeToMP3() {
         guard let source = fileURL ?? podcastAudioFile.podcast.url else { return }
-        guard confirmSilenceOrContinue() else { return }
+        let uiTest = UITestLaunchArguments()
+        if !uiTest.isActive {
+            guard confirmSilenceOrContinue() else { return }
+        }
+
+        if let dest = uiTest.encodeURL {
+            beginEncode(from: source, to: dest)
+            return
+        }
 
         let panel = NSSavePanel()
         panel.allowedContentTypes = [.mp3]
@@ -327,8 +353,15 @@ struct CastSnipApp: App {
         let tagsCheckbox = tagging.attachCheckbox(to: panel)
         guard panel.runModal() == .OK, let dest = panel.url else { return }
         tagging.apply(from: tagsCheckbox)
-        SecurityScopedBookmarkStore.shared.rememberAndAccess(dest)
+        beginEncode(from: source, to: dest)
+    }
 
+    private func beginEncode(from source: URL, to dest: URL) {
+        let directory = dest.deletingLastPathComponent()
+        if !FileManager.default.fileExists(atPath: directory.path) {
+            try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        }
+        SecurityScopedBookmarkStore.shared.rememberAndAccess(dest)
         Task { @MainActor in
             await performEncode(from: source, to: dest)
         }
@@ -338,6 +371,7 @@ struct CastSnipApp: App {
         let alert = NSAlert()
         alert.messageText = "Encoding…"
         alert.informativeText = "Creating a podcast-quality file (192 kbps CBR stereo MP3 via in-process LAME)."
+        alert.window.setAccessibilityIdentifier(EditorAccessibility.encoding)
         let bar = NSProgressIndicator(frame: NSRect(x: 0, y: 0, width: 240, height: 16))
         bar.minValue = 0
         bar.maxValue = 1

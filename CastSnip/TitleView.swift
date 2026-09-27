@@ -19,6 +19,8 @@ struct TitleView: View {
                 .font(.system(.subheadline).lowercaseSmallCaps())
             TextField("Podcast Title Goes Here", text: $title)
                 .textFieldStyle(.plain)
+                .accessibilityIdentifier(EditorAccessibility.podcastTitle)
+                .accessibilityLabel(EditorAccessibility.podcastTitle)
                 .padding(EdgeInsets(top: 4, leading: (radius/2), bottom: 4, trailing: (radius/2)))
                 .compatibleTextFieldBorder()
                 .background(Color(nsColor: .textBackgroundColor))
