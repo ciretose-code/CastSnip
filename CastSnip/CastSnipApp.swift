@@ -151,6 +151,9 @@ struct CastSnipApp: App {
                 Button("mostlysecurity.com") {
                     showMostlySecurityWebsite()
                 }
+                Button("Clear Autofill Memory") {
+                    ShowAutofillStore.shared.clear()
+                }
             }
         }
         .defaultSize(width: 800, height: 600)
