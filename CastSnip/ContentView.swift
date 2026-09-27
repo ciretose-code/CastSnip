@@ -116,25 +116,13 @@ struct ContentView: View {
                         
                         // Transport controls + waveform viewport
                         VStack(spacing: 8) {
-                            let sortedChapters = podcastAudioFile.podcast.chapters.sorted()
-                            let nonZeroChapters = sortedChapters.filter { $0.startTime > 0 }
-                            let chapterMarkers: [WaveformView.Marker] = nonZeroChapters.enumerated().map { index, chapter in
-                                WaveformView.Marker(
-                                    id: chapter.id,
-                                    time: TimeInterval(chapter.startTime) / 1000.0,
-                                    color: .red,
-                                    lineWidth: 2,
-                                    label: "Chapter \(index + 1)"
-                                )
-                            }
-
                             WaveformView(
                                 audioFile: podcastAudioFile.podcast.file,
                                 sampleCount: 2000,
                                 viewportStart: viewportStart,
                                 viewportDuration: viewportDuration,
                                 currentTime: player.currentTime,
-                                markers: chapterMarkers,
+                                markers: WaveformView.makeMarkers(from: podcastAudioFile.podcast.chapters),
                                 onSeek: { time in
                                     player.seek(to: time)
                                     // Keep the current viewport fixed for this seek.
