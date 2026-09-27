@@ -12,6 +12,7 @@ enum KeyboardShortcutsHelp {
            Open Recent
     ⌘S     Save
     ⌘⇧S    Save As
+           Include ID3 tags
     ⌘W     Close
 
     Playback

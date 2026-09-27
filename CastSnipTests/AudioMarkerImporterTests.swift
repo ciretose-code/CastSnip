@@ -4,7 +4,7 @@ import Foundation
 
 struct AudioMarkerImporterTests {
 
-    @Test func labeledWavCuePointsBecomeChapters() throws {
+    @Test func labeledWavCuePointsBecomeChapters() async throws {
         let wav = WAVMarkerFixture.file(
             sampleRate: 8_000,
             frames: 8_000,
@@ -17,7 +17,7 @@ struct AudioMarkerImporterTests {
         let url = try writeTemp(wav, ext: "wav")
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let chapters = AudioMarkerImporter.chapters(from: url, durationMillis: 1_000)
+        let chapters = await AudioMarkerImporter.chapters(from: url, durationMillis: 1_000)
 
         #expect(chapters.map(\.title) == ["Intro", "Interview"])
         #expect(chapters.map(\.startTime) == [0, 500])
@@ -25,7 +25,7 @@ struct AudioMarkerImporterTests {
         #expect(chapters.allSatisfy { $0.podcastDuration == 1_000 })
     }
 
-    @Test func unlabeledWavCuePointsBecomeNumberedMarkers() throws {
+    @Test func unlabeledWavCuePointsBecomeNumberedMarkers() async throws {
         let wav = WAVMarkerFixture.file(
             sampleRate: 8_000,
             frames: 8_000,
@@ -38,23 +38,23 @@ struct AudioMarkerImporterTests {
         let url = try writeTemp(wav, ext: "wav")
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let chapters = AudioMarkerImporter.chapters(from: url, durationMillis: 2_000)
+        let chapters = await AudioMarkerImporter.chapters(from: url, durationMillis: 2_000)
 
         #expect(chapters.map(\.title) == ["Marker 1", "Marker 2"])
         #expect(chapters.map(\.startTime) == [0, 250])
         #expect(chapters.map(\.endTime) == [250, 2_000])
     }
 
-    @Test func wavWithoutCuePointsReturnsNoChapters() throws {
+    @Test func wavWithoutCuePointsReturnsNoChapters() async throws {
         let wav = WAVMarkerFixture.file(sampleRate: 8_000, frames: 800, cues: [], includeLabels: false)
         let url = try writeTemp(wav, ext: "wav")
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let chapters = AudioMarkerImporter.chapters(from: url, durationMillis: 100)
+        let chapters = await AudioMarkerImporter.chapters(from: url, durationMillis: 100)
         #expect(chapters.isEmpty)
     }
 
-    @Test func labeledAiffMarkersBecomeChapters() throws {
+    @Test func labeledAiffMarkersBecomeChapters() async throws {
         let aiff = AIFFMarkerFixture.file(
             sampleRate: 8_000,
             frames: 8_000,
@@ -66,18 +66,18 @@ struct AudioMarkerImporterTests {
         let url = try writeTemp(aiff, ext: "aiff")
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let chapters = AudioMarkerImporter.chapters(from: url, durationMillis: 1_000)
+        let chapters = await AudioMarkerImporter.chapters(from: url, durationMillis: 1_000)
 
         #expect(chapters.map(\.title) == ["Cold open", "Credits"])
         #expect(chapters.map(\.startTime) == [0, 500])
         #expect(chapters.map(\.endTime) == [500, 1_000])
     }
 
-    @Test func m4aWithoutChapterMetadataReturnsEmpty() throws {
+    @Test func m4aWithoutChapterMetadataReturnsEmpty() async throws {
         let url = try writeTemp(Data("not a real movie file".utf8), ext: "m4a")
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let chapters = AudioMarkerImporter.chapters(from: url, durationMillis: 5_000)
+        let chapters = await AudioMarkerImporter.chapters(from: url, durationMillis: 5_000)
         #expect(chapters.isEmpty)
     }
 

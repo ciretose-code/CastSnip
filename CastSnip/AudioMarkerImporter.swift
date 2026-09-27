@@ -7,9 +7,9 @@ import Foundation
 import AVFoundation
 
 enum AudioMarkerImporter {
-    static func chapters(from url: URL, durationMillis: UInt32) -> [Chapter] {
+    static func chapters(from url: URL, durationMillis: UInt32) async -> [Chapter] {
         guard let header = fileHeader(url), header.count >= 12 else {
-            return movieChapters(from: url, durationMillis: durationMillis)
+            return await movieChapters(from: url, durationMillis: durationMillis)
         }
 
         let magic = fourCC(header, 0)
@@ -20,7 +20,7 @@ enum AudioMarkerImporter {
         if magic == "FORM", form == "AIFF" || form == "AIFC" {
             return aiffChapters(from: url, durationMillis: durationMillis)
         }
-        return movieChapters(from: url, durationMillis: durationMillis)
+        return await movieChapters(from: url, durationMillis: durationMillis)
     }
 
     // MARK: - WAVE cue + LIST/adtl
@@ -163,44 +163,52 @@ enum AudioMarkerImporter {
 
     // MARK: - M4A chapter / timed metadata
 
-    private static func movieChapters(from url: URL, durationMillis: UInt32) -> [Chapter] {
+    private static func movieChapters(from url: URL, durationMillis: UInt32) async -> [Chapter] {
         let ext = url.pathExtension.lowercased()
         let movieExtensions: Set<String> = ["m4a", "m4b", "mp4", "aac"]
         guard movieExtensions.contains(ext) else { return [] }
 
         let asset = AVURLAsset(url: url)
         var groups: [AVTimedMetadataGroup] = []
-        if let locale = asset.availableChapterLocales.first {
-            groups = asset.chapterMetadataGroups(withTitleLocale: locale, containingItemsWithCommonKeys: nil)
-        }
-        if groups.isEmpty {
-            groups = asset.chapterMetadataGroups(bestMatchingPreferredLanguages: Locale.preferredLanguages)
+        do {
+            if let locale = try await asset.load(.availableChapterLocales).first {
+                groups = try await asset.loadChapterMetadataGroups(
+                    withTitleLocale: locale,
+                    containingItemsWithCommonKeys: []
+                )
+            }
+            if groups.isEmpty {
+                groups = try await asset.loadChapterMetadataGroups(
+                    bestMatchingPreferredLanguages: Locale.preferredLanguages
+                )
+            }
+        } catch {
+            return []
         }
         guard !groups.isEmpty else { return [] }
-        return chapters(from: groups, durationMillis: durationMillis, asset: asset)
+        return await chapters(from: groups, durationMillis: durationMillis, asset: asset)
     }
 
     private static func chapters(
         from groups: [AVTimedMetadataGroup],
         durationMillis: UInt32,
         asset: AVURLAsset
-    ) -> [Chapter] {
-        let duration = resolvedDuration(durationMillis, asset: asset)
-        return makeChapters(
-            points: groups.enumerated().map { index, group in
-                let title = group.items.first(where: { $0.commonKey == .commonKeyTitle })?.stringValue
-                    ?? group.items.first?.stringValue
-                    ?? "Marker \(index + 1)"
-                let start = millis(from: group.timeRange.start)
-                return (title: title, start: start)
-            },
-            durationMillis: duration
-        )
+    ) async -> [Chapter] {
+        let duration = await resolvedDuration(durationMillis, asset: asset)
+        var points: [(title: String, start: UInt32)] = []
+        for (index, group) in groups.enumerated() {
+            let item = group.items.first(where: { $0.commonKey == .commonKeyTitle }) ?? group.items.first
+            let loaded = try? await item?.load(.stringValue)
+            let title = loaded.flatMap { $0.isEmpty ? nil : $0 } ?? "Marker \(index + 1)"
+            points.append((title: title, start: millis(from: group.timeRange.start)))
+        }
+        return makeChapters(points: points, durationMillis: duration)
     }
 
-    private static func resolvedDuration(_ durationMillis: UInt32, asset: AVURLAsset) -> UInt32 {
+    private static func resolvedDuration(_ durationMillis: UInt32, asset: AVURLAsset) async -> UInt32 {
         if durationMillis > 0 { return durationMillis }
-        let seconds = CMTimeGetSeconds(asset.duration)
+        guard let time = try? await asset.load(.duration) else { return 0 }
+        let seconds = CMTimeGetSeconds(time)
         guard seconds.isFinite, seconds > 0 else { return 0 }
         return UInt32((seconds * 1000).rounded())
     }

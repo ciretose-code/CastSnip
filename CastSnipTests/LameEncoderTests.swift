@@ -1,8 +1,15 @@
 import Testing
 import Foundation
+import LAME
 @testable import CastSnip
 
 struct LameEncoderTests {
+
+    /// Fails while CastSnip still links BB9z 3.100.x; passes on LAME 4.x.
+    @Test func linkedLibraryIsLAME4() {
+        let version = String(cString: get_lame_version())
+        #expect(version.hasPrefix("4."), "expected LAME 4.x, got \(version)")
+    }
 
     @Test func encodesSyntheticWAVToMPEGLayerIII() throws {
         let directory = FileManager.default.temporaryDirectory

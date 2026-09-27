@@ -373,6 +373,28 @@ struct ID3WriterTests {
         #expect(ID3Writer.mpegAudioPayload(from: written).starts(with: [0xFF, 0xFB]))
     }
 
+    @Test func writeOmitsAllTagsWhenIncludeTagsIsFalse() throws {
+        let source = FileManager.default.temporaryDirectory.appendingPathComponent("castsnip-notags-src-\(UUID().uuidString).mp3")
+        let dest = FileManager.default.temporaryDirectory.appendingPathComponent("castsnip-notags-dest-\(UUID().uuidString).mp3")
+        defer {
+            try? FileManager.default.removeItem(at: source)
+            try? FileManager.default.removeItem(at: dest)
+        }
+
+        try Data([0xFF, 0xFB, 0x90, 0x00, 0x11, 0x22]).write(to: source)
+        let podcast = Podcast()
+        podcast.title = "Should Not Appear"
+        podcast.logo = makeSolidJPEGImage()
+        podcast.chapters = [Chapter(title: "Intro", startTime: 0, endTime: 1000, podcastDuration: 1000)]
+        podcast.url = source
+
+        try ID3Writer.write(podcast: podcast, from: source, to: dest, includeTags: false)
+
+        let written = try Data(contentsOf: dest)
+        #expect(!written.starts(with: Data("ID3".utf8)))
+        #expect(written == Data([0xFF, 0xFB, 0x90, 0x00, 0x11, 0x22]))
+    }
+
     @Test func saveThenReopenPreservesTitleChaptersAndArtwork() throws {
         let source = FileManager.default.temporaryDirectory.appendingPathComponent("castsnip-roundtrip-src-\(UUID().uuidString).mp3")
         let dest = FileManager.default.temporaryDirectory.appendingPathComponent("castsnip-roundtrip-dest-\(UUID().uuidString).mp3")

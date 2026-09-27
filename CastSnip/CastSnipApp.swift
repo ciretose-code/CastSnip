@@ -20,6 +20,7 @@ struct CastSnipApp: App {
     @State var podcastAudioFile = AudioFile()
     @State var fileURL: URL?
     @State private var recentFiles = RecentFilesStore.shared
+    @State private var tagging = ID3TaggingStore.shared
     @State private var pendingAction: PendingDocumentAction?
     @State private var showDiscardAlert = false
     @State private var showShortcutsHelp = false
@@ -121,6 +122,8 @@ struct CastSnipApp: App {
                     _ = saveAs()
                 }
                 .keyboardShortcut("S", modifiers: [.command, .shift])
+                Toggle(ID3TaggingStore.checkboxTitle, isOn: Bindable(tagging).includeTags)
+                    .help(ID3TaggingStore.checkboxHelp)
                 Button("Encode to MP3…") {
                     encodeToMP3()
                 }
@@ -272,7 +275,9 @@ struct CastSnipApp: App {
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = fileURL?.lastPathComponent ?? "episode.mp3"
         panel.title = "Save Podcast MP3"
+        let tagsCheckbox = tagging.attachCheckbox(to: panel)
         guard panel.runModal() == .OK, let url = panel.url else { return false }
+        tagging.apply(from: tagsCheckbox)
         SecurityScopedBookmarkStore.shared.rememberAndAccess(url)
         let didWrite = write(to: url)
         if didWrite {
@@ -285,7 +290,7 @@ struct CastSnipApp: App {
     @discardableResult
     private func write(to url: URL) -> Bool {
         do {
-            try podcastAudioFile.save(to: url)
+            try podcastAudioFile.save(to: url, includeTags: tagging.includeTags)
             NSApp.keyWindow?.isDocumentEdited = false
             return true
         } catch {
@@ -315,11 +320,13 @@ struct CastSnipApp: App {
         guard confirmSilenceOrContinue() else { return }
 
         let panel = NSSavePanel()
-        panel.allowedContentTypes = [.mp3, .mpeg4Audio]
+        panel.allowedContentTypes = [.mp3]
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = source.deletingPathExtension().appendingPathExtension("mp3").lastPathComponent
         panel.title = "Encode to MP3"
+        let tagsCheckbox = tagging.attachCheckbox(to: panel)
         guard panel.runModal() == .OK, let dest = panel.url else { return }
+        tagging.apply(from: tagsCheckbox)
         SecurityScopedBookmarkStore.shared.rememberAndAccess(dest)
 
         Task { @MainActor in
@@ -344,7 +351,12 @@ struct CastSnipApp: App {
         }
 
         do {
-            let written = try await PodcastEncoder.encode(from: source, to: dest) { value in
+            let written = try await PodcastEncoder.encode(
+                from: source,
+                to: dest,
+                tagging: podcastAudioFile.podcast,
+                includeTags: tagging.includeTags
+            ) { value in
                 DispatchQueue.main.async {
                     bar.doubleValue = value
                 }

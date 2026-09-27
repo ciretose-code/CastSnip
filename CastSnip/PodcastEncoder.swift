@@ -41,11 +41,14 @@ enum PodcastEncoder {
 
     /// Encodes `input` toward `output`. AAC fallback rewrites the extension to `m4a`.
     /// When `using` is nil, LAME failures fall back to AAC so the app still produces a file.
+    /// After a successful MP3 encode, `tagging` is written as ID3v2.3 (show, chapters, art).
     @discardableResult
     static func encode(
         from input: URL,
         to output: URL,
         using tool: Tool? = nil,
+        tagging podcast: Podcast? = nil,
+        includeTags: Bool = true,
         progress: ((Double) -> Void)? = nil
     ) async throws -> URL {
         let resolved = tool ?? preferredTool()
@@ -53,9 +56,15 @@ enum PodcastEncoder {
         case .lameInProcess:
             do {
                 try LameEncoder.encode(from: input, to: output, progress: progress)
+                if includeTags, let podcast {
+                    try ID3Writer.write(podcast: podcast, from: output, to: output, includeTags: true)
+                }
                 return output
             } catch {
                 if tool != nil { throw error }
+                if includeTags {
+                    throw error
+                }
                 logger.error("LAME encode failed (\(error.localizedDescription)); falling back to AAC .m4a")
                 return try await encodeAAC(from: input, replacing: output, progress: progress)
             }
@@ -78,21 +87,14 @@ enum PodcastEncoder {
         guard let session = AVAssetExportSession(asset: asset, presetName: AVAssetExportPresetAppleM4A) else {
             throw EncodeError.failed("AAC export is not available")
         }
-        session.outputURL = dest
-        session.outputFileType = .m4a
 
         progress?(0)
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            session.exportAsynchronously {
-                switch session.status {
-                case .completed:
-                    continuation.resume()
-                case .cancelled:
-                    continuation.resume(throwing: EncodeError.failed("AAC export cancelled"))
-                default:
-                    continuation.resume(throwing: session.error ?? EncodeError.failed("AAC export failed"))
-                }
-            }
+        do {
+            try await session.export(to: dest, as: .m4a)
+        } catch is CancellationError {
+            throw EncodeError.failed("AAC export cancelled")
+        } catch {
+            throw EncodeError.failed(error.localizedDescription)
         }
         progress?(1)
         return dest

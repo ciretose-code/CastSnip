@@ -1,6 +1,7 @@
 import Testing
 import Foundation
 import AVFoundation
+import AppKit
 @testable import CastSnip
 
 struct SilenceDetectorTests {
@@ -139,6 +140,77 @@ struct PodcastEncoderTests {
         #expect(progressValues.contains { $0 >= 1 })
         #expect(progressValues.allSatisfy { $0 >= 0 && $0 <= 1 })
     }
+
+    @Test func lameEncodeWritesShowChaptersAndImages() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-encode-tags-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let input = directory.appendingPathComponent("tone.wav")
+        try ProductionAudioFixtures.writeSineWAV(to: input, duration: 0.4)
+        let requested = directory.appendingPathComponent("episode.mp3")
+
+        let cover = encodeTestImage(NSColor.red)
+        let chapterArt = encodeTestImage(NSColor.blue)
+        let podcast = Podcast()
+        podcast.title = "Mostly Security"
+        podcast.episode = "329: Cool"
+        podcast.artist = "Ciretose"
+        podcast.summary = "Show notes"
+        podcast.durationInMillis = 400
+        podcast.logo = cover
+        let intro = Chapter(title: "Intro", url: "https://example.com/intro", startTime: 0, endTime: 200, podcastDuration: 400)
+        intro.image = chapterArt
+        podcast.chapters = [
+            intro,
+            Chapter(title: "Interview", startTime: 200, endTime: 400, podcastDuration: 400),
+        ]
+
+        let written = try await PodcastEncoder.encode(from: input, to: requested, tagging: podcast)
+
+        let frames = try ID3Parser.readFrames(from: Data(contentsOf: written))
+        let texts = Dictionary(uniqueKeysWithValues: frames.compactMap { frame -> (String, String)? in
+            guard ["TALB", "TIT2", "TPE1"].contains(frame.name) else { return nil }
+            return (frame.name, ID3Parser.decodeTextFrameBody(frame.body))
+        })
+        #expect(texts["TALB"] == "Mostly Security")
+        #expect(texts["TIT2"] == "329: Cool")
+        #expect(texts["TPE1"] == "Ciretose")
+        #expect(frames.contains { $0.name == "APIC" })
+        #expect(frames.contains { $0.name == "CTOC" })
+
+        let chapters = frames.filter { $0.name == "CHAP" }.map { Chapter(data: $0.body, podcastDuration: 400) }.sorted()
+        #expect(chapters.map(\.title) == ["Intro", "Interview"])
+        #expect(chapters[0].url == "https://example.com/intro")
+        #expect(chapters[0].image != nil)
+        #expect(chapters[1].startTime == 200)
+    }
+
+    @Test func lameEncodeOmitsTagsWhenAsked() async throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-encode-notags-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let input = directory.appendingPathComponent("tone.wav")
+        try ProductionAudioFixtures.writeSineWAV(to: input, duration: 0.4)
+        let requested = directory.appendingPathComponent("episode.mp3")
+
+        let podcast = Podcast()
+        podcast.title = "Should Not Appear"
+        podcast.chapters = [Chapter(title: "Intro", startTime: 0, endTime: 400, podcastDuration: 400)]
+
+        let written = try await PodcastEncoder.encode(
+            from: input,
+            to: requested,
+            tagging: podcast,
+            includeTags: false
+        )
+        let data = try Data(contentsOf: written)
+        #expect(data.count > 128)
+        #expect(!data.starts(with: Data("ID3".utf8)))
+    }
 }
 
 struct AircheckExporterTests {
@@ -196,6 +268,15 @@ struct AircheckExporterTests {
         let seconds = Double(exported.length) / exported.processingFormat.sampleRate
         #expect(abs(seconds - 1.0) < 0.15)
     }
+}
+
+private func encodeTestImage(_ color: NSColor) -> NSImage {
+    let image = NSImage(size: NSSize(width: 2, height: 2))
+    image.lockFocus()
+    color.setFill()
+    NSBezierPath(rect: NSRect(x: 0, y: 0, width: 2, height: 2)).fill()
+    image.unlockFocus()
+    return image
 }
 
 enum ProductionAudioFixtures {
