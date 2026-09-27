@@ -93,12 +93,17 @@ class AudioFile: Identifiable {
     }
 
     func silenceRanges(
-        thresholdDb: Double = SilenceDetector.defaultThresholdDb,
-        durationSeconds: TimeInterval = SilenceDetector.defaultDurationSeconds
+        thresholdDb: Double? = nil,
+        durationSeconds: TimeInterval? = nil,
+        settings: SilenceSettingsStore = .shared
     ) -> [SilenceDetector.Range] {
         guard let file = podcast.file else { return [] }
         do {
-            return try SilenceDetector.detect(in: file, thresholdDb: thresholdDb, durationSeconds: durationSeconds)
+            return try SilenceDetector.detect(
+                in: file,
+                thresholdDb: thresholdDb ?? settings.thresholdDb,
+                durationSeconds: durationSeconds ?? settings.durationSeconds
+            )
         } catch {
             logger.error("Silence detection failed: \(error.localizedDescription)")
             return []
