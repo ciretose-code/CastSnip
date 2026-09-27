@@ -26,6 +26,16 @@ struct ChapterTableView: View {
                         showHours: showHours(podcastAudioFile.podcast.durationInSeconds ?? 0)
                     )
                 }
+                .overlay {
+                    if podcastAudioFile.podcast.chapters.isEmpty {
+                        Text(EmptyEditorCopy.chapters)
+                            .font(.callout)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(24)
+                            .accessibilityLabel(EmptyEditorCopy.chapters)
+                    }
+                }
                 .onChange(of: podcastAudioFile.selectedChapter) {
                     if let selected = podcastAudioFile.selectedChapter {
                         onSelect?(selected)
