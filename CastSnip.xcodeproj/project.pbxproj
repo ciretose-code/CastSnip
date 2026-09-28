@@ -41,6 +41,7 @@
 		A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001D /* PodcastEncoder.swift */; };
 		A11D3E010001000100000020 /* AircheckExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001F /* AircheckExporter.swift */; };
 		A11D3E010001000100000022 /* LameEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000021 /* LameEncoder.swift */; };
+		B0A1A0010001000100000006 /* WaveformPeakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000005 /* WaveformPeakStore.swift */; };
 		A11D3E010001000100000024 /* WaveformSampling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000023 /* WaveformSampling.swift */; };
 		A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000025 /* ID3TaggingStore.swift */; };
 		A11340010001000100000002 /* EditorSplitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11340010001000100000001 /* EditorSplitStore.swift */; };
@@ -107,6 +108,7 @@
 		A11D3E01000100010000001D /* PodcastEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastEncoder.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001F /* AircheckExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircheckExporter.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000021 /* LameEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LameEncoder.swift; sourceTree = "<group>"; };
+		B0A1A0010001000100000005 /* WaveformPeakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformPeakStore.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000023 /* WaveformSampling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformSampling.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000025 /* ID3TaggingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3TaggingStore.swift; sourceTree = "<group>"; };
 		A11340010001000100000001 /* EditorSplitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSplitStore.swift; sourceTree = "<group>"; };
@@ -186,6 +188,7 @@
 				A11D3E010001000100000015 /* EmptyPodcastView.swift */,
 				7B16BD222F2E853900DFD7E8 /* PlatformImage.swift */,
 				7B16BD232F2E853900DFD7E8 /* WaveformView.swift */,
+				B0A1A0010001000100000005 /* WaveformPeakStore.swift */,
 				A11D3E010001000100000023 /* WaveformSampling.swift */,
 				7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */,
 				7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */,
@@ -429,6 +432,7 @@
 				A11D3E010001000100000022 /* LameEncoder.swift in Sources */,
 				A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */,
 				A11D3E010001000100000020 /* AircheckExporter.swift in Sources */,
+				B0A1A0010001000100000006 /* WaveformPeakStore.swift in Sources */,
 				A11D3E010001000100000024 /* WaveformSampling.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

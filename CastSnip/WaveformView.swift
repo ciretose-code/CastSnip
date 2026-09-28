@@ -13,7 +13,7 @@ import AppKit
 struct WaveformView: View {
     let audioFile: AVAudioFile?
 
-    /// Deprecated: retained for API compatibility; actual resolution is controlled by `bucketDuration`.
+    /// Number of overview buckets for the whole file. Zoomed-in windows load finer detail on demand.
     let sampleCount: Int
 
     /// Viewport start time (seconds from start of audio).
@@ -46,21 +46,13 @@ struct WaveformView: View {
     /// Called on a pinch: true to zoom in, false to zoom out.
     var onZoom: (Bool) -> Void = { _ in }
 
-    /// Each bar represents this many seconds of audio.
-    private let bucketDuration: TimeInterval = 0.1
-
-    /// Safety cap to avoid huge allocations for multi-hour files.
-    private let maxBucketCount: Int = 200_000 // 0.1s * 200k = ~5.5 hours
-
     /// How close (in points) the pointer must be to a boundary to grab it.
     private let markerGrabDistance: CGFloat = 6
 
     private let overviewHeight: CGFloat = 32
     private let rulerHeight: CGFloat = 20
 
-    @State private var samples: [Float] = []
-    @State private var isLoading = true
-    @State private var audioDuration: TimeInterval = 0
+    @State private var peaks = WaveformPeakStore()
     @State private var canvasWidth: CGFloat = 0
     @State private var draggingMarkerID: UUID?
     @State private var dragModeDecided = false
@@ -151,12 +143,38 @@ struct WaveformView: View {
         self.onViewportPan = onViewportPan
     }
 
+    private var audioDuration: TimeInterval { peaks.duration }
+
+    /// The detail tiles to load for the current viewport, or nil when it draws from the overview.
+    private var detailRequest: DetailRequest? {
+        guard let window = viewportWindow(), window.duration <= WaveformPeakStore.maxDetailWindow else { return nil }
+        let tiles = WaveformSampling.tiles(
+            covering: window.start,
+            to: window.end,
+            tileDuration: WaveformPeakStore.tileDuration,
+            audioDuration: audioDuration
+        )
+        return DetailRequest(url: peaks.url, tiles: tiles, start: window.start, end: window.end)
+    }
+
+    private struct DetailRequest: Equatable {
+        let url: URL?
+        let tiles: ClosedRange<Int>
+        let start: TimeInterval
+        let end: TimeInterval
+
+        // Restart loading only when the set of tiles changes, not on every scroll step.
+        static func == (lhs: Self, rhs: Self) -> Bool {
+            lhs.url == rhs.url && lhs.tiles == rhs.tiles
+        }
+    }
+
     var body: some View {
         ZStack {
-            if isLoading {
+            if peaks.isLoading || peaks.url != audioFile?.url {
                 ProgressView("Building Audio Waveform...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if samples.isEmpty {
+            } else if peaks.overview.isEmpty {
                 Text("No audio data")
                     .foregroundColor(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -173,10 +191,11 @@ struct WaveformView: View {
             }
         }
         .task(id: audioFile?.url) {
-            isLoading = true
-            samples = []
-            audioDuration = 0
-            await loadSamples()
+            await peaks.loadOverview(url: audioFile?.url, bucketCount: sampleCount)
+        }
+        .task(id: detailRequest) {
+            guard let request = detailRequest else { return }
+            await peaks.loadDetail(start: request.start, end: request.end)
         }
     }
 
@@ -212,7 +231,7 @@ struct WaveformView: View {
             context.fill(Path(rect), with: .color(marker.color.opacity(marker.isSelected ? 0.35 : 0.18)))
         }
 
-        let bars = WaveformSampling.downsample(buckets: samples, maxBars: max(1, Int(width / 2)))
+        let bars = WaveformSampling.downsample(buckets: peaks.overview, maxBars: max(1, Int(width / 2)))
         let barWidth = width / CGFloat(max(bars.count, 1))
         for (index, sample) in bars.enumerated() {
             let barHeight = max(CGFloat(sample) * height * 0.8, 1)
@@ -391,13 +410,28 @@ struct WaveformView: View {
         let height = size.height
         let midHeight = height / 2
 
-        let visibleBuckets = WaveformSampling.samplesForViewport(
-            samples: samples,
-            audioDuration: audioDuration,
-            viewportStart: viewportStart,
-            viewportDuration: viewportDuration,
-            bucketDuration: bucketDuration
-        )
+        guard let window = viewportWindow() else { return }
+        let visibleBuckets: [Float]
+        if window.duration <= WaveformPeakStore.maxDetailWindow {
+            // Exact peaks where tiles have loaded, the overview elsewhere until they do.
+            visibleBuckets = WaveformSampling.viewportPeaks(
+                overview: peaks.overview,
+                overviewBucketDuration: peaks.overviewBucketDuration,
+                tiles: peaks.tiles,
+                tileDuration: WaveformPeakStore.tileDuration,
+                detailBucketDuration: WaveformPeakStore.detailBucketDuration,
+                start: window.start,
+                end: window.end
+            )
+        } else {
+            visibleBuckets = WaveformSampling.samplesForViewport(
+                samples: peaks.overview,
+                audioDuration: audioDuration,
+                viewportStart: window.start,
+                viewportDuration: window.duration,
+                bucketDuration: peaks.overviewBucketDuration
+            )
+        }
         guard !visibleBuckets.isEmpty else { return }
 
         // For a fixed ~20s viewport and 0.1s buckets, visibleBuckets is ~200.
@@ -561,32 +595,6 @@ struct WaveformView: View {
                 grip.addLine(to: CGPoint(x: x + offset, y: handle.maxY - 4))
                 context.stroke(grip, with: .color(.white.opacity(0.8)), lineWidth: 0.75)
             }
-        }
-    }
-
-    private func loadSamples() async {
-        guard let audioFile = audioFile else {
-            samples = []
-            isLoading = false
-            return
-        }
-
-        let duration = Double(audioFile.length) / audioFile.processingFormat.sampleRate
-
-        // Target count based on fixed 0.1s buckets.
-        let targetBucketCount: Int = min(maxBucketCount, max(1, Int(ceil(duration / bucketDuration))))
-
-        // Perform heavy computation off main thread.
-        // Capture the file in the closure to avoid any accidental actor-isolated access.
-        let file = audioFile
-        let extractedSamples = await Task.detached(priority: .userInitiated) {
-            WaveformSampling.extractSamples(from: file, targetSampleCount: targetBucketCount)
-        }.value
-
-        await MainActor.run {
-            self.samples = extractedSamples
-            self.audioDuration = duration
-            self.isLoading = false
         }
     }
 }
