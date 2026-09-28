@@ -70,8 +70,8 @@ struct WaveformView: View {
     let markers: [Marker]
 
     /// Tints used for chapter regions, shared with the chapter list so rows match the waveform.
-    /// Mostly Security amber — played waveform, not system accent (which can stay blue).
-    static let playedWaveform = Color(red: 251 / 255, green: 156 / 255, blue: 4 / 255)
+    /// Played waveform — CastSnip blue (P3 0.40, 0.60, 1.00), not the amber accent.
+    static let playedWaveform = Color(red: 102 / 255, green: 153 / 255, blue: 1)
 
     /// Mostly Security lockup: purple, green, amber, then supporting site tones.
     static let chapterPalette: [Color] = [
