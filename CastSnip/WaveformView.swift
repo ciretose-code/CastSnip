@@ -70,7 +70,20 @@ struct WaveformView: View {
     let markers: [Marker]
 
     /// Tints used for chapter regions, shared with the chapter list so rows match the waveform.
-    static let chapterPalette: [Color] = [.blue, .purple, .pink, .orange, .teal, .green, .indigo, .mint]
+    /// Mostly Security amber — played waveform, not system accent (which can stay blue).
+    static let playedWaveform = Color(red: 251 / 255, green: 156 / 255, blue: 4 / 255)
+
+    /// Mostly Security lockup: purple, green, amber, then supporting site tones.
+    static let chapterPalette: [Color] = [
+        Color(red: 100 / 255, green: 52 / 255, blue: 155 / 255),   // #64349B
+        Color(red: 52 / 255, green: 155 / 255, blue: 99 / 255),    // #349B63
+        Color(red: 251 / 255, green: 156 / 255, blue: 4 / 255),    // #FB9C04
+        Color(red: 201 / 255, green: 65 / 255, blue: 43 / 255),    // #C9412B
+        Color(red: 86 / 255, green: 79 / 255, blue: 118 / 255),    // #564F76
+        Color(red: 75 / 255, green: 94 / 255, blue: 112 / 255),    // #4B5E70
+        Color(red: 228 / 255, green: 106 / 255, blue: 26 / 255),   // #E46A1A
+        Color(red: 163 / 255, green: 163 / 255, blue: 163 / 255)   // #A3A3A3
+    ]
 
     static func chapterColor(at index: Int) -> Color {
         chapterPalette[index % chapterPalette.count]
@@ -225,8 +238,8 @@ struct WaveformView: View {
             let x1 = CGFloat(window.end / audioDuration) * width
             let rect = CGRect(x: x0, y: 1, width: max(x1 - x0, 3), height: height - 2)
             let path = Path(roundedRect: rect, cornerRadius: 3)
-            context.fill(path, with: .color(.accentColor.opacity(0.15)))
-            context.stroke(path, with: .color(.accentColor), lineWidth: 1.5)
+            context.fill(path, with: .color(Self.playedWaveform.opacity(0.15)))
+            context.stroke(path, with: .color(Self.playedWaveform), lineWidth: 1.5)
         }
 
         let playheadX = CGFloat(currentTime / audioDuration) * width
@@ -424,8 +437,7 @@ struct WaveformView: View {
             // Make bars rounded at top + bottom (capsule-like).
             let radius = min(rect.width, rect.height) / 2
 
-            // Audio already played is drawn in the accent color.
-            let color: Color = x < playheadX ? .accentColor : .primary.opacity(0.55)
+            let color: Color = x < playheadX ? Self.playedWaveform : .primary.opacity(0.55)
             context.fill(
                 Path(roundedRect: rect, cornerRadius: radius),
                 with: .color(color)
