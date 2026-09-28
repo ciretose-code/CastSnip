@@ -14,6 +14,7 @@
           "name" : "Playhead"
         }
       ],
+      "name" : "Playhead",
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.35
@@ -29,25 +30,14 @@
           "glass" : false,
           "image-name" : "WaveformBlue.svg",
           "name" : "Waveform Blue"
-        }
-      ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.4
-      },
-      "translucency" : {
-        "enabled" : false,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
+        },
         {
           "glass" : false,
           "image-name" : "WaveformWhite.svg",
           "name" : "Waveform White"
         }
       ],
+      "name" : "Waveform",
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.4
@@ -63,47 +53,19 @@
           "glass" : false,
           "image-name" : "ChapterAmber.svg",
           "name" : "Chapter Amber"
-        }
-      ],
-      "name" : "Chapter Amber",
-      "opacity" : 1,
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.2
-      },
-      "translucency" : {
-        "enabled" : false,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
+        },
         {
           "glass" : false,
           "image-name" : "ChapterGreen.svg",
           "name" : "Chapter Green"
-        }
-      ],
-      "name" : "Chapter Green",
-      "opacity" : 1,
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.2
-      },
-      "translucency" : {
-        "enabled" : false,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
+        },
         {
           "glass" : false,
           "image-name" : "ChapterPurple.svg",
           "name" : "Chapter Purple"
         }
       ],
-      "name" : "Chapter Purple",
+      "name" : "Chapters",
       "opacity" : 1,
       "shadow" : {
         "kind" : "neutral",

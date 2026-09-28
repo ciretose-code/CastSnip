@@ -35,9 +35,14 @@ struct ChapterListView: View {
                             .font(.caption2)
                             .foregroundStyle(Color.accentColor)
                             .opacity(chapter.id == playingID ? 1 : 0)
-                            .accessibilityHidden(chapter.id != playingID)
-                            .accessibilityLabel("Playing")
                     }
+                    // VoiceOver reads this cell as a summary of the row.
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(EditorAccessibility.chapterRow(
+                        title: chapter.title,
+                        start: ID3Parser.toTrackTime(millis: chapter.startTime, showHours: showHours),
+                        end: ID3Parser.toTrackTime(millis: chapter.startTime + length(of: chapter, in: chapters), showHours: showHours)
+                    ) + (chapter.id == playingID ? ", playing" : ""))
                 }
                 .width(30)
 
