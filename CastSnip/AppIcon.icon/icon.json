@@ -1,6 +1,6 @@
 {
   "fill" : {
-    "automatic-gradient" : "extended-gray:1.00000,1.00000"
+    "automatic-gradient" : "srgb:1.00000,0.60000,0.00000,1.00000"
   },
   "groups" : [
     {
@@ -9,9 +9,7 @@
           "blend-mode" : "normal",
           "fill-specializations" : [
             {
-              "value" : {
-                "solid" : "extended-gray:0.25000,1.00000"
-              }
+              "value" : "automatic"
             },
             {
               "appearance" : "dark",
@@ -45,7 +43,7 @@
           "glass" : false,
           "image-name" : "WaveformBlue.svg",
           "name" : "Waveform Blue",
-          "opacity" : 0.9,
+          "opacity" : 0.95,
           "position" : {
             "scale" : 1,
             "translation-in-points" : [
@@ -55,6 +53,14 @@
           }
         },
         {
+          "fill-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : {
+                "solid" : "extended-gray:0.75000,1.00000"
+              }
+            }
+          ],
           "glass" : false,
           "image-name" : "WaveformWhite.svg",
           "name" : "Waveform White",
@@ -107,6 +113,9 @@
           }
         },
         {
+          "fill" : {
+            "solid" : "srgb:0.80000,0.20000,0.20000,1.00000"
+          },
           "glass" : false,
           "image-name" : "ChapterAmber.svg",
           "name" : "Chapter Amber",
