@@ -666,7 +666,7 @@ private final class ScrollCaptureView: NSView {
 }
 
 extension Color {
-    /// CastSnip blue (sRGB 0.40, 0.60, 1.00), also the app's AccentColor. Used directly where the
-    /// blue must hold even when the system accent overrides the app's, such as the played waveform.
-    static let castSnipBlue = Color(red: 102 / 255, green: 153 / 255, blue: 1)
+    /// CastSnip blue (Display P3 0.40, 0.60, 1.00), also the app's AccentColor. Used directly where
+    /// the blue must hold even when the system accent overrides the app's, such as the played waveform.
+    static let castSnipBlue = Color(.displayP3, red: 0.4, green: 0.6, blue: 1)
 }
