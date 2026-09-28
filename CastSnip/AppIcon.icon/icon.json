@@ -1,22 +1,22 @@
 {
   "fill" : {
-    "automatic-gradient" : "display-p3:0.39608,0.60000,1.00000,1.00000"
+    "automatic-gradient" : "display-p3:0.14118,0.13725,0.14118,1.00000"
   },
   "groups" : [
     {
       "layers" : [
         {
-          "glass" : false,
-          "image-name" : "CastSnipLogo-Mic.png",
-          "name" : "CastSnipLogo-Mic"
+          "glass" : true,
+          "image-name" : "Playhead.svg",
+          "name" : "Playhead"
         }
       ],
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.5
+        "opacity" : 0.35
       },
       "translucency" : {
-        "enabled" : true,
+        "enabled" : false,
         "value" : 0.5
       }
     },
@@ -24,55 +24,36 @@
       "layers" : [
         {
           "glass" : false,
-          "image-name" : "CastSnipLogo-RightCloud.png",
-          "name" : "CastSnipLogo-RightCloud"
+          "image-name" : "Waveform.svg",
+          "name" : "Waveform"
         }
       ],
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.5
+        "opacity" : 0.4
       },
       "translucency" : {
         "enabled" : true,
-        "value" : 0.5
+        "value" : 0.35
       }
     },
     {
-      "blur-material" : null,
       "layers" : [
         {
           "glass" : false,
-          "image-name" : "CastSnipLogo-Mountains 2.png",
-          "name" : "CastSnipLogo-Mountains 2"
+          "image-name" : "ChapterBands.svg",
+          "name" : "Chapters"
         }
       ],
-      "name" : "Mountains",
+      "name" : "Chapters",
       "opacity" : 1,
       "shadow" : {
         "kind" : "neutral",
-        "opacity" : 0.5
+        "opacity" : 0.2
       },
       "translucency" : {
         "enabled" : true,
-        "value" : 0.5
-      }
-    },
-    {
-      "layers" : [
-        {
-          "glass" : false,
-          "image-name" : "CastSnipLogo-LeftCloud.png",
-          "name" : "CastSnipLogo-LeftCloud"
-        }
-      ],
-      "name" : "Clouds",
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 0.5
-      },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.5
+        "value" : 0.45
       }
     }
   ],
