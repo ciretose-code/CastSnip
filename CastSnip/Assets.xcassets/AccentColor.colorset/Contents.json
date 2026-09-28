@@ -2,64 +2,15 @@
   "colors" : [
     {
       "color" : {
-        "color-space" : "srgb",
+        "color-space" : "display-p3",
         "components" : {
           "alpha" : "1.000",
-          "blue" : "1.000",
-          "green" : "0.600",
-          "red" : "0.400"
+          "blue" : "0xFF",
+          "green" : "0x99",
+          "red" : "0x66"
         }
       },
       "idiom" : "universal"
-    },
-    {
-      "color" : {
-        "color-space" : "srgb",
-        "components" : {
-          "alpha" : "1.000",
-          "blue" : "1.000",
-          "green" : "0.600",
-          "red" : "0.400"
-        }
-      },
-      "idiom" : "iphone"
-    },
-    {
-      "color" : {
-        "color-space" : "srgb",
-        "components" : {
-          "alpha" : "1.000",
-          "blue" : "1.000",
-          "green" : "0.600",
-          "red" : "0.400"
-        }
-      },
-      "idiom" : "ipad"
-    },
-    {
-      "color" : {
-        "color-space" : "srgb",
-        "components" : {
-          "alpha" : "1.000",
-          "blue" : "1.000",
-          "green" : "0.600",
-          "red" : "0.400"
-        }
-      },
-      "idiom" : "ipad",
-      "subtype" : "mac-catalyst"
-    },
-    {
-      "color" : {
-        "color-space" : "srgb",
-        "components" : {
-          "alpha" : "1.000",
-          "blue" : "1.000",
-          "green" : "0.600",
-          "red" : "0.400"
-        }
-      },
-      "idiom" : "mac"
     }
   ],
   "info" : {
