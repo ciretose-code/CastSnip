@@ -1,11 +1,14 @@
 {
   "fill" : {
-    "automatic-gradient" : "display-p3:0.14118,0.13725,0.14118,1.00000"
+    "automatic-gradient" : "extended-gray:1.00000,1.00000"
   },
   "groups" : [
     {
       "layers" : [
         {
+          "fill" : {
+            "automatic-gradient" : "extended-gray:0.00000,1.00000"
+          },
           "glass" : true,
           "image-name" : "Playhead.svg",
           "name" : "Playhead"
@@ -24,8 +27,8 @@
       "layers" : [
         {
           "glass" : false,
-          "image-name" : "Waveform.svg",
-          "name" : "Waveform"
+          "image-name" : "WaveformBlue.svg",
+          "name" : "Waveform Blue"
         }
       ],
       "shadow" : {
@@ -33,27 +36,82 @@
         "opacity" : 0.4
       },
       "translucency" : {
-        "enabled" : true,
-        "value" : 0.35
+        "enabled" : false,
+        "value" : 0.5
       }
     },
     {
       "layers" : [
         {
           "glass" : false,
-          "image-name" : "ChapterBands.svg",
-          "name" : "Chapters"
+          "image-name" : "WaveformWhite.svg",
+          "name" : "Waveform White"
         }
       ],
-      "name" : "Chapters",
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.4
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "ChapterAmber.svg",
+          "name" : "Chapter Amber"
+        }
+      ],
+      "name" : "Chapter Amber",
       "opacity" : 1,
       "shadow" : {
         "kind" : "neutral",
         "opacity" : 0.2
       },
       "translucency" : {
-        "enabled" : true,
-        "value" : 0.45
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "ChapterGreen.svg",
+          "name" : "Chapter Green"
+        }
+      ],
+      "name" : "Chapter Green",
+      "opacity" : 1,
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.2
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
+        {
+          "glass" : false,
+          "image-name" : "ChapterPurple.svg",
+          "name" : "Chapter Purple"
+        }
+      ],
+      "name" : "Chapter Purple",
+      "opacity" : 1,
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.2
+      },
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
       }
     }
   ],
