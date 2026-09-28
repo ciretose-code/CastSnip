@@ -14,21 +14,13 @@
 		7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20B82BD36A83006D1AA4 /* ContentView.swift */; };
 		7B1D20BB2BD36A85006D1AA4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */; };
 		7B1D20BF2BD36A85006D1AA4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B1D20BE2BD36A85006D1AA4 /* Preview Assets.xcassets */; };
-		7B1D20CD2BD3709A006D1AA4 /* ChapterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */; };
 		B0A1A0010001000100000002 /* ChapterListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000001 /* ChapterListView.swift */; };
 		B0A1A0010001000100000004 /* EditorInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000003 /* EditorInspector.swift */; };
-		7B1D20D12BD37282006D1AA4 /* ChapterTableView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20D02BD37282006D1AA4 /* ChapterTableView.swift */; };
-		7B1F1CC62BE4AA4500B0A29B /* TimeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1F1CC52BE4AA4500B0A29B /* TimeView.swift */; };
-		7B1F1CC82BEAFC0D00B0A29B /* EditableTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1F1CC72BEAFC0D00B0A29B /* EditableTextField.swift */; };
 		7B390A312BD5C0F5009CEDEE /* AudioFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B390A302BD5C0F5009CEDEE /* AudioFile.swift */; };
 		7B4015432BD443530060A2BF /* intro.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015422BD443530060A2BF /* intro.mp3 */; };
-		7B4015452BD44F5A0060A2BF /* AudioView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B4015442BD44F5A0060A2BF /* AudioView.swift */; };
 		7B4015482BD452B20060A2BF /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015472BD452B20060A2BF /* README.md */; };
 		7B5427C02BEC519000314CDB /* Chapter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5427BF2BEC519000314CDB /* Chapter.swift */; };
 		7B5427C22BEC51ED00314CDB /* Podcast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B5427C12BEC51ED00314CDB /* Podcast.swift */; };
-		7B650FDB2BE33CC200901E28 /* TitleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B650FDA2BE33CC200901E28 /* TitleView.swift */; };
-		7B650FDD2BE33E5400901E28 /* EpisodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B650FDC2BE33E5400901E28 /* EpisodeView.swift */; };
-		7B650FDF2BE3437400901E28 /* SummaryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B650FDE2BE3437400901E28 /* SummaryView.swift */; };
 		7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7404522BDEBB5D001811B2 /* ID3Parser.swift */; };
 		7BD56E9D2F2FD49F000F7D25 /* AudioPlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */; };
 		7BD56EA12F2FD582000F7D25 /* ViewportMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */; };
@@ -37,7 +29,6 @@
 		A11D3E010001000100000006 /* SecurityScopedBookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */; };
 		A11D3E010001000100000008 /* ChapterTimeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000007 /* ChapterTimeline.swift */; };
 		A11D3E01000100010000000A /* ChapterVisibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000009 /* ChapterVisibility.swift */; };
-		A11D3E01000100010000000C /* CopyableInfoBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000000B /* CopyableInfoBadge.swift */; };
 		A11D3E01000100010000000E /* OpenPodcastEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */; };
 		A11D3E010001000100000010 /* RecentFilesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000000F /* RecentFilesStore.swift */; };
 		A11D3E010001000100000012 /* KeyboardShortcutsHelp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */; };
@@ -86,23 +77,15 @@
 		7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7B1D20BC2BD36A85006D1AA4 /* CastSnip.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CastSnip.entitlements; sourceTree = "<group>"; };
 		7B1D20BE2BD36A85006D1AA4 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterView.swift; sourceTree = "<group>"; };
 		B0A1A0010001000100000001 /* ChapterListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterListView.swift; sourceTree = "<group>"; };
 		B0A1A0010001000100000003 /* EditorInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorInspector.swift; sourceTree = "<group>"; };
-		7B1D20D02BD37282006D1AA4 /* ChapterTableView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterTableView.swift; sourceTree = "<group>"; };
-		7B1F1CC52BE4AA4500B0A29B /* TimeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeView.swift; sourceTree = "<group>"; };
-		7B1F1CC72BEAFC0D00B0A29B /* EditableTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditableTextField.swift; sourceTree = "<group>"; };
 		7B2A958E2F2C74E600C924FB /* CastSnipTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CastSnipTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A11380010001000100000001 /* CastSnipUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CastSnipUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B390A302BD5C0F5009CEDEE /* AudioFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFile.swift; sourceTree = "<group>"; };
 		7B4015422BD443530060A2BF /* intro.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = intro.mp3; sourceTree = "<group>"; };
-		7B4015442BD44F5A0060A2BF /* AudioView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioView.swift; sourceTree = "<group>"; };
 		7B4015472BD452B20060A2BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
 		7B5427BF2BEC519000314CDB /* Chapter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chapter.swift; sourceTree = "<group>"; };
 		7B5427C12BEC51ED00314CDB /* Podcast.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Podcast.swift; sourceTree = "<group>"; };
-		7B650FDA2BE33CC200901E28 /* TitleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TitleView.swift; sourceTree = "<group>"; };
-		7B650FDC2BE33E5400901E28 /* EpisodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EpisodeView.swift; sourceTree = "<group>"; };
-		7B650FDE2BE3437400901E28 /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		7B7404522BDEBB5D001811B2 /* ID3Parser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3Parser.swift; sourceTree = "<group>"; };
 		7BD163DF2F2D2B230007DD6E /* CastSnip.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = CastSnip.xctestplan; sourceTree = "<group>"; };
 		7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerManager.swift; sourceTree = "<group>"; };
@@ -112,7 +95,6 @@
 		A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityScopedBookmarkStore.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000007 /* ChapterTimeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterTimeline.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000009 /* ChapterVisibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterVisibility.swift; sourceTree = "<group>"; };
-		A11D3E01000100010000000B /* CopyableInfoBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyableInfoBadge.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenPodcastEnvironment.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000000F /* RecentFilesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentFilesStore.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardShortcutsHelp.swift; sourceTree = "<group>"; };
@@ -194,7 +176,6 @@
 				7B4015412BD4423A0060A2BF /* Samples */,
 				7B1D20B62BD36A83006D1AA4 /* CastSnipApp.swift */,
 				7B1D20B82BD36A83006D1AA4 /* ContentView.swift */,
-				A11D3E01000100010000000B /* CopyableInfoBadge.swift */,
 				A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */,
 				A11D3E01000100010000000F /* RecentFilesStore.swift */,
 				A11340010001000100000001 /* EditorSplitStore.swift */,
@@ -215,16 +196,8 @@
 				A11290010001000100000003 /* SilenceSettingsView.swift */,
 				A11D3E010001000100000003 /* ID3MetadataMapping.swift */,
 				A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */,
-				7B1D20CC2BD3709A006D1AA4 /* ChapterView.swift */,
-				7B1F1CC72BEAFC0D00B0A29B /* EditableTextField.swift */,
-				7B1F1CC52BE4AA4500B0A29B /* TimeView.swift */,
-				7B650FDA2BE33CC200901E28 /* TitleView.swift */,
-				7B650FDE2BE3437400901E28 /* SummaryView.swift */,
-				7B650FDC2BE33E5400901E28 /* EpisodeView.swift */,
 				B0A1A0010001000100000001 /* ChapterListView.swift */,
 				B0A1A0010001000100000003 /* EditorInspector.swift */,
-				7B1D20D02BD37282006D1AA4 /* ChapterTableView.swift */,
-				7B4015442BD44F5A0060A2BF /* AudioView.swift */,
 				7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */,
 				7B1D20BC2BD36A85006D1AA4 /* CastSnip.entitlements */,
 				7B1D20BD2BD36A85006D1AA4 /* Preview Content */,
@@ -424,12 +397,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				7B390A312BD5C0F5009CEDEE /* AudioFile.swift in Sources */,
-				7B4015452BD44F5A0060A2BF /* AudioView.swift in Sources */,
 				7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */,
-				7B650FDD2BE33E5400901E28 /* EpisodeView.swift in Sources */,
-				7B1D20CD2BD3709A006D1AA4 /* ChapterView.swift in Sources */,
 				7BD56EA12F2FD582000F7D25 /* ViewportMath.swift in Sources */,
-				7B650FDB2BE33CC200901E28 /* TitleView.swift in Sources */,
 				7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */,
 				7B5427C02BEC519000314CDB /* Chapter.swift in Sources */,
 				7B5427C22BEC51ED00314CDB /* Podcast.swift in Sources */,
@@ -438,10 +407,6 @@
 				7B1D20B72BD36A83006D1AA4 /* CastSnipApp.swift in Sources */,
 				B0A1A0010001000100000002 /* ChapterListView.swift in Sources */,
 				B0A1A0010001000100000004 /* EditorInspector.swift in Sources */,
-				7B1D20D12BD37282006D1AA4 /* ChapterTableView.swift in Sources */,
-				7B650FDF2BE3437400901E28 /* SummaryView.swift in Sources */,
-				7B1F1CC62BE4AA4500B0A29B /* TimeView.swift in Sources */,
-				7B1F1CC82BEAFC0D00B0A29B /* EditableTextField.swift in Sources */,
 				7BD56E9D2F2FD49F000F7D25 /* AudioPlayerManager.swift in Sources */,
 				A11D3E010001000100000002 /* ID3Writer.swift in Sources */,
 				A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */,
@@ -451,7 +416,6 @@
 				A11D3E010001000100000006 /* SecurityScopedBookmarkStore.swift in Sources */,
 				A11D3E010001000100000008 /* ChapterTimeline.swift in Sources */,
 				A11D3E01000100010000000A /* ChapterVisibility.swift in Sources */,
-				A11D3E01000100010000000C /* CopyableInfoBadge.swift in Sources */,
 				A11D3E01000100010000000E /* OpenPodcastEnvironment.swift in Sources */,
 				A11D3E010001000100000010 /* RecentFilesStore.swift in Sources */,
 				A11340010001000100000002 /* EditorSplitStore.swift in Sources */,

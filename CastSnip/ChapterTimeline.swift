@@ -38,8 +38,13 @@ enum ChapterTimeline {
         return sorted.last(where: { $0.startTime <= millis }) ?? sorted.first
     }
 
+    /// The first chapter anchors the timeline, so its start can't be moved.
+    static func isStartLocked(_ chapter: Chapter, in chapters: [Chapter]) -> Bool {
+        chapters.sorted().first?.id == chapter.id
+    }
+
     /// Moves a chapter's start, keeping the timeline contiguous: the previous chapter ends where this one starts.
-    /// The new start is clamped so every chapter stays at least `minimumGap` long.
+    /// The new start is clamped so every chapter stays at least `minimumGap` long. The first chapter is locked.
     @discardableResult
     static func moveStart(
         of chapter: Chapter,
@@ -48,17 +53,17 @@ enum ChapterTimeline {
         durationMillis: UInt32
     ) -> UInt32 {
         let sorted = chapters.sorted()
-        guard let index = sorted.firstIndex(where: { $0.id == chapter.id }) else { return chapter.startTime }
-        let previous = index > 0 ? sorted[index - 1] : nil
+        guard let index = sorted.firstIndex(where: { $0.id == chapter.id }), index > 0 else { return chapter.startTime }
+        let previous = sorted[index - 1]
         let next = index + 1 < sorted.count ? sorted[index + 1] : nil
 
-        let lower = previous.map { $0.startTime + minimumGap } ?? 0
+        let lower = previous.startTime + minimumGap
         let upperBound = next?.startTime ?? durationMillis
         let upper = upperBound > minimumGap ? upperBound - minimumGap : 0
         let clamped = lower <= upper ? min(max(millis, lower), upper) : chapter.startTime
 
         chapter.startTime = clamped
-        previous?.endTime = clamped
+        previous.endTime = clamped
         return clamped
     }
 
