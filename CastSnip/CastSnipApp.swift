@@ -433,12 +433,13 @@ struct CastSnipApp: App {
                 from: source,
                 to: dest,
                 tagging: podcastAudioFile.podcast,
-                includeTags: tagging.includeTags
-            ) { value in
-                DispatchQueue.main.async {
-                    bar.doubleValue = value
+                includeTags: tagging.includeTags,
+                progress: { value in
+                    DispatchQueue.main.async {
+                        bar.doubleValue = value
+                    }
                 }
-            }
+            )
             if let window {
                 window.endSheet(alert.window)
             }
