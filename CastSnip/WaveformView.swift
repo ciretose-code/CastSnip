@@ -61,10 +61,10 @@ struct WaveformView: View {
     /// Times are seconds from start of audio.
     let markers: [Marker]
 
-    /// Tints used for chapter regions, shared with the chapter list so rows match the waveform.
-    /// Played waveform — CastSnip blue (P3 0.40, 0.60, 1.00), not the amber accent.
-    static let playedWaveform = Color(red: 102 / 255, green: 153 / 255, blue: 1)
+    /// Played waveform. Always CastSnip blue, even when the system accent overrides the app's.
+    static let playedWaveform = Color.castSnipBlue
 
+    /// Tints used for chapter regions, shared with the chapter list so rows match the waveform.
     /// Mostly Security lockup: purple, green, amber, then supporting site tones.
     static let chapterPalette: [Color] = [
         Color(red: 100 / 255, green: 52 / 255, blue: 155 / 255),   // #64349B
@@ -663,4 +663,10 @@ private final class ScrollCaptureView: NSView {
     override func scrollWheel(with event: NSEvent) {
         onScroll?(event.scrollingDeltaX, event.scrollingDeltaY)
     }
+}
+
+extension Color {
+    /// CastSnip blue (sRGB 0.40, 0.60, 1.00), also the app's AccentColor. Used directly where the
+    /// blue must hold even when the system accent overrides the app's, such as the played waveform.
+    static let castSnipBlue = Color(red: 102 / 255, green: 153 / 255, blue: 1)
 }
