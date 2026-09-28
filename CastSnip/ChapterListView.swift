@@ -33,7 +33,7 @@ struct ChapterListView: View {
                             .frame(width: 4, height: 18)
                         Image(systemName: "speaker.wave.2.fill")
                             .font(.caption2)
-                            .foregroundStyle(Color.accentColor)
+                            .foregroundStyle(Color.castSnipBlue)
                             .opacity(chapter.id == playingID ? 1 : 0)
                     }
                     // VoiceOver reads this cell as a summary of the row.
@@ -90,6 +90,7 @@ struct ChapterListView: View {
                     Toggle("Show in podcast players", isOn: audioFile.visibleBinding(for: chapter))
                         .toggleStyle(.checkbox)
                         .labelsHidden()
+                        .tint(.castSnipBlue)
                 }
                 .width(64)
             }
