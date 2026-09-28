@@ -86,6 +86,8 @@ struct WaveformView: View {
         var end: TimeInterval?
         var isSelected: Bool = false
         var isHidden: Bool = false
+        /// Locked boundaries (the first chapter's start) can't be dragged.
+        var isLocked: Bool = false
 
         init(
             id: UUID = UUID(),
@@ -95,7 +97,8 @@ struct WaveformView: View {
             label: String? = nil,
             end: TimeInterval? = nil,
             isSelected: Bool = false,
-            isHidden: Bool = false
+            isHidden: Bool = false,
+            isLocked: Bool = false
         ) {
             self.id = id
             self.time = time
@@ -105,6 +108,7 @@ struct WaveformView: View {
             self.end = end
             self.isSelected = isSelected
             self.isHidden = isHidden
+            self.isLocked = isLocked
         }
     }
 
@@ -121,7 +125,8 @@ struct WaveformView: View {
                 label: title.isEmpty ? "Chapter" : title,
                 end: nextStart > chapter.startTime ? TimeInterval(nextStart) / 1000.0 : nil,
                 isSelected: chapter.id == selectedID,
-                isHidden: chapter.isHidden
+                isHidden: chapter.isHidden,
+                isLocked: index == 0
             )
         }
     }
@@ -321,7 +326,7 @@ struct WaveformView: View {
     private func marker(nearX x: CGFloat) -> Marker? {
         guard let window = viewportWindow(), canvasWidth > 0 else { return nil }
         return markers
-            .filter { $0.time >= window.start && $0.time <= window.end }
+            .filter { !$0.isLocked && $0.time >= window.start && $0.time <= window.end }
             .map { ($0, abs(self.x(forTime: $0.time, in: window, width: canvasWidth) - x)) }
             .filter { $0.1 <= markerGrabDistance }
             .min(by: { $0.1 < $1.1 })?
@@ -547,6 +552,7 @@ struct WaveformView: View {
             context.stroke(path, with: .color(marker.color), lineWidth: lineWidth)
 
             // Grab handle at the bottom of the boundary, so it reads as draggable.
+            guard !marker.isLocked else { continue }
             let handle = CGRect(x: x - 4, y: height - 18, width: 8, height: 16)
             context.fill(Path(roundedRect: handle, cornerRadius: 3), with: .color(marker.color))
             for offset in [-1.5, 1.5] as [CGFloat] {

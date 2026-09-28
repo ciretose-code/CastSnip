@@ -40,3 +40,19 @@ extension EnvironmentValues {
         set { self[OpenPodcastPanelKey.self] = newValue }
     }
 }
+
+/// Editor actions for the menu bar. `ContentView` publishes them for the focused window; a nil
+/// action means it's unavailable right now and its menu item is disabled.
+struct EditorCommands {
+    var addChapter: () -> Void
+    var setStartToPlayhead: (() -> Void)?
+    var zoomIn: (() -> Void)?
+    var zoomOut: (() -> Void)?
+    var zoomToFit: (() -> Void)?
+    var isInspectorShown: Bool
+    var toggleInspector: () -> Void
+}
+
+extension FocusedValues {
+    @Entry var editorCommands: EditorCommands?
+}

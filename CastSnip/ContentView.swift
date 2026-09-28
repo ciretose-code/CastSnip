@@ -18,6 +18,9 @@ struct ContentView: View {
     @State private var isDraggingAudio = false
     @State private var showInspector = true
     @State private var inspectorPane: EditorInspector.Pane = .episode
+    /// Share of the editor height given to the chapter list; persisted by `EditorSplitStore`.
+    @State private var splitFraction = EditorSplitStore.load()
+    @State private var splitDragStartFraction: Double?
 
     @StateObject private var player = AudioPlayerManager()
     
@@ -62,15 +65,20 @@ struct ContentView: View {
     }
 
     private var editor: some View {
-        VSplitView {
-            timelinePane
-                .frame(minHeight: 200, idealHeight: 320)
-            ChapterListView(
-                playheadMillis: playheadMillis,
-                onAdd: { addChapter(atMillis: playheadMillis) },
-                onSeek: { chapter in seekToChapter(chapter) }
-            )
-            .frame(minHeight: 160)
+        GeometryReader { geometry in
+            let totalHeight = geometry.size.height
+            let listHeight = totalHeight * splitFraction
+            VStack(spacing: 0) {
+                timelinePane
+                    .frame(height: max(totalHeight - listHeight, 0))
+                splitDivider(totalHeight: totalHeight)
+                ChapterListView(
+                    playheadMillis: playheadMillis,
+                    onAdd: { addChapter(atMillis: playheadMillis) },
+                    onSeek: { chapter in seekToChapter(chapter) }
+                )
+                .frame(height: listHeight)
+            }
         }
         .inspector(isPresented: $showInspector) {
             EditorInspector(pane: $inspectorPane, playheadMillis: playheadMillis) { chapter, proposed in
@@ -81,20 +89,7 @@ struct ContentView: View {
             .inspectorColumnWidth(min: 280, ideal: 320, max: 460)
         }
         .toolbar { toolbarContent }
-        .background {
-            // Menu-less shortcuts for the editor.
-            Group {
-                Button("Add Chapter") { addChapter(atMillis: playheadMillis) }
-                    .keyboardShortcut("n", modifiers: .command)
-                Button("Zoom In") { zoom(in: true) }
-                    .keyboardShortcut("=", modifiers: .command)
-                Button("Zoom Out") { zoom(in: false) }
-                    .keyboardShortcut("-", modifiers: .command)
-                Button("Zoom to Fit") { selectedViewportIndex = max(viewportOptions.count - 1, 0) }
-                    .keyboardShortcut("0", modifiers: .command)
-            }
-            .hidden()
-        }
+        .focusedSceneValue(\.editorCommands, editorCommands)
         .onAppear {
             player.load(url: podcastAudioFile.podcast.url)
             viewportStart = 0
@@ -229,13 +224,47 @@ struct ContentView: View {
         }
     }
 
+    /// Draggable divider between the waveform and the chapter list. Double-click resets it.
+    private func splitDivider(totalHeight: Double) -> some View {
+        Divider()
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 3)
+            .contentShape(Rectangle())
+            .padding(.vertical, -3)
+            .zIndex(1)
+            .onHover { inside in
+                if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
+            }
+            .gesture(
+                DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                    .onChanged { value in
+                        let start = splitDragStartFraction ?? splitFraction
+                        splitDragStartFraction = start
+                        splitFraction = EditorSplitStore.fraction(
+                            chapterHeight: start * totalHeight - value.translation.height,
+                            totalHeight: totalHeight
+                        )
+                    }
+                    .onEnded { _ in
+                        splitDragStartFraction = nil
+                        EditorSplitStore.save(splitFraction)
+                    }
+            )
+            .onTapGesture(count: 2) {
+                splitFraction = EditorSplitStore.defaultFraction
+                EditorSplitStore.save(splitFraction)
+            }
+            .help("Drag to resize · double-click to reset")
+            .accessibilityHidden(true)
+    }
+
     private var zoomControls: some View {
         HStack(spacing: 4) {
             Button { zoom(in: false) } label: {
                 Image(systemName: "minus.magnifyingglass")
             }
             .disabled(selectedViewportIndex >= viewportOptions.count - 1)
-            .help("Zoom out (⌘−)")
+            .help("Zoom out (⌘-)")
             .accessibilityLabel("Zoom out")
 
             Text(viewportOptions[safe: selectedViewportIndex].map(viewportLabel) ?? "Full")
@@ -302,6 +331,7 @@ struct ContentView: View {
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .fixedSize()
+                    .padding(.trailing, 6)
             }
             .labelStyle(.iconOnly)
         }
@@ -311,6 +341,7 @@ struct ContentView: View {
                 Label("Add Chapter", systemImage: "plus")
             }
             .help("Add a chapter at the playhead (⌘N)")
+            .accessibilityIdentifier(EditorAccessibility.addChapter)
 
             Menu {
                 Button("Encode to MP3…", action: documentActions.encode)
@@ -323,11 +354,32 @@ struct ContentView: View {
             Button { showInspector.toggle() } label: {
                 Label("Inspector", systemImage: "sidebar.trailing")
             }
-            .help(showInspector ? "Hide inspector" : "Show inspector")
+            .help(showInspector ? "Hide inspector (⌥⌘I)" : "Show inspector (⌥⌘I)")
         }
     }
 
     // MARK: - Actions
+
+    private var editorCommands: EditorCommands {
+        let chapters = podcastAudioFile.podcast.chapters
+        var setStart: (() -> Void)?
+        if let selected = podcastAudioFile.selectedChapter, !ChapterTimeline.isStartLocked(selected, in: chapters) {
+            setStart = {
+                ChapterTimeline.moveStart(of: selected, to: playheadMillis, in: chapters, durationMillis: durationMillis)
+                podcastAudioFile.markAsModified()
+            }
+        }
+        let lastIndex = viewportOptions.count - 1
+        return EditorCommands(
+            addChapter: { addChapter(atMillis: playheadMillis) },
+            setStartToPlayhead: setStart,
+            zoomIn: selectedViewportIndex > 0 ? { zoom(in: true) } : nil,
+            zoomOut: selectedViewportIndex < lastIndex ? { zoom(in: false) } : nil,
+            zoomToFit: selectedViewportIndex < lastIndex ? { selectedViewportIndex = lastIndex } : nil,
+            isInspectorShown: showInspector,
+            toggleInspector: { showInspector.toggle() }
+        )
+    }
 
     private func addChapter(atMillis millis: UInt32) {
         let added = ChapterTimeline.insertChapter(

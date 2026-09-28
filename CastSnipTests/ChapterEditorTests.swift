@@ -129,6 +129,16 @@ struct ChapterBoundaryTests {
         #expect(chapters[0].endTime == 1_000)
     }
 
+    @Test func firstChapterStartIsLocked() {
+        let chapters = threeChapters()
+        let moved = ChapterTimeline.moveStart(of: chapters[0], to: 2_000, in: chapters, durationMillis: 12_000)
+
+        #expect(moved == 0)
+        #expect(chapters[0].startTime == 0)
+        #expect(ChapterTimeline.isStartLocked(chapters[0], in: chapters))
+        #expect(!ChapterTimeline.isStartLocked(chapters[1], in: chapters))
+    }
+
     @Test func movingLastStartStaysBeforeDuration() {
         let chapters = threeChapters()
         ChapterTimeline.moveStart(of: chapters[2], to: 20_000, in: chapters, durationMillis: 12_000)

@@ -43,4 +43,15 @@ struct WaveformMarkerTests {
         let markers = WaveformView.makeMarkers(from: chapters)
         #expect(markers[0].label == "Chapter")
     }
+
+    @Test func onlyTheFirstMarkerIsLocked() {
+        let chapters = [
+            Chapter(title: "Intro", startTime: 0, endTime: 4000),
+            Chapter(title: "Interview", startTime: 4000, endTime: 10_000)
+        ]
+
+        let markers = WaveformView.makeMarkers(from: chapters)
+
+        #expect(markers.map(\.isLocked) == [true, false])
+    }
 }

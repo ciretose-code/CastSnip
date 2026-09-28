@@ -75,11 +75,11 @@ struct ChapterListView: View {
                 .width(min: 140, ideal: 240)
 
                 TableColumn("Length") { chapter in
-                    Text(ID3Parser.toTrackTime(millis: length(of: chapter, in: chapters), showHours: showHours))
+                    Text(ID3Parser.toTrackTime(millis: length(of: chapter, in: chapters), showHours: showHours, showMillis: true))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
-                .width(min: 50, ideal: 60, max: 80)
+                .width(min: 72, ideal: 80, max: 110)
 
                 TableColumn("In Players") { chapter in
                     Toggle("Show in podcast players", isOn: audioFile.visibleBinding(for: chapter))
@@ -105,7 +105,7 @@ struct ChapterListView: View {
                     ContentUnavailableView {
                         Label("No Chapters", systemImage: "list.bullet.rectangle")
                     } description: {
-                        Text("Double-click the waveform or press ⌘N to add a chapter at the playhead.")
+                        Text("Double-click the waveform, or press ⌘N to add a chapter at the playhead.")
                     }
                 }
             }

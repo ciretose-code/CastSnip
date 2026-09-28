@@ -25,6 +25,7 @@ struct CastSnipApp: App {
     @State private var pendingAction: PendingDocumentAction?
     @State private var showDiscardAlert = false
     @State private var showShortcutsHelp = false
+    @FocusedValue(\.editorCommands) private var editorCommands
     @State private var showAutofillBrowser = false
     
     var body: some Scene {
@@ -152,7 +153,37 @@ struct CastSnipApp: App {
                 .disabled(fileURL == nil && !podcastAudioFile.hasUnsavedChanges)
             }
 
+            CommandGroup(before: .toolbar) {
+                Button("Zoom In") { editorCommands?.zoomIn?() }
+                    .keyboardShortcut("=", modifiers: .command)
+                    .disabled(editorCommands?.zoomIn == nil)
+                Button("Zoom Out") { editorCommands?.zoomOut?() }
+                    .keyboardShortcut("-", modifiers: .command)
+                    .disabled(editorCommands?.zoomOut == nil)
+                Button("Zoom to Fit") { editorCommands?.zoomToFit?() }
+                    .keyboardShortcut("0", modifiers: .command)
+                    .disabled(editorCommands?.zoomToFit == nil)
+                Divider()
+                Button(editorCommands?.isInspectorShown == false ? "Show Inspector" : "Hide Inspector") {
+                    editorCommands?.toggleInspector()
+                }
+                .keyboardShortcut("i", modifiers: [.command, .option])
+                .disabled(editorCommands == nil)
+                Divider()
+            }
+
             CommandMenu("Chapter") {
+                Button("Add Chapter at Playhead") {
+                    editorCommands?.addChapter()
+                }
+                .keyboardShortcut("n", modifiers: .command)
+                .disabled(editorCommands == nil)
+                Button("Set Start to Playhead") {
+                    editorCommands?.setStartToPlayhead?()
+                }
+                .keyboardShortcut("t", modifiers: .command)
+                .disabled(editorCommands?.setStartToPlayhead == nil)
+                Divider()
                 Button("Previous Chapter") {
                     podcastAudioFile.selectNeighbor(going: .previous)
                 }

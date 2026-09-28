@@ -130,6 +130,9 @@ struct KeyboardShortcutsHelpTests {
         #expect(text.contains("⌘N"))
         #expect(text.contains("⌘["))
         #expect(text.contains("⌘]"))
+        #expect(text.contains("⌘T"))
+        #expect(text.contains("⌘0"))
+        #expect(text.contains("⌥⌘I"))
         #expect(text.contains("Open Recent"))
         #expect(text.contains("Include ID3 tags"))
     }

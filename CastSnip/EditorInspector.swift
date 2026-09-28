@@ -62,6 +62,8 @@ private struct ChapterInspector: View {
 
     private var showHours: Bool { audioFile.podcast.shouldShowHours }
 
+    private var isLocked: Bool { ChapterTimeline.isStartLocked(chapter, in: audioFile.podcast.chapters) }
+
     private var endMillis: UInt32 {
         let sorted = audioFile.podcast.chapters.sorted()
         guard let index = sorted.firstIndex(of: chapter) else { return chapter.endTime }
@@ -103,12 +105,13 @@ private struct ChapterInspector: View {
                         ChapterTimeField(millis: chapter.startTime, showHours: showHours) { proposed in
                             onRetime(chapter, proposed)
                         }
+                        .disabled(isLocked)
                         Button {
                             _ = onRetime(chapter, playheadMillis)
                         } label: {
                             Image(systemName: "scope")
                         }
-                        .keyboardShortcut("t", modifiers: .command)
+                        .disabled(isLocked)
                         .help("Set start to the playhead (⌘T)")
                         .accessibilityLabel("Set start to playhead")
                     }
@@ -124,7 +127,9 @@ private struct ChapterInspector: View {
             } header: {
                 Text("Timing")
             } footer: {
-                Text("Each chapter ends where the next begins. Drag an edge on the waveform to retime.")
+                Text(isLocked
+                     ? "The first chapter's start is fixed. Each chapter ends where the next begins."
+                     : "Each chapter ends where the next begins. Drag an edge on the waveform to retime.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
