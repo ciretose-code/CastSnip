@@ -189,6 +189,7 @@ struct ContentView: View {
                 viewportStart: viewportStart,
                 viewportDuration: viewportDuration,
                 currentTime: player.currentTime,
+                isPlaying: player.isPlaying,
                 markers: WaveformView.makeMarkers(from: chapters, selectedID: podcastAudioFile.selectedChapter?.id),
                 onSeek: { time in
                     player.seek(to: time)
