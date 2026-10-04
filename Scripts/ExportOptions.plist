@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Direct distribution, not the App Store: the export is re-signed with the
+         Developer ID Application certificate so Gatekeeper will run it on a Mac
+         that has never seen this developer before. -->
+    <key>method</key>
+    <string>developer-id</string>
+    <key>teamID</key>
+    <string>6D39SX3E6V</string>
+    <key>signingStyle</key>
+    <string>automatic</string>
+    <key>stripSwiftSymbols</key>
+    <true/>
+</dict>
+</plist>

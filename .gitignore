@@ -1,3 +1,13 @@
-.DS_Store
+# Xcode
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
 *ewuehler.xcuserdata*
+*.xcscmblueprint
+*.xccheckout
+.DS_Store
+
+# Claude Code worktrees (used for isolated feature work; not project content)
 .worktrees/
+/.claude/worktrees/
