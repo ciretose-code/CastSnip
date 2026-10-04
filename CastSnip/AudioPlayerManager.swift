@@ -7,13 +7,19 @@
 
 import Foundation
 import AVFoundation
+import CoreVideo
 import OSLog
 
 final class AudioPlayerManager: ObservableObject {
     private let logger = Logger(subsystem: "com.castsnip", category: "AudioPlayer")
 
     private var player: AVAudioPlayer?
-    private var timer: Timer?
+    private var displayLink: CVDisplayLink?
+    private var fallbackTimer: Timer?
+    /// True while a display clock is expected to drive `tick()`. Stale
+    /// `CVDisplayLink` callbacks already queued on the main queue must not
+    /// overwrite an end-of-track pin after the clock has been stopped.
+    private var isDisplayClockRunning = false
 
     var url: URL?
     @Published var isPlaying: Bool = false
@@ -22,7 +28,7 @@ final class AudioPlayerManager: ObservableObject {
     @Published var loadError: String?
 
     func load(url: URL?) {
-        stopTimer()
+        stopDisplayClock()
         player = nil
         loadError = nil
         setPublished(isPlaying: false, currentTime: 0, duration: 0)
@@ -54,27 +60,21 @@ final class AudioPlayerManager: ObservableObject {
     func play() {
         guard let player else { return }
         player.play()
-        DispatchQueue.main.async { [weak self] in
-            self?.isPlaying = true
-        }
-        startTimer()
+        setPublished(isPlaying: true, currentTime: player.currentTime, duration: player.duration)
+        startDisplayClock()
     }
 
     func pause() {
         player?.pause()
-        DispatchQueue.main.async { [weak self] in
-            self?.isPlaying = false
-        }
-        stopTimer()
+        setPublished(isPlaying: false, currentTime: player?.currentTime ?? currentTime, duration: duration)
+        stopDisplayClock()
     }
 
     func seek(to time: TimeInterval) {
         guard let player else { return }
         let clamped = max(0, min(time, duration))
         player.currentTime = clamped
-        DispatchQueue.main.async { [weak self] in
-            self?.currentTime = clamped
-        }
+        setPublished(isPlaying: isPlaying, currentTime: clamped, duration: duration)
     }
 
     func jumpForward(_ seconds: TimeInterval = 15) {
@@ -85,23 +85,51 @@ final class AudioPlayerManager: ObservableObject {
         seek(to: currentTime - seconds)
     }
 
-    // MARK: - Timer
+    // MARK: - Display-synced clock
 
-    private func startTimer() {
-        guard timer == nil else { return }
+    private func startDisplayClock() {
+        guard displayLink == nil, fallbackTimer == nil else { return }
+        isDisplayClockRunning = true
 
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+        var link: CVDisplayLink?
+        let created = CVDisplayLinkCreateWithActiveCGDisplays(&link)
+        if created == kCVReturnSuccess, let link {
+            let callback: CVDisplayLinkOutputCallback = { _, _, _, _, _, userInfo in
+                guard let userInfo else { return kCVReturnSuccess }
+                let manager = Unmanaged<AudioPlayerManager>.fromOpaque(userInfo).takeUnretainedValue()
+                // CVDisplayLink fires off the main thread; UI + AVAudioPlayer time live on main.
+                DispatchQueue.main.async {
+                    manager.tick()
+                }
+                return kCVReturnSuccess
+            }
+            CVDisplayLinkSetOutputCallback(link, callback, Unmanaged.passUnretained(self).toOpaque())
+            CVDisplayLinkStart(link)
+            displayLink = link
+            return
+        }
+
+        // Headless / no active display: stay near 60 Hz on the common run-loop modes.
+        let timer = Timer(timeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
             self?.tick()
         }
-        timer?.tolerance = 1.0 / 60.0
+        timer.tolerance = 1.0 / 120.0
+        RunLoop.main.add(timer, forMode: .common)
+        fallbackTimer = timer
     }
 
-    private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
+    private func stopDisplayClock() {
+        isDisplayClockRunning = false
+        if let displayLink {
+            CVDisplayLinkStop(displayLink)
+        }
+        displayLink = nil
+
+        fallbackTimer?.invalidate()
+        fallbackTimer = nil
     }
 
-    /// Tests call this after a real `AVAudioPlayer` finishes because `Timer` does not fire on the Swift Testing run loop.
+    /// Tests call this after a real `AVAudioPlayer` finishes because display clocks do not fire on the Swift Testing run loop.
     func tick() {
         guard let player else { return }
         if !player.isPlaying, player.duration > 0 {
@@ -109,24 +137,31 @@ final class AudioPlayerManager: ObservableObject {
             // AVAudioPlayer resets `currentTime` to 0 when the file ends.
             let finishedAndWrapped = isPlaying && player.currentTime < 0.05
             if atEnd || finishedAndWrapped {
-                stopTimer()
+                stopDisplayClock()
                 setPublished(isPlaying: false, currentTime: player.duration, duration: player.duration)
                 return
             }
         }
+        // Ignore stale display-link frames after stop so they cannot clear a duration pin.
+        guard isDisplayClockRunning else { return }
         setPublished(isPlaying: player.isPlaying, currentTime: player.currentTime, duration: player.duration)
     }
 
     private func setPublished(isPlaying: Bool, currentTime: TimeInterval, duration: TimeInterval) {
-        DispatchQueue.main.async { [weak self] in
+        let apply = { [weak self] in
             guard let self else { return }
             self.isPlaying = isPlaying
             self.currentTime = currentTime
             self.duration = duration
         }
+        if Thread.isMainThread {
+            apply()
+        } else {
+            DispatchQueue.main.async(execute: apply)
+        }
     }
 
     deinit {
-        stopTimer()
+        stopDisplayClock()
     }
 }

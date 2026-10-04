@@ -146,4 +146,51 @@ final class ViewportMathTests: XCTestCase {
         XCTAssertNil(ViewportMath.playheadX(time: 5, viewportStart: 0, viewportDuration: 0, audioDuration: 100, width: 200))
         XCTAssertNil(ViewportMath.playheadX(time: 5, viewportStart: 0, viewportDuration: 20, audioDuration: 0, width: 200))
     }
+
+    func testFollowedStart_WhilePlaying_SnapsToCenteredTarget() {
+        // Previous start lagged behind; playback should hard-snap, not ease.
+        let next = ViewportMath.followedStart(
+            currentStart: 10,
+            currentTime: 40,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: true,
+            snap: false
+        )
+        XCTAssertEqual(next, 30, accuracy: 0.0001)
+    }
+
+    func testFollowedStart_WhenSnapRequested_SnapsEvenIfPaused() {
+        let next = ViewportMath.followedStart(
+            currentStart: 0,
+            currentTime: 40,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: false,
+            snap: true
+        )
+        XCTAssertEqual(next, 30, accuracy: 0.0001)
+    }
+
+    func testFollowedStart_WhenPausedWithoutSnap_KeepsCurrentStart() {
+        let next = ViewportMath.followedStart(
+            currentStart: 12,
+            currentTime: 40,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: false,
+            snap: false
+        )
+        XCTAssertEqual(next, 12, accuracy: 0.0001)
+    }
+
+    func testShouldPublishTransport_WhilePlaying_ThrottlesToInterval() {
+        XCTAssertTrue(ViewportMath.shouldPublishTransport(now: 1.00, lastPublishedAt: 0, isPlaying: true))
+        XCTAssertFalse(ViewportMath.shouldPublishTransport(now: 1.05, lastPublishedAt: 1.00, isPlaying: true))
+        XCTAssertTrue(ViewportMath.shouldPublishTransport(now: 1.10, lastPublishedAt: 1.00, isPlaying: true))
+    }
+
+    func testShouldPublishTransport_WhenPaused_AlwaysPublishes() {
+        XCTAssertTrue(ViewportMath.shouldPublishTransport(now: 1.01, lastPublishedAt: 1.00, isPlaying: false))
+    }
 }

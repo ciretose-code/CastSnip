@@ -99,6 +99,43 @@ enum ViewportMath {
         return ((time - start) / duration) * width
     }
 
+    /// Interval for chapter-list / toolbar playhead labels during playback.
+    /// The waveform uses the full display-link rate; these UIs stay cheaper.
+    static let transportPublishInterval: TimeInterval = 0.1
+
+    /// Next viewport start while following the playhead.
+    ///
+    /// While playing (or when `snap` is requested) the viewport hard-centers on
+    /// `currentTime`. When paused without a snap, the existing start is kept so
+    /// a manual pan is not overwritten by a stale chase.
+    static func followedStart(
+        currentStart: TimeInterval,
+        currentTime: TimeInterval,
+        duration: TimeInterval,
+        viewportDuration: TimeInterval,
+        isPlaying: Bool,
+        snap: Bool
+    ) -> TimeInterval {
+        guard isPlaying || snap else { return currentStart }
+        return viewportStart(
+            currentTime: currentTime,
+            duration: duration,
+            viewportDuration: viewportDuration
+        )
+    }
+
+    /// Whether throttled transport UI (chapter list, time readout) should refresh.
+    /// Seeks while paused always publish; during play, updates are capped to
+    /// `transportPublishInterval`.
+    static func shouldPublishTransport(
+        now: TimeInterval,
+        lastPublishedAt: TimeInterval,
+        isPlaying: Bool
+    ) -> Bool {
+        if !isPlaying { return true }
+        return now - lastPublishedAt >= transportPublishInterval
+    }
+
     private static func clamp<T: Comparable>(_ value: T, min: T, max: T) -> T {
         Swift.max(min, Swift.min(max, value))
     }
