@@ -210,15 +210,43 @@ final class ViewportMathTests: XCTestCase {
         XCTAssertEqual(nearEnd.end, 600, accuracy: 0.0001)
     }
 
-    func testImageOffsetX_PlacesCurrentTimeAtViewCenter() {
+    func testImageOffsetX_PlacesVisibleStartAtViewLeadingEdge() {
+        // Mid-track: viewport [20, 40] inside strip [0, 60], view 200pt of 600pt strip.
         let offset = WaveformStripMath.imageOffsetX(
-            currentTime: 30,
+            visibleStart: 20,
             stripStart: 0,
             stripDuration: 60,
-            stripPixelWidth: 600,
-            viewWidth: 200
+            stripPixelWidth: 600
         )
         XCTAssertEqual(offset, -200, accuracy: 0.0001)
+    }
+
+    func testImageOffsetX_NearTrackStart_MatchesClampedViewport() throws {
+        // Playhead at t=5 with 20s viewport clamps to start=0 (ruler window), not hard-center.
+        let visibleStart = ViewportMath.viewportStart(currentTime: 5, duration: 600, viewportDuration: 20)
+        XCTAssertEqual(visibleStart, 0, accuracy: 0.0001)
+
+        let offset = WaveformStripMath.imageOffsetX(
+            visibleStart: visibleStart,
+            stripStart: 0,
+            stripDuration: 60,
+            stripPixelWidth: 600
+        )
+        XCTAssertEqual(offset, 0, accuracy: 0.0001)
+
+        let playheadX = try XCTUnwrap(
+            ViewportMath.playheadX(
+                time: 5,
+                viewportStart: visibleStart,
+                viewportDuration: 20,
+                audioDuration: 600,
+                width: 200
+            )
+        )
+        // Ruler tick at t=5 and CA playhead must share the same x.
+        XCTAssertEqual(playheadX, 50, accuracy: 0.0001)
+        let tickX = ((5.0 - visibleStart) / 20.0) * 200.0
+        XCTAssertEqual(tickX, playheadX, accuracy: 0.0001)
     }
 
     func testNeedsPrefetch_WhenPlayheadNearsStripEdge() {

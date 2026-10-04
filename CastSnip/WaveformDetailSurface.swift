@@ -254,22 +254,43 @@ final class WaveformDetailSurface: NSView {
             markers: markers
         )
 
-        Task.detached(priority: .userInitiated) { [weak self] in
+        let stripStart = stripWindow.start
+        let stripDuration = stripWindow.duration
+        let height = bounds.height
+        Task.detached(priority: .userInitiated) {
             let image = WaveformStripBaker.bake(input)
-            await MainActor.run {
-                guard let self, token == self.bakeGeneration, let image else { return }
-                self.stripStart = stripWindow.start
-                self.stripDuration = stripWindow.duration
-                self.stripPixelWidth = stripPixelWidth
-                CATransaction.begin()
-                CATransaction.setDisableActions(true)
-                self.waveformLayer.contents = image
-                self.waveformLayer.frame = CGRect(x: 0, y: 0, width: stripPixelWidth, height: bounds.height)
-                self.contentLayer.frame = self.bounds
-                CATransaction.commit()
-                self.updateChrome()
+            await MainActor.run { [weak self] in
+                self?.finishBake(
+                    image: image,
+                    token: token,
+                    stripStart: stripStart,
+                    stripDuration: stripDuration,
+                    stripPixelWidth: stripPixelWidth,
+                    height: height
+                )
             }
         }
+    }
+
+    private func finishBake(
+        image: CGImage?,
+        token: Int,
+        stripStart: TimeInterval,
+        stripDuration: TimeInterval,
+        stripPixelWidth: CGFloat,
+        height: CGFloat
+    ) {
+        guard token == bakeGeneration, let image else { return }
+        self.stripStart = stripStart
+        self.stripDuration = stripDuration
+        self.stripPixelWidth = stripPixelWidth
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        waveformLayer.contents = image
+        waveformLayer.frame = CGRect(x: 0, y: 0, width: stripPixelWidth, height: height)
+        contentLayer.frame = bounds
+        CATransaction.commit()
+        updateChrome()
     }
 
     private static func markerDTOs(from markers: [WaveformView.Marker]) -> [WaveformStripBaker.MarkerDTO] {
@@ -302,25 +323,16 @@ final class WaveformDetailSurface: NSView {
         let height = bounds.height
         guard width > 1, height > 1, stripDuration > 0, stripPixelWidth > 0 else { return }
 
-        let focusTime: TimeInterval
-        if model.isPlaying {
-            focusTime = model.currentTime
-        } else {
-            focusTime = model.viewportStart + model.viewportDuration / 2
-        }
-
+        // Same window as the SwiftUI ruler: clamped `viewportStart`, not hard-centered playhead.
         let offset = WaveformStripMath.imageOffsetX(
-            currentTime: focusTime,
+            visibleStart: model.viewportStart,
             stripStart: stripStart,
             stripDuration: stripDuration,
-            stripPixelWidth: stripPixelWidth,
-            viewWidth: width
+            stripPixelWidth: stripPixelWidth
         )
 
         let playheadX: CGFloat
-        if model.isPlaying {
-            playheadX = width / 2
-        } else if let x = ViewportMath.playheadX(
+        if let x = ViewportMath.playheadX(
             time: model.currentTime,
             viewportStart: model.viewportStart,
             viewportDuration: model.viewportDuration,
@@ -384,39 +396,20 @@ final class WaveformDetailSurface: NSView {
     // MARK: - Hit testing / gestures
 
     private func time(atX x: CGFloat) -> TimeInterval? {
-        let width = bounds.width
-        guard width > 0, model.viewportDuration > 0 else { return nil }
-        let start: TimeInterval
-        let duration: TimeInterval
-        if model.isPlaying {
-            start = max(0, model.currentTime - model.viewportDuration / 2)
-            let end = min(model.audioDuration, start + model.viewportDuration)
-            duration = max(end - start, 0)
-        } else {
-            start = model.viewportStart
-            duration = model.viewportDuration
-        }
-        guard duration > 0 else { return nil }
-        let progress = min(max(x / width, 0), 1)
-        var t = start + progress * duration
-        if model.audioDuration > 0 {
-            t = min(max(t, 0), model.audioDuration)
-        }
-        return t
+        ViewportMath.seekTime(
+            x: Double(x),
+            width: Double(bounds.width),
+            viewportStart: model.viewportStart,
+            viewportDuration: model.viewportDuration,
+            audioDuration: model.audioDuration
+        )
     }
 
     private func marker(nearX x: CGFloat) -> WaveformView.Marker? {
         let width = bounds.width
-        guard width > 0 else { return nil }
-        let windowStart: TimeInterval
-        let windowDuration: TimeInterval
-        if model.isPlaying {
-            windowStart = max(0, model.currentTime - model.viewportDuration / 2)
-            windowDuration = model.viewportDuration
-        } else {
-            windowStart = model.viewportStart
-            windowDuration = model.viewportDuration
-        }
+        guard width > 0, model.viewportDuration > 0 else { return nil }
+        let windowStart = model.viewportStart
+        let windowDuration = model.viewportDuration
         return model.markers
             .filter { !$0.isLocked && $0.time >= windowStart && $0.time <= windowStart + windowDuration }
             .map { marker -> (WaveformView.Marker, CGFloat) in

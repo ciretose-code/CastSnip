@@ -194,13 +194,13 @@ struct WaveformView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 VStack(spacing: 0) {
-                    overview
-                    Divider()
                     detail
                     Canvas { context, size in
                         drawViewportTimestamps(context: context, size: size)
                     }
                     .frame(height: rulerHeight)
+                    Divider()
+                    overview
                 }
             }
         }

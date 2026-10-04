@@ -183,17 +183,19 @@ enum WaveformStripMath {
         return Window(start: start, end: end)
     }
 
-    /// Image x-origin so `currentTime` lands at the horizontal center of the view.
+    /// Image x-origin so `visibleStart` lands at the leading edge of the view.
+    ///
+    /// Matches the SwiftUI time ruler, which maps `viewportStart` → x=0. Prefer this
+    /// over hard-centering the playhead so edge-clamped viewports stay aligned.
     static func imageOffsetX(
-        currentTime: TimeInterval,
+        visibleStart: TimeInterval,
         stripStart: TimeInterval,
         stripDuration: TimeInterval,
-        stripPixelWidth: CGFloat,
-        viewWidth: CGFloat
+        stripPixelWidth: CGFloat
     ) -> CGFloat {
         guard stripDuration > 0, stripPixelWidth > 0 else { return 0 }
-        let xInStrip = CGFloat((currentTime - stripStart) / stripDuration) * stripPixelWidth
-        return viewWidth / 2 - xInStrip
+        let xInStrip = CGFloat((visibleStart - stripStart) / stripDuration) * stripPixelWidth
+        return -xInStrip
     }
 
     static func needsPrefetch(
