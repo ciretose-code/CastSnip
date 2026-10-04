@@ -24,7 +24,6 @@
 		7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7404522BDEBB5D001811B2 /* ID3Parser.swift */; };
 		7BD56E9D2F2FD49F000F7D25 /* AudioPlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */; };
 		7BD56EA12F2FD582000F7D25 /* ViewportMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */; };
-		A11STRIP010001000100000002 /* WaveformStripCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11STRIP010001000100000001 /* WaveformStripCache.swift */; };
 		A11D3E010001000100000002 /* ID3Writer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000001 /* ID3Writer.swift */; };
 		A11D3E010001000100000004 /* ID3MetadataMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000003 /* ID3MetadataMapping.swift */; };
 		A11D3E010001000100000006 /* SecurityScopedBookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */; };
@@ -92,7 +91,6 @@
 		7BD163DF2F2D2B230007DD6E /* CastSnip.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = CastSnip.xctestplan; sourceTree = "<group>"; };
 		7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerManager.swift; sourceTree = "<group>"; };
 		7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewportMath.swift; sourceTree = "<group>"; };
-		A11STRIP010001000100000001 /* WaveformStripCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformStripCache.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000001 /* ID3Writer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3Writer.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000003 /* ID3MetadataMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3MetadataMapping.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityScopedBookmarkStore.swift; sourceTree = "<group>"; };
@@ -192,7 +190,6 @@
 				7B16BD232F2E853900DFD7E8 /* WaveformView.swift */,
 				B0A1A0010001000100000005 /* WaveformPeakStore.swift */,
 				A11D3E010001000100000023 /* WaveformSampling.swift */,
-				A11STRIP010001000100000001 /* WaveformStripCache.swift */,
 				7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */,
 				7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */,
 				7B7404522BDEBB5D001811B2 /* ID3Parser.swift */,
@@ -405,7 +402,6 @@
 				7B390A312BD5C0F5009CEDEE /* AudioFile.swift in Sources */,
 				7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */,
 				7BD56EA12F2FD582000F7D25 /* ViewportMath.swift in Sources */,
-				A11STRIP010001000100000002 /* WaveformStripCache.swift in Sources */,
 				7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */,
 				7B5427C02BEC519000314CDB /* Chapter.swift in Sources */,
 				7B5427C22BEC51ED00314CDB /* Podcast.swift in Sources */,
