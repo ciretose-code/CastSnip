@@ -133,6 +133,9 @@ step "Archiving..."
 # into project.pbxproj, so the bundle reports the same build number the release
 # is tagged with. Without it the app inside a DMG named 1.0.109 would tell Get
 # Info it was build 1, and any future update check would compare the wrong thing.
+# ARCHS=arm64: the LAME SPM binary is arm64-only, and the app's deployment
+# target already excludes Intel Macs. A generic/platform=macOS archive would
+# also try to link x86_64 and fail with undefined lame_* symbols.
 xcodebuild archive \
   -project "$PROJECT" \
   -scheme "$SCHEME" \
@@ -141,6 +144,8 @@ xcodebuild archive \
   -destination "generic/platform=macOS" \
   -allowProvisioningUpdates \
   CURRENT_PROJECT_VERSION="$BUILD" \
+  ARCHS=arm64 \
+  ONLY_ACTIVE_ARCH=NO \
   | grep -E "^(error:|warning:|Build succeeded|Archive succeeded)" || true
 [ -d "$ARCHIVE_PATH" ] || die "archive failed"
 
