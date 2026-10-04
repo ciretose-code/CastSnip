@@ -56,7 +56,10 @@ struct WaveformView: View {
     private let rulerHeight: CGFloat = 20
 
     @State private var peaks = WaveformPeakStore()
+    @State private var stripCache = WaveformStripCache()
     @State private var canvasWidth: CGFloat = 0
+    @State private var detailHeight: CGFloat = 0
+    @State private var stripRefreshToken = 0
     @State private var draggingMarkerID: UUID?
     @State private var dragModeDecided = false
 
@@ -215,6 +218,53 @@ struct WaveformView: View {
             guard let request = detailRequest else { return }
             await peaks.loadDetail(start: request.start, end: request.end)
         }
+        .onChange(of: isPlaying) { _, playing in
+            if playing {
+                stripRefreshToken += 1
+            } else {
+                stripCache.invalidate()
+            }
+        }
+        .onChange(of: currentTime) { _, _ in
+            guard isPlaying else { return }
+            guard let snapshot = stripCache.snapshot else {
+                stripRefreshToken += 1
+                return
+            }
+            if WaveformStripMath.needsPrefetch(
+                currentTime: currentTime,
+                stripStart: snapshot.start,
+                stripDuration: snapshot.duration
+            ) {
+                stripRefreshToken += 1
+            }
+        }
+        .onChange(of: viewportDuration) { _, _ in
+            guard isPlaying else { return }
+            stripRefreshToken += 1
+        }
+        .task(id: stripRefreshToken) {
+            guard isPlaying, canvasWidth > 1, detailHeight > 1, audioDuration > 0 else { return }
+            let window = WaveformStripMath.stripWindow(
+                anchorTime: currentTime,
+                viewportDuration: viewportDuration,
+                audioDuration: audioDuration
+            )
+            await peaks.loadDetail(start: window.start, end: window.end)
+            let scale = NSScreen.main?.backingScaleFactor ?? 2
+            await stripCache.ensureStrip(
+                currentTime: currentTime,
+                viewportDuration: viewportDuration,
+                audioDuration: audioDuration,
+                viewWidth: canvasWidth,
+                viewHeight: detailHeight,
+                scale: scale,
+                overview: peaks.overview,
+                overviewBucketDuration: peaks.overviewBucketDuration,
+                tiles: peaks.tiles,
+                markers: markers
+            )
+        }
     }
 
     // MARK: - Overview
@@ -270,47 +320,29 @@ struct WaveformView: View {
     // MARK: - Detail
 
     private var detail: some View {
-        // Waveform + markers redraw when the viewport scrolls; playhead/played wash stay cheap overlays.
         ZStack {
-            Canvas { context, size in
-                drawRegions(context: context, size: size)
-                drawWaveform(context: context, size: size)
-                drawMarkers(context: context, size: size)
+            if isPlaying, let snapshot = stripCache.snapshot {
+                slidingDetail(snapshot: snapshot)
+            } else {
+                liveDetail
             }
-
-            Canvas { context, size in
-                drawPlayedWash(context: context, size: size)
-                drawPlayhead(context: context, size: size)
-            }
-            .allowsHitTesting(false)
         }
         .frame(maxHeight: .infinity)
         .contentShape(Rectangle())
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { canvasWidth = $0 }
-        .gesture(
-            DragGesture(minimumDistance: 2)
-                .onChanged { value in
-                    if !dragModeDecided {
-                        dragModeDecided = true
-                        draggingMarkerID = marker(nearX: value.startLocation.x)?.id
-                    }
-                    guard let time = time(atX: value.location.x) else { return }
-                    if let id = draggingMarkerID {
-                        onMarkerMove(id, time)
-                    } else {
-                        onSeek(time)
-                    }
-                }
-                .onEnded { _ in
-                    if let id = draggingMarkerID {
-                        onMarkerMoveEnded(id)
-                    }
-                    draggingMarkerID = nil
-                    dragModeDecided = false
-                }
-        )
+        .onGeometryChange(for: CGSize.self) { proxy in
+            proxy.size
+        } action: { size in
+            let widthChanged = abs(size.width - canvasWidth) > 0.5
+            let heightChanged = abs(size.height - detailHeight) > 0.5
+            canvasWidth = size.width
+            detailHeight = size.height
+            // Only re-bake the strip when the drawable size actually changes.
+            if isPlaying, (widthChanged || heightChanged), size.width > 1, size.height > 1 {
+                stripRefreshToken += 1
+            }
+        }
+        .gesture(detailDragGesture)
         .simultaneousGesture(
-            // A plain click seeks; a double-click's first click seeks to the same spot it adds at.
             SpatialTapGesture(count: 1)
                 .onEnded { value in
                     if let time = time(atX: value.location.x) {
@@ -350,6 +382,96 @@ struct WaveformView: View {
             }
         )
         .help("Click to seek · drag a chapter edge to retime · double-click to add a chapter · pinch to zoom")
+    }
+
+    /// Live Canvas used while paused (and as a fallback until the first strip is ready).
+    private var liveDetail: some View {
+        ZStack {
+            Canvas { context, size in
+                drawRegions(context: context, size: size)
+                drawWaveform(context: context, size: size)
+                drawMarkers(context: context, size: size)
+            }
+
+            Canvas { context, size in
+                drawPlayedWash(context: context, size: size)
+                drawPlayhead(context: context, size: size)
+            }
+            .allowsHitTesting(false)
+        }
+    }
+
+    /// Pre-rendered strip that slides under a fixed center playhead during playback.
+    private func slidingDetail(snapshot: WaveformStripSnapshot) -> some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            let height = geo.size.height
+            let offset = WaveformStripMath.imageOffsetX(
+                currentTime: currentTime,
+                stripStart: snapshot.start,
+                stripDuration: snapshot.duration,
+                stripPixelWidth: snapshot.pixelWidth,
+                viewWidth: width
+            )
+
+            ZStack(alignment: .topLeading) {
+                Image(nsImage: snapshot.image)
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: snapshot.pixelWidth, height: height)
+                    .offset(x: offset)
+
+                Self.playedWaveform.opacity(0.28)
+                    .frame(width: max(width / 2, 0), height: height)
+                    .allowsHitTesting(false)
+
+                Canvas { context, size in
+                    drawFixedCenterPlayhead(context: context, size: size)
+                }
+                .allowsHitTesting(false)
+            }
+            .frame(width: width, height: height, alignment: .topLeading)
+            .clipped()
+        }
+    }
+
+    private var detailDragGesture: some Gesture {
+        DragGesture(minimumDistance: 2)
+            .onChanged { value in
+                if !dragModeDecided {
+                    dragModeDecided = true
+                    draggingMarkerID = marker(nearX: value.startLocation.x)?.id
+                }
+                guard let time = time(atX: value.location.x) else { return }
+                if let id = draggingMarkerID {
+                    onMarkerMove(id, time)
+                } else {
+                    onSeek(time)
+                }
+            }
+            .onEnded { _ in
+                if let id = draggingMarkerID {
+                    onMarkerMoveEnded(id)
+                }
+                draggingMarkerID = nil
+                dragModeDecided = false
+            }
+    }
+
+    private func drawFixedCenterPlayhead(context: GraphicsContext, size: CGSize) {
+        let x = size.width / 2
+        var path = Path()
+        path.move(to: CGPoint(x: x, y: 0))
+        path.addLine(to: CGPoint(x: x, y: size.height))
+        context.stroke(path, with: .color(.black.opacity(0.35)), lineWidth: 3)
+        context.stroke(path, with: .color(.white.opacity(0.9)), lineWidth: 1.5)
+
+        var cap = Path()
+        cap.move(to: CGPoint(x: x - 5, y: 0))
+        cap.addLine(to: CGPoint(x: x + 5, y: 0))
+        cap.addLine(to: CGPoint(x: x, y: 7))
+        cap.closeSubpath()
+        context.fill(cap, with: .color(.white.opacity(0.9)))
     }
 
     private func time(atX x: CGFloat) -> TimeInterval? {
