@@ -7,8 +7,8 @@
 //  LAME remains a dynamic package product (LGPL); this file only configures
 //  and drives encode/flush.
 //
-//  Forecast-class defaults: 192 kbps CBR stereo. Input sample rate is passed
-//  through (44.1 kHz stays 44.1 kHz). Mono sources are duplicated to stereo.
+//  CBR stereo at a chosen bitrate (default 192 kbps). Input sample rate is
+//  passed through (44.1 kHz stays 44.1 kHz). Mono sources are duplicated to stereo.
 //
 
 import AVFoundation
@@ -30,6 +30,7 @@ enum LameEncoder {
     static func encode(
         from input: URL,
         to output: URL,
+        bitrateKbps: Int = EncodeBitrate.default.rawValue,
         progress: ((Double) -> Void)? = nil
     ) throws {
         let audioFile = try AVAudioFile(forReading: input)
@@ -47,10 +48,11 @@ enum LameEncoder {
         }
         defer { lame_close(lame) }
 
+        let bitrate = EncodeBitrate.resolved(bitrateKbps).rawValue
         lame_set_in_samplerate(lame, Int32(format.sampleRate.rounded()))
         lame_set_num_channels(lame, 2)
         lame_set_mode(lame, STEREO)
-        lame_set_brate(lame, 192)
+        lame_set_brate(lame, Int32(bitrate))
         lame_set_VBR(lame, vbr_off)
         guard lame_init_params(lame) >= 0 else {
             throw Error.failed("lame_init_params failed")

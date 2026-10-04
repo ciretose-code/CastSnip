@@ -2,7 +2,7 @@
 //  AircheckExporter.swift
 //  CastSnip
 //
-//  Writes one WAV per chapter time range (sponsor airchecks).
+//  Writes one WAV per chapter time range (chapter clips).
 //
 
 import AVFoundation

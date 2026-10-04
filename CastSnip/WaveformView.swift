@@ -63,17 +63,13 @@ struct WaveformView: View {
     /// Played waveform. Always CastSnip blue, even when the system accent overrides the app's.
     static let playedWaveform = Color.castSnipBlue
 
-    /// Tints used for chapter regions, shared with the chapter list so rows match the waveform.
-    /// Mostly Security lockup: purple, green, amber, then supporting site tones.
+    /// Chapter region tints (purple → green → amber → red), shared with the chapter list.
+    /// CastSnip blue is reserved for the accent / played wash, not chapters.
     static let chapterPalette: [Color] = [
-        Color(red: 100 / 255, green: 52 / 255, blue: 155 / 255),   // #64349B
-        Color(red: 52 / 255, green: 155 / 255, blue: 99 / 255),    // #349B63
-        Color(red: 251 / 255, green: 156 / 255, blue: 4 / 255),    // #FB9C04
-        Color(red: 201 / 255, green: 65 / 255, blue: 43 / 255),    // #C9412B
-        Color(red: 86 / 255, green: 79 / 255, blue: 118 / 255),    // #564F76
-        Color(red: 75 / 255, green: 94 / 255, blue: 112 / 255),    // #4B5E70
-        Color(red: 228 / 255, green: 106 / 255, blue: 26 / 255),   // #E46A1A
-        Color(red: 163 / 255, green: 163 / 255, blue: 163 / 255)   // #A3A3A3
+        Color(red: 100 / 255, green: 52 / 255, blue: 155 / 255),   // purple #64349B
+        Color(red: 52 / 255, green: 155 / 255, blue: 99 / 255),    // green  #349B63
+        Color(red: 251 / 255, green: 156 / 255, blue: 4 / 255),    // amber  #FB9C04
+        Color(red: 201 / 255, green: 65 / 255, blue: 43 / 255),    // red    #C9412B
     ]
 
     static func chapterColor(at index: Int) -> Color {
@@ -312,7 +308,10 @@ struct WaveformView: View {
 
         guard let window = viewportWindow() else { return }
 
-        let intervals = viewportTickIntervals()
+        let intervals = ViewportMath.rulerTickIntervals(
+            viewportDuration: window.duration,
+            width: Double(width)
+        )
         let halfTickInterval = intervals.half
         let majorInterval = intervals.major
         let labelInterval = intervals.label
@@ -349,36 +348,6 @@ struct WaveformView: View {
 
             tick += halfTickInterval
         }
-    }
-
-    private func viewportTickIntervals() -> (half: TimeInterval, major: TimeInterval, label: TimeInterval) {
-        // Match the active viewport window size to the requested cadence.
-        // Prefer "full" when the viewport spans the whole audio duration.
-        if audioDuration > 0, abs(viewportDuration - audioDuration) < 0.5, audioDuration > 60 {
-            return (half: 15, major: 30, label: 120)
-        }
-
-        if viewportDuration <= 10.5 {
-            return (half: 0.25, major: 0.5, label: 1)
-        }
-        if viewportDuration <= 30.5 {
-            return (half: 0.25, major: 0.5, label: 5)
-        }
-        if viewportDuration <= 60.5 {
-            return (half: 0.5, major: 1, label: 10)
-        }
-        if viewportDuration <= 120.5 {
-            return (half: 1, major: 2, label: 15)
-        }
-        if viewportDuration <= 300.5 {
-            return (half: 3, major: 6, label: 30)
-        }
-        if viewportDuration <= 600.5 {
-            return (half: 5, major: 10, label: 60)
-        }
-
-        // Fallback for longer windows (treat as full-width style).
-        return (half: 15, major: 30, label: 120)
     }
 
 }

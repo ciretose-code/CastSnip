@@ -13,8 +13,6 @@ import QuartzCore
 struct ContentView: View {
     @Environment(AudioFile.self) var podcastAudioFile
     @Environment(\.openPodcast) private var openPodcast
-    @Environment(\.openPodcastPanel) private var openPodcastPanel
-    @Environment(\.documentActions) private var documentActions
 
     @State private var isDraggingAudio = false
     @State private var showInspector = true
@@ -302,17 +300,6 @@ struct ContentView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItemGroup(placement: .navigation) {
-            Button(action: openPodcastPanel) {
-                Label("Open", systemImage: "folder")
-            }
-            .help("Open an audio file (⌘O)")
-            Button(action: documentActions.save) {
-                Label("Save", systemImage: "square.and.arrow.down")
-            }
-            .help("Save (⌘S)")
-        }
-
         ToolbarItem(placement: .principal) {
             HStack(spacing: 14) {
                 Button { player.jumpBackward(10) } label: {
@@ -346,21 +333,7 @@ struct ContentView: View {
             .labelStyle(.iconOnly)
         }
 
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button { addChapter(atMillis: actionPlayheadMillis) } label: {
-                Label("Add Chapter", systemImage: "plus")
-            }
-            .help("Add a chapter at the playhead (⌘N)")
-            .accessibilityIdentifier(EditorAccessibility.addChapter)
-
-            Menu {
-                Button("Encode to MP3…", action: documentActions.encode)
-                Button("Export Airchecks…", action: documentActions.exportAirchecks)
-            } label: {
-                Label("Export", systemImage: "square.and.arrow.up")
-            }
-            .help("Encode or export")
-
+        ToolbarItem(placement: .primaryAction) {
             Button { showInspector.toggle() } label: {
                 Label("Inspector", systemImage: "sidebar.trailing")
             }

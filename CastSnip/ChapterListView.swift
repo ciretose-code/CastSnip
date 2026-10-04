@@ -86,7 +86,7 @@ struct ChapterListView: View {
                 }
                 .width(min: 72, ideal: 80, max: 110)
 
-                TableColumn("In Players") { chapter in
+                TableColumn("Visible") { chapter in
                     Toggle("Show in podcast players", isOn: audioFile.visibleBinding(for: chapter))
                         .toggleStyle(.checkbox)
                         .labelsHidden()
@@ -150,6 +150,7 @@ struct ChapterListView: View {
             }
             .help("Add a chapter at the playhead (⌘N)")
             .accessibilityLabel("Add chapter")
+            .accessibilityIdentifier(EditorAccessibility.addChapter)
             Divider().frame(height: 14)
             Button {
                 pendingDelete = audioFile.selectedChapter

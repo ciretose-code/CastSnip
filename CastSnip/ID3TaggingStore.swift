@@ -30,11 +30,16 @@ final class ID3TaggingStore {
         }
     }
 
-    @discardableResult
-    func attachCheckbox(to panel: NSSavePanel) -> NSButton {
+    func makeCheckbox() -> NSButton {
         let checkbox = NSButton(checkboxWithTitle: Self.checkboxTitle, target: nil, action: nil)
         checkbox.state = includeTags ? .on : .off
         checkbox.toolTip = Self.checkboxHelp
+        return checkbox
+    }
+
+    @discardableResult
+    func attachCheckbox(to panel: NSSavePanel) -> NSButton {
+        let checkbox = makeCheckbox()
         panel.accessoryView = checkbox
         return checkbox
     }

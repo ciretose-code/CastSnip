@@ -57,6 +57,25 @@ struct LameEncoderTests {
         }
     }
 
+    @Test func lowerBitrateProducesSmallerFile() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-lame-bitrate-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let input = directory.appendingPathComponent("tone.wav")
+        try ProductionAudioFixtures.writeSineWAV(to: input, duration: 1.0)
+        let low = directory.appendingPathComponent("64.mp3")
+        let high = directory.appendingPathComponent("192.mp3")
+
+        try LameEncoder.encode(from: input, to: low, bitrateKbps: 64)
+        try LameEncoder.encode(from: input, to: high, bitrateKbps: 192)
+
+        let lowSize = try Data(contentsOf: low).count
+        let highSize = try Data(contentsOf: high).count
+        #expect(lowSize < highSize)
+    }
+
     private func isMPEGAudio(_ data: Data) -> Bool {
         guard data.count >= 3 else { return false }
         if data.starts(with: [0x49, 0x44, 0x33]) { return true }

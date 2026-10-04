@@ -254,4 +254,61 @@ final class ViewportMathTests: XCTestCase {
         XCTAssertFalse(WaveformStripMath.needsPrefetch(currentTime: 30, stripStart: 0, stripDuration: 60))
         XCTAssertTrue(WaveformStripMath.needsPrefetch(currentTime: 50, stripStart: 0, stripDuration: 60))
     }
+
+    func testRulerTickIntervals_TwoHourFit_KeepsLabelsSpaced() {
+        // Full-fit 2h on a typical editor width must not pack labels every 2 minutes.
+        let intervals = ViewportMath.rulerTickIntervals(viewportDuration: 7200, width: 1000)
+        let labelSpacing = 1000 * (intervals.label / 7200)
+        XCTAssertGreaterThanOrEqual(labelSpacing, 70, "labels need room; got \(intervals.label)s → \(labelSpacing)pt")
+        XCTAssertGreaterThanOrEqual(intervals.label, 600)
+        XCTAssertLessThanOrEqual(intervals.half, intervals.major)
+        XCTAssertLessThanOrEqual(intervals.major, intervals.label)
+    }
+
+    func testRulerTickIntervals_ShortViewport_StaysFineGrained() {
+        let intervals = ViewportMath.rulerTickIntervals(viewportDuration: 20, width: 1000)
+        XCTAssertLessThanOrEqual(intervals.label, 5)
+    }
+
+    func testRulerTickIntervals_NarrowWidth_UsesCoarserLabels() {
+        let wide = ViewportMath.rulerTickIntervals(viewportDuration: 600, width: 1200)
+        let narrow = ViewportMath.rulerTickIntervals(viewportDuration: 600, width: 300)
+        XCTAssertGreaterThanOrEqual(narrow.label, wide.label)
+    }
+
+    func testMarkerLayoutX_TracksTimeInsideViewport() throws {
+        let before = try XCTUnwrap(
+            ViewportMath.markerLayoutX(
+                time: 15,
+                viewportStart: 10,
+                viewportDuration: 20,
+                audioDuration: 100,
+                width: 200
+            )
+        )
+        let after = try XCTUnwrap(
+            ViewportMath.markerLayoutX(
+                time: 20,
+                viewportStart: 10,
+                viewportDuration: 20,
+                audioDuration: 100,
+                width: 200
+            )
+        )
+        XCTAssertEqual(before, 50, accuracy: 0.0001)
+        XCTAssertEqual(after, 100, accuracy: 0.0001)
+        XCTAssertGreaterThan(after, before)
+    }
+
+    func testMarkerLayoutX_NilWhenOutsideViewport() {
+        XCTAssertNil(
+            ViewportMath.markerLayoutX(
+                time: 5,
+                viewportStart: 10,
+                viewportDuration: 20,
+                audioDuration: 100,
+                width: 200
+            )
+        )
+    }
 }

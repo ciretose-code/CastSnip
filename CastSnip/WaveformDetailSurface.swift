@@ -3,7 +3,7 @@
 //  CastSnip
 //
 //  AppKit + Core Animation detail waveform: bake a wide strip once, scroll layers
-//  while playing, live playhead / played wash overlays.
+//  while playing, live markers / playhead / played wash overlays.
 //
 
 import AppKit
@@ -80,6 +80,7 @@ final class WaveformDetailSurface: NSView {
     private let contentLayer = CALayer()
     private let waveformLayer = CALayer()
     private let playedWashLayer = CALayer()
+    private let markersLayer = CALayer()
     private let playheadLayer = CAShapeLayer()
 
     private var model = WaveformDetailModel(
@@ -117,6 +118,7 @@ final class WaveformDetailSurface: NSView {
         var overviewCount: Int
         var tileKeys: [Int]
         var markerIDs: [UUID]
+        var markerTimes: [TimeInterval]
         var selectedID: UUID?
         var audioDuration: TimeInterval
         var viewportDuration: TimeInterval
@@ -139,6 +141,7 @@ final class WaveformDetailSurface: NSView {
 
         contentLayer.masksToBounds = false
         waveformLayer.contentsGravity = .resize
+        markersLayer.masksToBounds = false
         playedWashLayer.backgroundColor = NSColor(Color.castSnipBlue).withAlphaComponent(0.28).cgColor
         playheadLayer.fillColor = NSColor.white.withAlphaComponent(0.9).cgColor
         playheadLayer.strokeColor = NSColor.black.withAlphaComponent(0.35).cgColor
@@ -147,6 +150,7 @@ final class WaveformDetailSurface: NSView {
         layer?.addSublayer(contentLayer)
         contentLayer.addSublayer(waveformLayer)
         layer?.addSublayer(playedWashLayer)
+        layer?.addSublayer(markersLayer)
         layer?.addSublayer(playheadLayer)
 
         let magnify = NSMagnificationGestureRecognizer(target: self, action: #selector(handleMagnify(_:)))
@@ -169,6 +173,7 @@ final class WaveformDetailSurface: NSView {
         let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
         contentLayer.contentsScale = scale
         waveformLayer.contentsScale = scale
+        markersLayer.contentsScale = scale
         playedWashLayer.contentsScale = scale
         playheadLayer.contentsScale = scale
         requestBakeIfNeeded(force: false)
@@ -186,11 +191,14 @@ final class WaveformDetailSurface: NSView {
                 stopDisplayLink()
             }
         }
-        if epochChanged, model.isPlaying {
-            // Overview seek / snap: ensure strip recenters on playhead.
-            requestBakeIfNeeded(force: true)
-        } else {
-            requestBakeIfNeeded(force: false)
+        // Skip strip rebake while dragging a marker — live markersLayer tracks the handle.
+        if dragMarkerID == nil {
+            if epochChanged, model.isPlaying {
+                // Overview seek / snap: ensure strip recenters on playhead.
+                requestBakeIfNeeded(force: true)
+            } else {
+                requestBakeIfNeeded(force: false)
+            }
         }
         updateChrome()
     }
@@ -230,6 +238,7 @@ final class WaveformDetailSurface: NSView {
             overviewCount: model.overview.count,
             tileKeys: model.tiles.keys.sorted(),
             markerIDs: model.markers.map(\.id),
+            markerTimes: model.markers.map(\.time),
             selectedID: model.markers.first(where: \.isSelected)?.id,
             audioDuration: model.audioDuration,
             viewportDuration: model.viewportDuration
@@ -316,20 +325,12 @@ final class WaveformDetailSurface: NSView {
         }
     }
 
-    // MARK: - Chrome (offset, wash, playhead)
+    // MARK: - Chrome (offset, markers, wash, playhead)
 
     private func updateChrome() {
         let width = bounds.width
         let height = bounds.height
-        guard width > 1, height > 1, stripDuration > 0, stripPixelWidth > 0 else { return }
-
-        // Same window as the SwiftUI ruler: clamped `viewportStart`, not hard-centered playhead.
-        let offset = WaveformStripMath.imageOffsetX(
-            visibleStart: model.viewportStart,
-            stripStart: stripStart,
-            stripDuration: stripDuration,
-            stripPixelWidth: stripPixelWidth
-        )
+        guard width > 1, height > 1 else { return }
 
         let playheadX: CGFloat
         if let x = ViewportMath.playheadX(
@@ -347,10 +348,59 @@ final class WaveformDetailSurface: NSView {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         contentLayer.frame = bounds
-        waveformLayer.frame = CGRect(x: offset, y: 0, width: stripPixelWidth, height: height)
+        if stripDuration > 0, stripPixelWidth > 0 {
+            // Same window as the SwiftUI ruler: clamped `viewportStart`, not hard-centered playhead.
+            let offset = WaveformStripMath.imageOffsetX(
+                visibleStart: model.viewportStart,
+                stripStart: stripStart,
+                stripDuration: stripDuration,
+                stripPixelWidth: stripPixelWidth
+            )
+            waveformLayer.frame = CGRect(x: offset, y: 0, width: stripPixelWidth, height: height)
+        }
         playedWashLayer.frame = CGRect(x: 0, y: 0, width: max(playheadX, 0), height: height)
+        updateMarkersLayer(width: width, height: height)
         updatePlayheadPath(at: playheadX, height: height)
         CATransaction.commit()
+    }
+
+    private func updateMarkersLayer(width: CGFloat, height: CGFloat) {
+        markersLayer.frame = bounds
+        markersLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
+
+        for marker in model.markers {
+            guard let xDouble = ViewportMath.markerLayoutX(
+                time: marker.time,
+                viewportStart: model.viewportStart,
+                viewportDuration: model.viewportDuration,
+                audioDuration: model.audioDuration,
+                width: Double(width)
+            ) else { continue }
+            let x = CGFloat(xDouble)
+            let ns = NSColor(marker.color)
+            let cg = (ns.usingColorSpace(.deviceRGB) ?? ns).cgColor
+            let lineWidth: CGFloat = marker.isSelected ? 3 : marker.lineWidth
+
+            let line = CAShapeLayer()
+            let linePath = CGMutablePath()
+            linePath.move(to: CGPoint(x: x, y: 0))
+            linePath.addLine(to: CGPoint(x: x, y: height))
+            line.path = linePath
+            line.strokeColor = cg
+            line.fillColor = nil
+            line.lineWidth = lineWidth
+            line.contentsScale = markersLayer.contentsScale
+            line.frame = bounds
+            markersLayer.addSublayer(line)
+
+            guard !marker.isLocked else { continue }
+            let handle = CALayer()
+            handle.backgroundColor = cg
+            handle.frame = CGRect(x: x - 4, y: height - 18, width: 8, height: 16)
+            handle.cornerRadius = 1
+            handle.contentsScale = markersLayer.contentsScale
+            markersLayer.addSublayer(handle)
+        }
     }
 
     private func updatePlayheadPath(at x: CGFloat, height: CGFloat) {
@@ -364,6 +414,22 @@ final class WaveformDetailSurface: NSView {
         path.closeSubpath()
         playheadLayer.path = path
         playheadLayer.frame = bounds
+    }
+
+    private func applyOptimisticMarkerTime(_ id: UUID, time: TimeInterval) {
+        guard let index = model.markers.firstIndex(where: { $0.id == id }) else { return }
+        let old = model.markers[index]
+        model.markers[index] = WaveformView.Marker(
+            id: old.id,
+            time: time,
+            color: old.color,
+            lineWidth: old.lineWidth,
+            label: old.label,
+            end: old.end,
+            isSelected: old.isSelected,
+            isHidden: old.isHidden,
+            isLocked: old.isLocked
+        )
     }
 
     // MARK: - Display link
@@ -449,6 +515,8 @@ final class WaveformDetailSurface: NSView {
         }
         guard let t = time(atX: loc.x) else { return }
         if let id = dragMarkerID {
+            applyOptimisticMarkerTime(id, time: t)
+            updateChrome()
             onMarkerMove?(id, t)
         } else {
             onSeek?(t)

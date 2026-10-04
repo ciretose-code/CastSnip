@@ -21,6 +21,7 @@ struct CastSnipApp: App {
     @State var fileURL: URL?
     @State private var recentFiles = RecentFilesStore.shared
     @State private var tagging = ID3TaggingStore.shared
+    @State private var encodeBitrate = EncodeBitrateStore.shared
     @State private var silenceSettings = SilenceSettingsStore.shared
     @State private var pendingAction: PendingDocumentAction?
     @State private var showDiscardAlert = false
@@ -142,7 +143,7 @@ struct CastSnipApp: App {
                     encodeToMP3()
                 }
                 .disabled(fileURL == nil && podcastAudioFile.podcast.url == nil)
-                Button("Export Airchecks…") {
+                Button("Export Chapter Clips…") {
                     exportAirchecks()
                 }
                 .disabled(fileURL == nil && podcastAudioFile.podcast.url == nil)
@@ -394,27 +395,29 @@ struct CastSnipApp: App {
         panel.canCreateDirectories = true
         panel.nameFieldStringValue = source.deletingPathExtension().appendingPathExtension("mp3").lastPathComponent
         panel.title = "Encode to MP3"
-        let tagsCheckbox = tagging.attachCheckbox(to: panel)
+        let accessory = encodeBitrate.attachAccessory(to: panel, tagging: tagging)
         guard panel.runModal() == .OK, let dest = panel.url else { return }
-        tagging.apply(from: tagsCheckbox)
-        beginEncode(from: source, to: dest)
+        encodeBitrate.apply(from: accessory.popup)
+        tagging.apply(from: accessory.tagsCheckbox)
+        beginEncode(from: source, to: dest, bitrateKbps: encodeBitrate.bitrate.rawValue)
     }
 
-    private func beginEncode(from source: URL, to dest: URL) {
+    private func beginEncode(from source: URL, to dest: URL, bitrateKbps: Int = EncodeBitrate.default.rawValue) {
         let directory = dest.deletingLastPathComponent()
         if !FileManager.default.fileExists(atPath: directory.path) {
             try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         }
         SecurityScopedBookmarkStore.shared.rememberAndAccess(dest)
         Task { @MainActor in
-            await performEncode(from: source, to: dest)
+            await performEncode(from: source, to: dest, bitrateKbps: bitrateKbps)
         }
     }
 
-    private func performEncode(from source: URL, to dest: URL) async {
+    private func performEncode(from source: URL, to dest: URL, bitrateKbps: Int) async {
+        let rate = EncodeBitrate.resolved(bitrateKbps)
         let alert = NSAlert()
         alert.messageText = "Encoding…"
-        alert.informativeText = "Creating a podcast-quality file (192 kbps CBR stereo MP3 via in-process LAME)."
+        alert.informativeText = "Creating a podcast file (\(rate.rawValue) kbps CBR stereo MP3 via in-process LAME)."
         alert.window.setAccessibilityIdentifier(EditorAccessibility.encoding)
         let bar = NSProgressIndicator(frame: NSRect(x: 0, y: 0, width: 240, height: 16))
         bar.minValue = 0
@@ -434,6 +437,7 @@ struct CastSnipApp: App {
                 to: dest,
                 tagging: podcastAudioFile.podcast,
                 includeTags: tagging.includeTags,
+                bitrateKbps: rate.rawValue,
                 progress: { value in
                     DispatchQueue.main.async {
                         bar.doubleValue = value
@@ -474,7 +478,7 @@ struct CastSnipApp: App {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         panel.prompt = "Export"
-        panel.title = "Export Airchecks"
+        panel.title = "Export Chapter Clips"
         guard panel.runModal() == .OK, let directory = panel.url else { return }
         SecurityScopedBookmarkStore.shared.rememberAndAccess(directory)
 

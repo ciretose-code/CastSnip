@@ -88,6 +88,25 @@ enum ViewportMath {
         audioDuration: TimeInterval,
         width: Double
     ) -> Double? {
+        markerLayoutX(
+            time: time,
+            viewportStart: viewportStart,
+            viewportDuration: viewportDuration,
+            audioDuration: audioDuration,
+            width: width
+        )
+    }
+
+    /// View-space x for a chapter boundary (or playhead) inside the visible viewport.
+    ///
+    /// Used by the live markers layer so handles track during drag without rebaking the strip.
+    static func markerLayoutX(
+        time: TimeInterval,
+        viewportStart: TimeInterval,
+        viewportDuration: TimeInterval,
+        audioDuration: TimeInterval,
+        width: Double
+    ) -> Double? {
         guard viewportDuration > 0, audioDuration > 0, width >= 0 else { return nil }
 
         let start = max(0, min(viewportStart, audioDuration))
@@ -134,6 +153,45 @@ enum ViewportMath {
     ) -> Bool {
         if !isPlaying { return true }
         return now - lastPublishedAt >= transportPublishInterval
+    }
+
+    /// Tick/label cadence for the detail time ruler.
+    ///
+    /// Chooses the smallest "nice" label interval that keeps labels at least
+    /// `minimumLabelSpacing` points apart across `width`, then derives major/half
+    /// subdivisions from the same nice ladder. Scales from short zooms to multi-hour
+    /// full-fit windows.
+    struct RulerTickIntervals: Equatable {
+        let half: TimeInterval
+        let major: TimeInterval
+        let label: TimeInterval
+    }
+
+    private static let niceRulerIntervals: [TimeInterval] = [
+        0.25, 0.5, 1, 2, 5, 10, 15, 30,
+        60, 120, 300, 600, 900, 1800,
+        3600, 7200, 10800, 14400, 21600, 43200, 86400
+    ]
+
+    static func rulerTickIntervals(
+        viewportDuration: TimeInterval,
+        width: Double,
+        minimumLabelSpacing: Double = 72
+    ) -> RulerTickIntervals {
+        guard viewportDuration > 0, width > 0 else {
+            return RulerTickIntervals(half: 1, major: 2, label: 5)
+        }
+
+        // Hour-style labels ("1:00:00") need a bit more room than "m:ss".
+        let minSpacing = viewportDuration >= 3600
+            ? max(minimumLabelSpacing, 84)
+            : minimumLabelSpacing
+        let targetLabelCount = max(2.0, width / minSpacing)
+        let rawLabel = viewportDuration / targetLabelCount
+        let label = niceRulerIntervals.first { $0 >= rawLabel } ?? niceRulerIntervals.last!
+        let major = niceRulerIntervals.last { $0 <= label / 2 + 1e-9 } ?? label
+        let half = niceRulerIntervals.last { $0 <= major / 2 + 1e-9 } ?? major
+        return RulerTickIntervals(half: half, major: major, label: label)
     }
 
     private static func clamp<T: Comparable>(_ value: T, min: T, max: T) -> T {

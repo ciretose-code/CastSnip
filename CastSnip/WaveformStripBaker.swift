@@ -2,7 +2,8 @@
 //  WaveformStripBaker.swift
 //  CastSnip
 //
-//  Offscreen CG bake of a waveform strip (regions + bars + marker lines) for CALayer.contents.
+//  Offscreen CG bake of a waveform strip (regions + bars) for CALayer.contents.
+//  Marker lines/handles are live layers on WaveformDetailSurface so they track during drag.
 //
 
 import AppKit
@@ -117,33 +118,6 @@ enum WaveformStripBaker {
                 )
                 ctx.fill(rect)
             }
-        }
-
-        for marker in input.markers {
-            guard marker.time >= stripStart - 0.0001,
-                  marker.time <= stripStart + stripDuration + 0.0001 else { continue }
-            let x = xPosition(time: marker.time, stripStart: stripStart, stripDuration: stripDuration, width: width)
-            let lineWidth: CGFloat = marker.isSelected ? 3 : marker.lineWidth
-            ctx.setStrokeColor(CGColor(
-                red: marker.red,
-                green: marker.green,
-                blue: marker.blue,
-                alpha: marker.alpha
-            ))
-            ctx.setLineWidth(lineWidth)
-            ctx.move(to: CGPoint(x: x, y: 0))
-            ctx.addLine(to: CGPoint(x: x, y: height))
-            ctx.strokePath()
-
-            guard !marker.isLocked else { continue }
-            let handle = CGRect(x: x - 4, y: height - 18, width: 8, height: 16)
-            ctx.setFillColor(CGColor(
-                red: marker.red,
-                green: marker.green,
-                blue: marker.blue,
-                alpha: marker.alpha
-            ))
-            ctx.fill(handle)
         }
 
         return ctx.makeImage()

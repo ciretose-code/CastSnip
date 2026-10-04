@@ -4,9 +4,10 @@
 //
 //  Encode PCM (WAV/AIFF and other AVAudioFile-readable sources) to a podcast file.
 //
-//  Encode settings (Forecast-class defaults via in-process LAME):
-//  - MP3: 192 kbps CBR stereo. 44.1 kHz is preserved when the source is
-//    already 44.1 kHz; LAME will resample if needed.
+//  Encode settings via in-process LAME:
+//  - MP3: CBR stereo at a chosen bitrate (64 / 96 / 128 / 192 kbps).
+//    44.1 kHz is preserved when the source is already 44.1 kHz; LAME will
+//    resample if needed.
 //  - Fallback: AAC .m4a via AVAssetExportSession (AppleM4A) if LameEncoder
 //    throws. Chosen because Core Audio cannot emit MP3 on current macOS.
 //
@@ -49,6 +50,7 @@ enum PodcastEncoder {
         using tool: Tool? = nil,
         tagging podcast: Podcast? = nil,
         includeTags: Bool = true,
+        bitrateKbps: Int = EncodeBitrate.default.rawValue,
         encoder: ((URL, URL, ((Double) -> Void)?) throws -> Void)? = nil,
         progress: ((Double) -> Void)? = nil
     ) async throws -> URL {
@@ -59,7 +61,12 @@ enum PodcastEncoder {
                 if let encoder {
                     try encoder(input, output, progress)
                 } else {
-                    try LameEncoder.encode(from: input, to: output, progress: progress)
+                    try LameEncoder.encode(
+                        from: input,
+                        to: output,
+                        bitrateKbps: bitrateKbps,
+                        progress: progress
+                    )
                 }
                 if includeTags, let podcast {
                     try ID3Writer.write(podcast: podcast, from: output, to: output, includeTags: true)
