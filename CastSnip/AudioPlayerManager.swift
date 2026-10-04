@@ -7,18 +7,20 @@
 
 import Foundation
 import AVFoundation
-import CoreVideo
+import AppKit
+import QuartzCore
 import OSLog
 
 final class AudioPlayerManager: ObservableObject {
     private let logger = Logger(subsystem: "com.castsnip", category: "AudioPlayer")
 
     private var player: AVAudioPlayer?
-    private var displayLink: CVDisplayLink?
+    private var displayLink: CADisplayLink?
+    private let displayLinkTarget = DisplayLinkTarget()
     private var fallbackTimer: Timer?
     /// True while a display clock is expected to drive `tick()`. Stale
-    /// `CVDisplayLink` callbacks already queued on the main queue must not
-    /// overwrite an end-of-track pin after the clock has been stopped.
+    /// display-link callbacks already queued must not overwrite an end-of-track
+    /// pin after the clock has been stopped.
     private var isDisplayClockRunning = false
 
     var url: URL?
@@ -91,20 +93,17 @@ final class AudioPlayerManager: ObservableObject {
         guard displayLink == nil, fallbackTimer == nil else { return }
         isDisplayClockRunning = true
 
-        var link: CVDisplayLink?
-        let created = CVDisplayLinkCreateWithActiveCGDisplays(&link)
-        if created == kCVReturnSuccess, let link {
-            let callback: CVDisplayLinkOutputCallback = { _, _, _, _, _, userInfo in
-                guard let userInfo else { return kCVReturnSuccess }
-                let manager = Unmanaged<AudioPlayerManager>.fromOpaque(userInfo).takeUnretainedValue()
-                // CVDisplayLink fires off the main thread; UI + AVAudioPlayer time live on main.
-                DispatchQueue.main.async {
-                    manager.tick()
-                }
-                return kCVReturnSuccess
-            }
-            CVDisplayLinkSetOutputCallback(link, callback, Unmanaged.passUnretained(self).toOpaque())
-            CVDisplayLinkStart(link)
+        displayLinkTarget.handler = { [weak self] in
+            self?.tick()
+        }
+
+        // NSScreen.displayLink is the macOS 15+ replacement for CVDisplayLink.
+        if let screen = NSScreen.main {
+            let link = screen.displayLink(
+                target: displayLinkTarget,
+                selector: #selector(DisplayLinkTarget.fire(_:))
+            )
+            link.add(to: .main, forMode: .common)
             displayLink = link
             return
         }
@@ -120,10 +119,9 @@ final class AudioPlayerManager: ObservableObject {
 
     private func stopDisplayClock() {
         isDisplayClockRunning = false
-        if let displayLink {
-            CVDisplayLinkStop(displayLink)
-        }
+        displayLink?.invalidate()
         displayLink = nil
+        displayLinkTarget.handler = nil
 
         fallbackTimer?.invalidate()
         fallbackTimer = nil
@@ -163,5 +161,14 @@ final class AudioPlayerManager: ObservableObject {
 
     deinit {
         stopDisplayClock()
+    }
+}
+
+/// `CADisplayLink` requires an NSObject target; keep that detail out of the player API.
+private final class DisplayLinkTarget: NSObject {
+    var handler: (() -> Void)?
+
+    @objc func fire(_ link: CADisplayLink) {
+        handler?()
     }
 }
