@@ -32,7 +32,12 @@ struct ID3ParserTests {
     
     @Test func testMillisecondsToTrackTime_WithMilliseconds() {
         let result = ID3Parser.toTrackTime(millis: 1234, showHours: false, showMillis: true)
-        #expect(result == "0:01.234")
+        #expect(result == "0:01.2")
+    }
+
+    @Test func testMillisecondsToTrackTime_WithTenthsAndHours() {
+        let result = ID3Parser.toTrackTime(millis: 3_661_234, showHours: true, showMillis: true)
+        #expect(result == "1:01:01.2")
     }
     
     @Test func testMillisecondsToTrackTime_Zero() {

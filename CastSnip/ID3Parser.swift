@@ -211,7 +211,7 @@ class ID3Parser {
     }
     
     static func toTrackTime(millis: UInt32, showHours: Bool = false, showMillis: Bool = false) -> String {
-        let ms = (millis % 1000)
+        let tenths = (millis % 1000) / 100
         let sec = millis / 1000
         let s = sec % 60
         let min = sec / 60
@@ -220,9 +220,9 @@ class ID3Parser {
 
         if showMillis {
             if showHours {
-                return String(format: "%i:%02i:%02i.%03i", h, m, s, ms)
+                return String(format: "%i:%02i:%02i.%01i", h, m, s, tenths)
             } else {
-                return String(format: "%i:%02i.%03i", min, s, ms)
+                return String(format: "%i:%02i.%01i", min, s, tenths)
             }
         } else {
             if showHours {
