@@ -50,7 +50,7 @@ enum PodcastEncoder {
         using tool: Tool? = nil,
         tagging podcast: Podcast? = nil,
         includeTags: Bool = true,
-        bitrateKbps: Int = EncodeBitrate.default.rawValue,
+        bitrateKbps: Int = 192,
         encoder: ((URL, URL, ((Double) -> Void)?) throws -> Void)? = nil,
         progress: ((Double) -> Void)? = nil
     ) async throws -> URL {

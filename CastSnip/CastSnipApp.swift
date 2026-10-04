@@ -402,7 +402,7 @@ struct CastSnipApp: App {
         beginEncode(from: source, to: dest, bitrateKbps: encodeBitrate.bitrate.rawValue)
     }
 
-    private func beginEncode(from source: URL, to dest: URL, bitrateKbps: Int = EncodeBitrate.default.rawValue) {
+    private func beginEncode(from source: URL, to dest: URL, bitrateKbps: Int = 192) {
         let directory = dest.deletingLastPathComponent()
         if !FileManager.default.fileExists(atPath: directory.path) {
             try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

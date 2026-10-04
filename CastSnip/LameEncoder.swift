@@ -30,7 +30,7 @@ enum LameEncoder {
     static func encode(
         from input: URL,
         to output: URL,
-        bitrateKbps: Int = EncodeBitrate.default.rawValue,
+        bitrateKbps: Int = 192,
         progress: ((Double) -> Void)? = nil
     ) throws {
         let audioFile = try AVAudioFile(forReading: input)

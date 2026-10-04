@@ -168,12 +168,12 @@ struct EncodeBitrateTests {
 
     @Test func offersStandardPodcastRates() {
         #expect(EncodeBitrate.allCases.map(\.rawValue) == [64, 96, 128, 192])
-        #expect(EncodeBitrate.default == .kbps192)
+        #expect(EncodeBitrate.podcastDefault == .kbps192)
     }
 
     @Test func resolvedFallsBackToDefaultForUnknownRates() {
         #expect(EncodeBitrate.resolved(128) == .kbps128)
-        #expect(EncodeBitrate.resolved(999) == .default)
+        #expect(EncodeBitrate.resolved(999) == .podcastDefault)
     }
 
     @Test func missingPreferenceDefaultsTo192() {

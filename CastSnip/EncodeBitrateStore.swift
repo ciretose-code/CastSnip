@@ -15,14 +15,15 @@ enum EncodeBitrate: Int, CaseIterable, Equatable, Identifiable {
     case kbps128 = 128
     case kbps192 = 192
 
-    static let `default` = kbps192
+    /// Forecast-class default; used when preference is missing or invalid.
+    static let podcastDefault = kbps192
 
     var id: Int { rawValue }
 
     var menuTitle: String { "\(rawValue) kbps" }
 
     static func resolved(_ raw: Int) -> EncodeBitrate {
-        EncodeBitrate(rawValue: raw) ?? .default
+        EncodeBitrate(rawValue: raw) ?? .podcastDefault
     }
 }
 
@@ -39,7 +40,7 @@ final class EncodeBitrateStore {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         if defaults.object(forKey: Self.defaultsKey) == nil {
-            bitrate = .default
+            bitrate = .podcastDefault
         } else {
             bitrate = EncodeBitrate.resolved(defaults.integer(forKey: Self.defaultsKey))
         }
