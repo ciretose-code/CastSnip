@@ -2,12 +2,30 @@
 //  EncodeBitrateStore.swift
 //  CastSnip
 //
-//  Persists the Encode to MP3 bitrate choice and builds the save-panel accessory.
+//  CBR bitrate choices for Encode to MP3, persisted across launches.
 //
 
 import AppKit
 import Foundation
 import Observation
+
+enum EncodeBitrate: Int, CaseIterable, Equatable, Identifiable, Sendable {
+    case kbps64 = 64
+    case kbps96 = 96
+    case kbps128 = 128
+    case kbps192 = 192
+
+    /// Forecast-class default; used when preference is missing or invalid.
+    static let podcastDefault = kbps192
+
+    var id: Int { rawValue }
+
+    var menuTitle: String { "\(rawValue) kbps" }
+
+    static func resolved(_ raw: Int) -> EncodeBitrate {
+        EncodeBitrate(rawValue: raw) ?? .podcastDefault
+    }
+}
 
 @Observable
 final class EncodeBitrateStore {

@@ -8,6 +8,7 @@
 import Foundation
 import AVFoundation
 import AppKit
+import Combine
 import QuartzCore
 import OSLog
 

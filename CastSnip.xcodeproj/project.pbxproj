@@ -47,7 +47,6 @@
 		A11D3E010001000100000024 /* WaveformSampling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000023 /* WaveformSampling.swift */; };
 		A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000025 /* ID3TaggingStore.swift */; };
 		A11BIT010001000100000002 /* EncodeBitrateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11BIT010001000100000001 /* EncodeBitrateStore.swift */; };
-		A11BIT010001000100000004 /* EncodeBitrate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11BIT010001000100000003 /* EncodeBitrate.swift */; };
 		A11340010001000100000002 /* EditorSplitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11340010001000100000001 /* EditorSplitStore.swift */; };
 		A11290010001000100000002 /* SilenceSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11290010001000100000001 /* SilenceSettingsStore.swift */; };
 		A11290010001000100000004 /* SilenceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11290010001000100000003 /* SilenceSettingsView.swift */; };
@@ -118,7 +117,6 @@
 		A11D3E010001000100000023 /* WaveformSampling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformSampling.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000025 /* ID3TaggingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3TaggingStore.swift; sourceTree = "<group>"; };
 		A11BIT010001000100000001 /* EncodeBitrateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncodeBitrateStore.swift; sourceTree = "<group>"; };
-		A11BIT010001000100000003 /* EncodeBitrate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncodeBitrate.swift; sourceTree = "<group>"; };
 		A11340010001000100000001 /* EditorSplitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSplitStore.swift; sourceTree = "<group>"; };
 		A11290010001000100000001 /* SilenceSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceSettingsStore.swift; sourceTree = "<group>"; };
 		A11290010001000100000003 /* SilenceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceSettingsView.swift; sourceTree = "<group>"; };
@@ -205,7 +203,6 @@
 				7B7404522BDEBB5D001811B2 /* ID3Parser.swift */,
 				A11D3E010001000100000001 /* ID3Writer.swift */,
 				A11D3E010001000100000025 /* ID3TaggingStore.swift */,
-				A11BIT010001000100000003 /* EncodeBitrate.swift */,
 				A11BIT010001000100000001 /* EncodeBitrateStore.swift */,
 				A11290010001000100000001 /* SilenceSettingsStore.swift */,
 				A11290010001000100000003 /* SilenceSettingsView.swift */,
@@ -427,7 +424,6 @@
 				7BD56E9D2F2FD49F000F7D25 /* AudioPlayerManager.swift in Sources */,
 				A11D3E010001000100000002 /* ID3Writer.swift in Sources */,
 				A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */,
-				A11BIT010001000100000004 /* EncodeBitrate.swift in Sources */,
 				A11BIT010001000100000002 /* EncodeBitrateStore.swift in Sources */,
 				A11290010001000100000002 /* SilenceSettingsStore.swift in Sources */,
 				A11290010001000100000004 /* SilenceSettingsView.swift in Sources */,
