@@ -48,7 +48,12 @@ enum LameEncoder {
         }
         defer { lame_close(lame) }
 
-        let bitrate = EncodeBitrate.resolved(bitrateKbps).rawValue
+        // Keep in sync with EncodeBitrate cases (64 / 96 / 128 / 192).
+        let bitrate: Int
+        switch bitrateKbps {
+        case 64, 96, 128, 192: bitrate = bitrateKbps
+        default: bitrate = 192
+        }
         lame_set_in_samplerate(lame, Int32(format.sampleRate.rounded()))
         lame_set_num_channels(lame, 2)
         lame_set_mode(lame, STEREO)
