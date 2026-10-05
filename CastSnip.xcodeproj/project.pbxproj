@@ -14,8 +14,6 @@
 		7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B1D20B82BD36A83006D1AA4 /* ContentView.swift */; };
 		7B1D20BB2BD36A85006D1AA4 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */; };
 		7B1D20BF2BD36A85006D1AA4 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7B1D20BE2BD36A85006D1AA4 /* Preview Assets.xcassets */; };
-		B0A1A0010001000100000002 /* ChapterListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000001 /* ChapterListView.swift */; };
-		B0A1A0010001000100000004 /* EditorInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000003 /* EditorInspector.swift */; };
 		7B390A312BD5C0F5009CEDEE /* AudioFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B390A302BD5C0F5009CEDEE /* AudioFile.swift */; };
 		7B4015432BD443530060A2BF /* intro.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015422BD443530060A2BF /* intro.mp3 */; };
 		7B4015482BD452B20060A2BF /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 7B4015472BD452B20060A2BF /* README.md */; };
@@ -24,6 +22,12 @@
 		7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B7404522BDEBB5D001811B2 /* ID3Parser.swift */; };
 		7BD56E9D2F2FD49F000F7D25 /* AudioPlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */; };
 		7BD56EA12F2FD582000F7D25 /* ViewportMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */; };
+		A11290010001000100000002 /* SilenceSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11290010001000100000001 /* SilenceSettingsStore.swift */; };
+		A11290010001000100000004 /* SilenceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11290010001000100000003 /* SilenceSettingsView.swift */; };
+		A1132000000000000000002 /* AutofillMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1132000000000000000001 /* AutofillMemoryView.swift */; };
+		A11340010001000100000002 /* EditorSplitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11340010001000100000001 /* EditorSplitStore.swift */; };
+		A11BAKE010001000100000002 /* WaveformStripBaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11BAKE010001000100000001 /* WaveformStripBaker.swift */; };
+		A11BIT010001000100000002 /* EncodeBitrateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11BIT010001000100000001 /* EncodeBitrateStore.swift */; };
 		A11D3E010001000100000002 /* ID3Writer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000001 /* ID3Writer.swift */; };
 		A11D3E010001000100000004 /* ID3MetadataMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000003 /* ID3MetadataMapping.swift */; };
 		A11D3E010001000100000006 /* SecurityScopedBookmarkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */; };
@@ -36,19 +40,18 @@
 		A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000015 /* EmptyPodcastView.swift */; };
 		A11D3E010001000100000018 /* AudioMarkerImporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000017 /* AudioMarkerImporter.swift */; };
 		A11D3E01000100010000001A /* ShowAutofillStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000019 /* ShowAutofillStore.swift */; };
-		A1132000000000000000002 /* AutofillMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1132000000000000000001 /* AutofillMemoryView.swift */; };
 		A11D3E01000100010000001C /* SilenceDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001B /* SilenceDetector.swift */; };
 		A11D3E01000100010000001E /* PodcastEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001D /* PodcastEncoder.swift */; };
 		A11D3E010001000100000020 /* AircheckExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E01000100010000001F /* AircheckExporter.swift */; };
 		A11D3E010001000100000022 /* LameEncoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000021 /* LameEncoder.swift */; };
-		B0A1A0010001000100000006 /* WaveformPeakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000005 /* WaveformPeakStore.swift */; };
 		A11D3E010001000100000024 /* WaveformSampling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000023 /* WaveformSampling.swift */; };
 		A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000025 /* ID3TaggingStore.swift */; };
-		A11340010001000100000002 /* EditorSplitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11340010001000100000001 /* EditorSplitStore.swift */; };
-		A11290010001000100000002 /* SilenceSettingsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11290010001000100000001 /* SilenceSettingsStore.swift */; };
-		A11290010001000100000004 /* SilenceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11290010001000100000003 /* SilenceSettingsView.swift */; };
+		A11DET010001000100000002 /* WaveformDetailSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11DET010001000100000001 /* WaveformDetailSurface.swift */; };
 		A11LAME010001000100000003 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000002 /* LAME */; };
 		A11LAME010001000100000005 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000004 /* LAME */; };
+		B0A1A0010001000100000002 /* ChapterListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000001 /* ChapterListView.swift */; };
+		B0A1A0010001000100000004 /* EditorInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000003 /* EditorInspector.swift */; };
+		B0A1A0010001000100000006 /* WaveformPeakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000005 /* WaveformPeakStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -78,10 +81,7 @@
 		7B1D20BA2BD36A85006D1AA4 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		7B1D20BC2BD36A85006D1AA4 /* CastSnip.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CastSnip.entitlements; sourceTree = "<group>"; };
 		7B1D20BE2BD36A85006D1AA4 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		B0A1A0010001000100000001 /* ChapterListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterListView.swift; sourceTree = "<group>"; };
-		B0A1A0010001000100000003 /* EditorInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorInspector.swift; sourceTree = "<group>"; };
 		7B2A958E2F2C74E600C924FB /* CastSnipTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CastSnipTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		A11380010001000100000001 /* CastSnipUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CastSnipUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7B390A302BD5C0F5009CEDEE /* AudioFile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioFile.swift; sourceTree = "<group>"; };
 		7B4015422BD443530060A2BF /* intro.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = intro.mp3; sourceTree = "<group>"; };
 		7B4015472BD452B20060A2BF /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = SOURCE_ROOT; };
@@ -91,6 +91,13 @@
 		7BD163DF2F2D2B230007DD6E /* CastSnip.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = CastSnip.xctestplan; sourceTree = "<group>"; };
 		7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayerManager.swift; sourceTree = "<group>"; };
 		7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewportMath.swift; sourceTree = "<group>"; };
+		A11290010001000100000001 /* SilenceSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceSettingsStore.swift; sourceTree = "<group>"; };
+		A11290010001000100000003 /* SilenceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceSettingsView.swift; sourceTree = "<group>"; };
+		A1132000000000000000001 /* AutofillMemoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutofillMemoryView.swift; sourceTree = "<group>"; };
+		A11340010001000100000001 /* EditorSplitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSplitStore.swift; sourceTree = "<group>"; };
+		A11380010001000100000001 /* CastSnipUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CastSnipUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A11BAKE010001000100000001 /* WaveformStripBaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformStripBaker.swift; sourceTree = "<group>"; };
+		A11BIT010001000100000001 /* EncodeBitrateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncodeBitrateStore.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000001 /* ID3Writer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3Writer.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000003 /* ID3MetadataMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3MetadataMapping.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityScopedBookmarkStore.swift; sourceTree = "<group>"; };
@@ -103,17 +110,16 @@
 		A11D3E010001000100000015 /* EmptyPodcastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmptyPodcastView.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000017 /* AudioMarkerImporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioMarkerImporter.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000019 /* ShowAutofillStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShowAutofillStore.swift; sourceTree = "<group>"; };
-		A1132000000000000000001 /* AutofillMemoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutofillMemoryView.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001B /* SilenceDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceDetector.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001D /* PodcastEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PodcastEncoder.swift; sourceTree = "<group>"; };
 		A11D3E01000100010000001F /* AircheckExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AircheckExporter.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000021 /* LameEncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LameEncoder.swift; sourceTree = "<group>"; };
-		B0A1A0010001000100000005 /* WaveformPeakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformPeakStore.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000023 /* WaveformSampling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformSampling.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000025 /* ID3TaggingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3TaggingStore.swift; sourceTree = "<group>"; };
-		A11340010001000100000001 /* EditorSplitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSplitStore.swift; sourceTree = "<group>"; };
-		A11290010001000100000001 /* SilenceSettingsStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceSettingsStore.swift; sourceTree = "<group>"; };
-		A11290010001000100000003 /* SilenceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceSettingsView.swift; sourceTree = "<group>"; };
+		A11DET010001000100000001 /* WaveformDetailSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformDetailSurface.swift; sourceTree = "<group>"; };
+		B0A1A0010001000100000001 /* ChapterListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterListView.swift; sourceTree = "<group>"; };
+		B0A1A0010001000100000003 /* EditorInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorInspector.swift; sourceTree = "<group>"; };
+		B0A1A0010001000100000005 /* WaveformPeakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformPeakStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -190,11 +196,14 @@
 				7B16BD232F2E853900DFD7E8 /* WaveformView.swift */,
 				B0A1A0010001000100000005 /* WaveformPeakStore.swift */,
 				A11D3E010001000100000023 /* WaveformSampling.swift */,
+				A11BAKE010001000100000001 /* WaveformStripBaker.swift */,
+				A11DET010001000100000001 /* WaveformDetailSurface.swift */,
 				7BD56EA02F2FD582000F7D25 /* ViewportMath.swift */,
 				7BD56E9C2F2FD49F000F7D25 /* AudioPlayerManager.swift */,
 				7B7404522BDEBB5D001811B2 /* ID3Parser.swift */,
 				A11D3E010001000100000001 /* ID3Writer.swift */,
 				A11D3E010001000100000025 /* ID3TaggingStore.swift */,
+				A11BIT010001000100000001 /* EncodeBitrateStore.swift */,
 				A11290010001000100000001 /* SilenceSettingsStore.swift */,
 				A11290010001000100000003 /* SilenceSettingsView.swift */,
 				A11D3E010001000100000003 /* ID3MetadataMapping.swift */,
@@ -402,6 +411,8 @@
 				7B390A312BD5C0F5009CEDEE /* AudioFile.swift in Sources */,
 				7B1D20B92BD36A83006D1AA4 /* ContentView.swift in Sources */,
 				7BD56EA12F2FD582000F7D25 /* ViewportMath.swift in Sources */,
+				A11BAKE010001000100000002 /* WaveformStripBaker.swift in Sources */,
+				A11DET010001000100000002 /* WaveformDetailSurface.swift in Sources */,
 				7B7404532BDEBB5D001811B2 /* ID3Parser.swift in Sources */,
 				7B5427C02BEC519000314CDB /* Chapter.swift in Sources */,
 				7B5427C22BEC51ED00314CDB /* Podcast.swift in Sources */,
@@ -413,6 +424,7 @@
 				7BD56E9D2F2FD49F000F7D25 /* AudioPlayerManager.swift in Sources */,
 				A11D3E010001000100000002 /* ID3Writer.swift in Sources */,
 				A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */,
+				A11BIT010001000100000002 /* EncodeBitrateStore.swift in Sources */,
 				A11290010001000100000002 /* SilenceSettingsStore.swift in Sources */,
 				A11290010001000100000004 /* SilenceSettingsView.swift in Sources */,
 				A11D3E010001000100000004 /* ID3MetadataMapping.swift in Sources */,
@@ -707,8 +719,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ciretose.util.CastSnipUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				SUPPORTED_PLATFORMS = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -728,8 +740,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.ciretose.util.CastSnipUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
-				SUPPORTED_PLATFORMS = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;

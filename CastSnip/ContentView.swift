@@ -8,12 +8,11 @@
 import SwiftUI
 import UniformTypeIdentifiers
 import AppKit
+import QuartzCore
 
 struct ContentView: View {
     @Environment(AudioFile.self) var podcastAudioFile
     @Environment(\.openPodcast) private var openPodcast
-    @Environment(\.openPodcastPanel) private var openPodcastPanel
-    @Environment(\.documentActions) private var documentActions
 
     @State private var isDraggingAudio = false
     @State private var showInspector = true
@@ -36,10 +35,12 @@ struct ContentView: View {
     /// Set to true to snap the viewport immediately on the next `updateViewport()` call.
     @State private var shouldSnapViewport = true
 
-    /// 0...1. Higher = faster response (less smoothing).
-    private let viewportSmoothingAlpha: Double = 0.18
+    /// Throttled playhead for chapter list / toolbar labels (waveform uses `player.currentTime`).
+    @State private var transportPlayheadMillis: UInt32 = 0
+    @State private var lastTransportPublishAt: TimeInterval = 0
 
-    private var playheadMillis: UInt32 { UInt32(max(player.currentTime, 0) * 1000) }
+    /// Precise playhead for edit actions (add chapter, set start).
+    private var actionPlayheadMillis: UInt32 { UInt32(max(player.currentTime, 0) * 1000) }
 
     private var durationMillis: UInt32 {
         podcastAudioFile.podcast.durationInMillis ?? UInt32(player.duration * 1000)
@@ -70,18 +71,19 @@ struct ContentView: View {
             let listHeight = totalHeight * splitFraction
             VStack(spacing: 0) {
                 timelinePane
-                    .frame(height: max(totalHeight - listHeight, 0))
+                    .frame(maxHeight: .infinity)
+                transportBar
                 splitDivider(totalHeight: totalHeight)
                 ChapterListView(
-                    playheadMillis: playheadMillis,
-                    onAdd: { addChapter(atMillis: playheadMillis) },
+                    playheadMillis: transportPlayheadMillis,
+                    onAdd: { addChapter(atMillis: actionPlayheadMillis) },
                     onSeek: { chapter in seekToChapter(chapter) }
                 )
                 .frame(height: listHeight)
             }
         }
         .inspector(isPresented: $showInspector) {
-            EditorInspector(pane: $inspectorPane, playheadMillis: playheadMillis) { chapter, proposed in
+            EditorInspector(pane: $inspectorPane, playheadMillis: transportPlayheadMillis) { chapter, proposed in
                 let applied = ChapterTimeline.moveStart(of: chapter, to: proposed, in: podcastAudioFile.podcast.chapters, durationMillis: durationMillis)
                 podcastAudioFile.markAsModified()
                 return applied
@@ -97,6 +99,7 @@ struct ContentView: View {
             refreshViewportOptions()
             clampViewportDuration()
             updateViewport()
+            publishTransportIfNeeded(time: player.currentTime)
         }
         .onChange(of: podcastAudioFile.podcast.url) { _, newValue in
             player.load(url: newValue)
@@ -105,6 +108,7 @@ struct ContentView: View {
             refreshViewportOptions()
             clampViewportDuration()
             updateViewport()
+            publishTransportIfNeeded(time: player.currentTime)
         }
         .onChange(of: player.duration) { _, _ in
             refreshViewportOptions()
@@ -115,8 +119,12 @@ struct ContentView: View {
         .onChange(of: selectedViewportIndex) { _, _ in
             applySelectedViewport()
         }
-        .onChange(of: player.currentTime) { _, _ in
+        .onChange(of: player.currentTime) { _, newTime in
             updateViewport()
+            publishTransportIfNeeded(time: newTime)
+        }
+        .onChange(of: player.isPlaying) { _, _ in
+            publishTransportIfNeeded(time: player.currentTime)
         }
         .onChange(of: podcastAudioFile.selectedChapter) { _, selected in
             guard let selected else { return }
@@ -149,7 +157,7 @@ struct ContentView: View {
 
     private var timelinePane: some View {
         let chapters = podcastAudioFile.podcast.chapters
-        let current = ChapterTimeline.chapter(at: playheadMillis, in: chapters)
+        let current = ChapterTimeline.chapter(at: transportPlayheadMillis, in: chapters)
 
         return VStack(spacing: 0) {
             HStack(spacing: 10) {
@@ -170,7 +178,6 @@ struct ContentView: View {
                         .lineLimit(1)
                 }
                 Spacer()
-                zoomControls
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -180,6 +187,7 @@ struct ContentView: View {
                 viewportStart: viewportStart,
                 viewportDuration: viewportDuration,
                 currentTime: player.currentTime,
+                isPlaying: player.isPlaying,
                 markers: WaveformView.makeMarkers(from: chapters, selectedID: podcastAudioFile.selectedChapter?.id),
                 onSeek: { time in
                     player.seek(to: time)
@@ -259,7 +267,13 @@ struct ContentView: View {
     }
 
     private var zoomControls: some View {
+        // Max = widest view (max zoom out), so it sits with −, not past +.
         HStack(spacing: 4) {
+            Button("Max") { selectedViewportIndex = max(viewportOptions.count - 1, 0) }
+                .disabled(selectedViewportIndex == viewportOptions.count - 1)
+                .help("Show the whole episode (⌘0)")
+                .padding(.trailing, 6)
+
             Button { zoom(in: false) } label: {
                 Image(systemName: "minus.magnifyingglass")
             }
@@ -267,7 +281,7 @@ struct ContentView: View {
             .help("Zoom out (⌘-)")
             .accessibilityLabel("Zoom out")
 
-            Text(viewportOptions[safe: selectedViewportIndex].map(viewportLabel) ?? "Full")
+            Text(viewportOptions[safe: selectedViewportIndex].map(viewportLabel) ?? "Max")
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 34)
@@ -279,31 +293,15 @@ struct ContentView: View {
             .disabled(selectedViewportIndex <= 0)
             .help("Zoom in (⌘=)")
             .accessibilityLabel("Zoom in")
-
-            Button("Fit") { selectedViewportIndex = max(viewportOptions.count - 1, 0) }
-                .disabled(selectedViewportIndex == viewportOptions.count - 1)
-                .help("Show the whole episode (⌘0)")
         }
         .buttonStyle(.borderless)
         .font(.callout)
     }
 
-    // MARK: - Toolbar
+    // MARK: - Transport
 
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItemGroup(placement: .navigation) {
-            Button(action: openPodcastPanel) {
-                Label("Open", systemImage: "folder")
-            }
-            .help("Open an audio file (⌘O)")
-            Button(action: documentActions.save) {
-                Label("Save", systemImage: "square.and.arrow.down")
-            }
-            .help("Save (⌘S)")
-        }
-
-        ToolbarItem(placement: .principal) {
+    private var transportBar: some View {
+        ZStack {
             HStack(spacing: 14) {
                 Button { player.jumpBackward(10) } label: {
                     Label(EditorAccessibility.back10, systemImage: "gobackward.10")
@@ -312,8 +310,10 @@ struct ContentView: View {
                 .accessibilityIdentifier(EditorAccessibility.back10)
 
                 Button { player.togglePlayPause() } label: {
-                    Label(player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play,
-                          systemImage: player.isPlaying ? "pause.fill" : "play.fill")
+                    Label(
+                        player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play,
+                        systemImage: player.isPlaying ? "pause.fill" : "play.fill"
+                    )
                 }
                 .disabled(player.duration <= 0)
                 .keyboardShortcut(.space, modifiers: [])
@@ -326,31 +326,30 @@ struct ContentView: View {
                 .disabled(player.duration <= 0)
                 .accessibilityIdentifier(EditorAccessibility.forward10)
 
-                Text("\(ID3Parser.toTrackTime(millis: playheadMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true)) / \(ID3Parser.toTrackTime(millis: durationMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true))")
+                Text("\(ID3Parser.toTrackTime(millis: transportPlayheadMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true)) / \(ID3Parser.toTrackTime(millis: durationMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true))")
                     .font(.callout)
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .fixedSize()
-                    .padding(.trailing, 6)
             }
             .labelStyle(.iconOnly)
+
+            HStack {
+                Spacer(minLength: 0)
+                zoomControls
+            }
         }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(.bar)
+    }
 
-        ToolbarItemGroup(placement: .primaryAction) {
-            Button { addChapter(atMillis: playheadMillis) } label: {
-                Label("Add Chapter", systemImage: "plus")
-            }
-            .help("Add a chapter at the playhead (⌘N)")
-            .accessibilityIdentifier(EditorAccessibility.addChapter)
+    // MARK: - Toolbar
 
-            Menu {
-                Button("Encode to MP3…", action: documentActions.encode)
-                Button("Export Airchecks…", action: documentActions.exportAirchecks)
-            } label: {
-                Label("Export", systemImage: "square.and.arrow.up")
-            }
-            .help("Encode or export")
-
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) {
             Button { showInspector.toggle() } label: {
                 Label("Inspector", systemImage: "sidebar.trailing")
             }
@@ -365,13 +364,13 @@ struct ContentView: View {
         var setStart: (() -> Void)?
         if let selected = podcastAudioFile.selectedChapter, !ChapterTimeline.isStartLocked(selected, in: chapters) {
             setStart = {
-                ChapterTimeline.moveStart(of: selected, to: playheadMillis, in: chapters, durationMillis: durationMillis)
+                ChapterTimeline.moveStart(of: selected, to: actionPlayheadMillis, in: chapters, durationMillis: durationMillis)
                 podcastAudioFile.markAsModified()
             }
         }
         let lastIndex = viewportOptions.count - 1
         return EditorCommands(
-            addChapter: { addChapter(atMillis: playheadMillis) },
+            addChapter: { addChapter(atMillis: actionPlayheadMillis) },
             setStartToPlayhead: setStart,
             zoomIn: selectedViewportIndex > 0 ? { zoom(in: true) } : nil,
             zoomOut: selectedViewportIndex < lastIndex ? { zoom(in: false) } : nil,
@@ -491,7 +490,7 @@ struct ContentView: View {
     private func viewportLabel(for duration: TimeInterval) -> String {
         let maxViewport = player.duration
         if maxViewport > 0, abs(duration - maxViewport) < 0.5 {
-            return "Full"
+            return "Max"
         }
         if duration >= 60 {
             let minutes = Int(duration / 60)
@@ -523,27 +522,31 @@ struct ContentView: View {
             return
         }
 
-        if duration <= viewportDuration {
-            viewportStart = 0
-            return
-        }
-
-        // Ideal viewport start to keep the playhead centered.
-        let centeredStart = player.currentTime - viewportDuration / 2
-        let targetStart = max(0, min(centeredStart, duration - viewportDuration))
-
-        // Snap immediately for initial load/track changes and explicit seeks.
-        if shouldSnapViewport {
-            viewportStart = targetStart
+        let snap = shouldSnapViewport
+        viewportStart = ViewportMath.followedStart(
+            currentStart: viewportStart,
+            currentTime: player.currentTime,
+            duration: duration,
+            viewportDuration: viewportDuration,
+            isPlaying: player.isPlaying,
+            snap: snap
+        )
+        if snap {
             shouldSnapViewport = false
+        }
+    }
+
+    private func publishTransportIfNeeded(time: TimeInterval) {
+        let now = CACurrentMediaTime()
+        guard ViewportMath.shouldPublishTransport(
+            now: now,
+            lastPublishedAt: lastTransportPublishAt,
+            isPlaying: player.isPlaying
+        ) else {
             return
         }
-
-        // Smoothly approach the target to reduce visible "stepping" during playback.
-        viewportStart = viewportStart + (targetStart - viewportStart) * viewportSmoothingAlpha
-
-        // Keep the viewport clamped even with smoothing.
-        viewportStart = max(0, min(viewportStart, duration - viewportDuration))
+        lastTransportPublishAt = now
+        transportPlayheadMillis = UInt32(max(time, 0) * 1000)
     }
 }
 

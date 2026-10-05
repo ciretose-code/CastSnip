@@ -146,4 +146,169 @@ final class ViewportMathTests: XCTestCase {
         XCTAssertNil(ViewportMath.playheadX(time: 5, viewportStart: 0, viewportDuration: 0, audioDuration: 100, width: 200))
         XCTAssertNil(ViewportMath.playheadX(time: 5, viewportStart: 0, viewportDuration: 20, audioDuration: 0, width: 200))
     }
+
+    func testFollowedStart_WhilePlaying_SnapsToCenteredTarget() {
+        // Previous start lagged behind; playback should hard-snap, not ease.
+        let next = ViewportMath.followedStart(
+            currentStart: 10,
+            currentTime: 40,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: true,
+            snap: false
+        )
+        XCTAssertEqual(next, 30, accuracy: 0.0001)
+    }
+
+    func testFollowedStart_WhenSnapRequested_SnapsEvenIfPaused() {
+        let next = ViewportMath.followedStart(
+            currentStart: 0,
+            currentTime: 40,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: false,
+            snap: true
+        )
+        XCTAssertEqual(next, 30, accuracy: 0.0001)
+    }
+
+    func testFollowedStart_WhenPausedWithoutSnap_KeepsCurrentStart() {
+        let next = ViewportMath.followedStart(
+            currentStart: 12,
+            currentTime: 40,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: false,
+            snap: false
+        )
+        XCTAssertEqual(next, 12, accuracy: 0.0001)
+    }
+
+    func testShouldPublishTransport_WhilePlaying_ThrottlesToInterval() {
+        XCTAssertTrue(ViewportMath.shouldPublishTransport(now: 1.00, lastPublishedAt: 0, isPlaying: true))
+        XCTAssertFalse(ViewportMath.shouldPublishTransport(now: 1.05, lastPublishedAt: 1.00, isPlaying: true))
+        XCTAssertTrue(ViewportMath.shouldPublishTransport(now: 1.10, lastPublishedAt: 1.00, isPlaying: true))
+    }
+
+    func testShouldPublishTransport_WhenPaused_AlwaysPublishes() {
+        XCTAssertTrue(ViewportMath.shouldPublishTransport(now: 1.01, lastPublishedAt: 1.00, isPlaying: false))
+    }
+
+    func testStripWindow_CentersThreeViewportsOnAnchor() {
+        let window = WaveformStripMath.stripWindow(anchorTime: 60, viewportDuration: 20, audioDuration: 600)
+        XCTAssertEqual(window.start, 30, accuracy: 0.0001)
+        XCTAssertEqual(window.end, 90, accuracy: 0.0001)
+    }
+
+    func testStripWindow_ClampsToAudioBounds() {
+        let nearStart = WaveformStripMath.stripWindow(anchorTime: 5, viewportDuration: 20, audioDuration: 600)
+        XCTAssertEqual(nearStart.start, 0, accuracy: 0.0001)
+        XCTAssertEqual(nearStart.end, 60, accuracy: 0.0001)
+
+        let nearEnd = WaveformStripMath.stripWindow(anchorTime: 590, viewportDuration: 20, audioDuration: 600)
+        XCTAssertEqual(nearEnd.start, 540, accuracy: 0.0001)
+        XCTAssertEqual(nearEnd.end, 600, accuracy: 0.0001)
+    }
+
+    func testImageOffsetX_PlacesVisibleStartAtViewLeadingEdge() {
+        // Mid-track: viewport [20, 40] inside strip [0, 60], view 200pt of 600pt strip.
+        let offset = WaveformStripMath.imageOffsetX(
+            visibleStart: 20,
+            stripStart: 0,
+            stripDuration: 60,
+            stripPixelWidth: 600
+        )
+        XCTAssertEqual(offset, -200, accuracy: 0.0001)
+    }
+
+    func testImageOffsetX_NearTrackStart_MatchesClampedViewport() throws {
+        // Playhead at t=5 with 20s viewport clamps to start=0 (ruler window), not hard-center.
+        let visibleStart = ViewportMath.viewportStart(currentTime: 5, duration: 600, viewportDuration: 20)
+        XCTAssertEqual(visibleStart, 0, accuracy: 0.0001)
+
+        let offset = WaveformStripMath.imageOffsetX(
+            visibleStart: visibleStart,
+            stripStart: 0,
+            stripDuration: 60,
+            stripPixelWidth: 600
+        )
+        XCTAssertEqual(offset, 0, accuracy: 0.0001)
+
+        let playheadX = try XCTUnwrap(
+            ViewportMath.playheadX(
+                time: 5,
+                viewportStart: visibleStart,
+                viewportDuration: 20,
+                audioDuration: 600,
+                width: 200
+            )
+        )
+        // Ruler tick at t=5 and CA playhead must share the same x.
+        XCTAssertEqual(playheadX, 50, accuracy: 0.0001)
+        let tickX = ((5.0 - visibleStart) / 20.0) * 200.0
+        XCTAssertEqual(tickX, playheadX, accuracy: 0.0001)
+    }
+
+    func testNeedsPrefetch_WhenPlayheadNearsStripEdge() {
+        XCTAssertTrue(WaveformStripMath.needsPrefetch(currentTime: 10, stripStart: 0, stripDuration: 60))
+        XCTAssertFalse(WaveformStripMath.needsPrefetch(currentTime: 30, stripStart: 0, stripDuration: 60))
+        XCTAssertTrue(WaveformStripMath.needsPrefetch(currentTime: 50, stripStart: 0, stripDuration: 60))
+    }
+
+    func testRulerTickIntervals_TwoHourFit_KeepsLabelsSpaced() {
+        // Full-fit 2h on a typical editor width must not pack labels every 2 minutes.
+        let intervals = ViewportMath.rulerTickIntervals(viewportDuration: 7200, width: 1000)
+        let labelSpacing = 1000 * (intervals.label / 7200)
+        XCTAssertGreaterThanOrEqual(labelSpacing, 70, "labels need room; got \(intervals.label)s → \(labelSpacing)pt")
+        XCTAssertGreaterThanOrEqual(intervals.label, 600)
+        XCTAssertLessThanOrEqual(intervals.half, intervals.major)
+        XCTAssertLessThanOrEqual(intervals.major, intervals.label)
+    }
+
+    func testRulerTickIntervals_ShortViewport_StaysFineGrained() {
+        let intervals = ViewportMath.rulerTickIntervals(viewportDuration: 20, width: 1000)
+        XCTAssertLessThanOrEqual(intervals.label, 5)
+    }
+
+    func testRulerTickIntervals_NarrowWidth_UsesCoarserLabels() {
+        let wide = ViewportMath.rulerTickIntervals(viewportDuration: 600, width: 1200)
+        let narrow = ViewportMath.rulerTickIntervals(viewportDuration: 600, width: 300)
+        XCTAssertGreaterThanOrEqual(narrow.label, wide.label)
+    }
+
+    func testMarkerLayoutX_TracksTimeInsideViewport() throws {
+        let before = try XCTUnwrap(
+            ViewportMath.markerLayoutX(
+                time: 15,
+                viewportStart: 10,
+                viewportDuration: 20,
+                audioDuration: 100,
+                width: 200
+            )
+        )
+        let after = try XCTUnwrap(
+            ViewportMath.markerLayoutX(
+                time: 20,
+                viewportStart: 10,
+                viewportDuration: 20,
+                audioDuration: 100,
+                width: 200
+            )
+        )
+        XCTAssertEqual(before, 50, accuracy: 0.0001)
+        XCTAssertEqual(after, 100, accuracy: 0.0001)
+        XCTAssertGreaterThan(after, before)
+    }
+
+    func testMarkerLayoutX_NilWhenOutsideViewport() {
+        XCTAssertNil(
+            ViewportMath.markerLayoutX(
+                time: 5,
+                viewportStart: 10,
+                viewportDuration: 20,
+                audioDuration: 100,
+                width: 200
+            )
+        )
+    }
 }

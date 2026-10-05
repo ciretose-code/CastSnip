@@ -36,7 +36,7 @@ struct EditorInspector: View {
             switch pane {
             case .chapter:
                 if let chapter = audioFile.selectedChapter {
-                    ChapterInspector(chapter: chapter, playheadMillis: playheadMillis, onRetime: onRetime)
+                    ChapterInspector(chapter: chapter, onRetime: onRetime)
                         .id(chapter.id)
                 } else {
                     ContentUnavailableView(
@@ -57,7 +57,6 @@ struct EditorInspector: View {
 private struct ChapterInspector: View {
     @Environment(AudioFile.self) private var audioFile
     let chapter: Chapter
-    let playheadMillis: UInt32
     let onRetime: (Chapter, UInt32) -> UInt32
 
     private var showHours: Bool { audioFile.podcast.shouldShowHours }
@@ -101,20 +100,10 @@ private struct ChapterInspector: View {
 
             Section {
                 LabeledContent("Start") {
-                    HStack(spacing: 6) {
-                        ChapterTimeField(millis: chapter.startTime, showHours: showHours) { proposed in
-                            onRetime(chapter, proposed)
-                        }
-                        .disabled(isLocked)
-                        Button {
-                            _ = onRetime(chapter, playheadMillis)
-                        } label: {
-                            Image(systemName: "scope")
-                        }
-                        .disabled(isLocked)
-                        .help("Set start to the playhead (⌘T)")
-                        .accessibilityLabel("Set start to playhead")
+                    ChapterTimeField(millis: chapter.startTime, showHours: showHours) { proposed in
+                        onRetime(chapter, proposed)
                     }
+                    .disabled(isLocked)
                 }
                 LabeledContent("End") {
                     Text(ID3Parser.toTrackTime(millis: endMillis, showHours: showHours, showMillis: true))

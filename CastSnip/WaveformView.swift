@@ -25,6 +25,9 @@ struct WaveformView: View {
     /// Current playback time (seconds from start of audio).
     let currentTime: TimeInterval
 
+    /// When true, skip expensive per-frame chrome (chapter title pills) so playback stays fluid.
+    var isPlaying: Bool = false
+
     /// Called when the user clicks/taps the waveform to seek.
     let onSeek: (TimeInterval) -> Void
 
@@ -46,16 +49,12 @@ struct WaveformView: View {
     /// Called on a pinch: true to zoom in, false to zoom out.
     var onZoom: (Bool) -> Void = { _ in }
 
-    /// How close (in points) the pointer must be to a boundary to grab it.
-    private let markerGrabDistance: CGFloat = 6
-
     private let overviewHeight: CGFloat = 32
     private let rulerHeight: CGFloat = 20
 
     @State private var peaks = WaveformPeakStore()
     @State private var canvasWidth: CGFloat = 0
-    @State private var draggingMarkerID: UUID?
-    @State private var dragModeDecided = false
+    @State private var followEpoch = 0
 
     /// Optional markers to draw as vertical bars over the waveform.
     /// Times are seconds from start of audio.
@@ -64,17 +63,13 @@ struct WaveformView: View {
     /// Played waveform. Always CastSnip blue, even when the system accent overrides the app's.
     static let playedWaveform = Color.castSnipBlue
 
-    /// Tints used for chapter regions, shared with the chapter list so rows match the waveform.
-    /// Mostly Security lockup: purple, green, amber, then supporting site tones.
+    /// Chapter region tints (purple → green → amber → red), shared with the chapter list.
+    /// CastSnip blue is reserved for the accent / played wash, not chapters.
     static let chapterPalette: [Color] = [
-        Color(red: 100 / 255, green: 52 / 255, blue: 155 / 255),   // #64349B
-        Color(red: 52 / 255, green: 155 / 255, blue: 99 / 255),    // #349B63
-        Color(red: 251 / 255, green: 156 / 255, blue: 4 / 255),    // #FB9C04
-        Color(red: 201 / 255, green: 65 / 255, blue: 43 / 255),    // #C9412B
-        Color(red: 86 / 255, green: 79 / 255, blue: 118 / 255),    // #564F76
-        Color(red: 75 / 255, green: 94 / 255, blue: 112 / 255),    // #4B5E70
-        Color(red: 228 / 255, green: 106 / 255, blue: 26 / 255),   // #E46A1A
-        Color(red: 163 / 255, green: 163 / 255, blue: 163 / 255)   // #A3A3A3
+        Color(red: 100 / 255, green: 52 / 255, blue: 155 / 255),   // purple #64349B
+        Color(red: 52 / 255, green: 155 / 255, blue: 99 / 255),    // green  #349B63
+        Color(red: 251 / 255, green: 156 / 255, blue: 4 / 255),    // amber  #FB9C04
+        Color(red: 201 / 255, green: 65 / 255, blue: 43 / 255),    // red    #C9412B
     ]
 
     static func chapterColor(at index: Int) -> Color {
@@ -142,6 +137,7 @@ struct WaveformView: View {
         viewportStart: TimeInterval,
         viewportDuration: TimeInterval,
         currentTime: TimeInterval,
+        isPlaying: Bool = false,
         markers: [Marker] = [],
         onSeek: @escaping (TimeInterval) -> Void = { _ in },
         onViewportPan: @escaping (TimeInterval) -> Void = { _ in }
@@ -151,6 +147,7 @@ struct WaveformView: View {
         self.viewportStart = viewportStart
         self.viewportDuration = viewportDuration
         self.currentTime = currentTime
+        self.isPlaying = isPlaying
         self.markers = markers
         self.onSeek = onSeek
         self.onViewportPan = onViewportPan
@@ -193,13 +190,13 @@ struct WaveformView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 VStack(spacing: 0) {
-                    overview
-                    Divider()
                     detail
                     Canvas { context, size in
                         drawViewportTimestamps(context: context, size: size)
                     }
                     .frame(height: rulerHeight)
+                    Divider()
+                    overview
                 }
             }
         }
@@ -215,8 +212,18 @@ struct WaveformView: View {
     // MARK: - Overview
 
     private var overview: some View {
-        Canvas { context, size in
-            drawOverview(context: context, size: size)
+        // Base waveform/regions are stable during playback; only the window + playhead move.
+        ZStack {
+            OverviewStaticCanvas(
+                overview: peaks.overview,
+                audioDuration: audioDuration,
+                markers: markers
+            )
+            .equatable()
+
+            Canvas { context, size in
+                drawOverviewChrome(context: context, size: size)
+            }
         }
         .frame(height: overviewHeight)
         .contentShape(Rectangle())
@@ -225,32 +232,17 @@ struct WaveformView: View {
                 .onChanged { value in
                     guard audioDuration > 0, canvasWidth > 0 else { return }
                     let progress = min(max(value.location.x / canvasWidth, 0), 1)
+                    followEpoch += 1
                     onOverviewSeek(progress * audioDuration)
                 }
         )
         .help("Whole episode — click to jump")
     }
 
-    private func drawOverview(context: GraphicsContext, size: CGSize) {
+    private func drawOverviewChrome(context: GraphicsContext, size: CGSize) {
         guard audioDuration > 0 else { return }
         let width = size.width
         let height = size.height
-
-        for marker in markers {
-            let end = marker.end ?? audioDuration
-            let x0 = CGFloat(marker.time / audioDuration) * width
-            let x1 = CGFloat(end / audioDuration) * width
-            let rect = CGRect(x: x0, y: 0, width: max(x1 - x0, 1), height: height)
-            context.fill(Path(rect), with: .color(marker.color.opacity(marker.isSelected ? 0.35 : 0.18)))
-        }
-
-        let bars = WaveformSampling.downsample(buckets: peaks.overview, maxBars: max(1, Int(width / 2)))
-        let barWidth = width / CGFloat(max(bars.count, 1))
-        for (index, sample) in bars.enumerated() {
-            let barHeight = max(CGFloat(sample) * height * 0.8, 1)
-            let rect = CGRect(x: CGFloat(index) * barWidth, y: (height - barHeight) / 2, width: max(barWidth - 0.5, 0.5), height: barHeight)
-            context.fill(Path(rect), with: .color(.primary.opacity(0.45)))
-        }
 
         if let window = viewportWindow() {
             let x0 = CGFloat(window.start / audioDuration) * width
@@ -271,107 +263,29 @@ struct WaveformView: View {
     // MARK: - Detail
 
     private var detail: some View {
-        Canvas { context, size in
-            drawRegions(context: context, size: size)
-            drawWaveform(context: context, size: size)
-            drawMarkers(context: context, size: size)
-            drawPlayhead(context: context, size: size)
-        }
+        WaveformDetailRepresentable(
+            model: WaveformDetailModel(
+                viewportStart: viewportStart,
+                viewportDuration: viewportDuration,
+                currentTime: currentTime,
+                isPlaying: isPlaying,
+                audioDuration: audioDuration,
+                overview: peaks.overview,
+                overviewBucketDuration: peaks.overviewBucketDuration,
+                tiles: peaks.tiles,
+                markers: markers,
+                followEpoch: followEpoch
+            ),
+            onSeek: onSeek,
+            onViewportPan: onViewportPan,
+            onMarkerMove: onMarkerMove,
+            onMarkerMoveEnded: onMarkerMoveEnded,
+            onAddChapter: onAddChapter,
+            onZoom: onZoom
+        )
         .frame(maxHeight: .infinity)
-        .contentShape(Rectangle())
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { canvasWidth = $0 }
-        .gesture(
-            DragGesture(minimumDistance: 2)
-                .onChanged { value in
-                    if !dragModeDecided {
-                        dragModeDecided = true
-                        draggingMarkerID = marker(nearX: value.startLocation.x)?.id
-                    }
-                    guard let time = time(atX: value.location.x) else { return }
-                    if let id = draggingMarkerID {
-                        onMarkerMove(id, time)
-                    } else {
-                        onSeek(time)
-                    }
-                }
-                .onEnded { _ in
-                    if let id = draggingMarkerID {
-                        onMarkerMoveEnded(id)
-                    }
-                    draggingMarkerID = nil
-                    dragModeDecided = false
-                }
-        )
-        .simultaneousGesture(
-            // A plain click seeks; a double-click's first click seeks to the same spot it adds at.
-            SpatialTapGesture(count: 1)
-                .onEnded { value in
-                    if let time = time(atX: value.location.x) {
-                        onSeek(time)
-                    }
-                }
-        )
-        .simultaneousGesture(
-            SpatialTapGesture(count: 2)
-                .onEnded { value in
-                    if let time = time(atX: value.location.x) {
-                        onAddChapter(time)
-                    }
-                }
-        )
-        .simultaneousGesture(
-            MagnifyGesture()
-                .onEnded { value in
-                    onZoom(value.magnification > 1)
-                }
-        )
-        .onContinuousHover { phase in
-            switch phase {
-            case .active(let location):
-                if draggingMarkerID != nil || marker(nearX: location.x) != nil {
-                    NSCursor.resizeLeftRight.set()
-                } else {
-                    NSCursor.arrow.set()
-                }
-            case .ended:
-                NSCursor.arrow.set()
-            }
-        }
-        .background(
-            ScrollWheelView { dx, dy in
-                handleViewportScroll(deltaX: dx, deltaY: dy)
-            }
-        )
         .help("Click to seek · drag a chapter edge to retime · double-click to add a chapter · pinch to zoom")
-    }
-
-    private func time(atX x: CGFloat) -> TimeInterval? {
-        guard let window = viewportWindow(), canvasWidth > 0 else { return nil }
-        let progress = min(max(x / canvasWidth, 0), 1)
-        return window.start + progress * window.duration
-    }
-
-    private func x(forTime time: TimeInterval, in window: ViewportWindow, width: CGFloat) -> CGFloat {
-        CGFloat((time - window.start) / window.duration) * width
-    }
-
-    private func marker(nearX x: CGFloat) -> Marker? {
-        guard let window = viewportWindow(), canvasWidth > 0 else { return nil }
-        return markers
-            .filter { !$0.isLocked && $0.time >= window.start && $0.time <= window.end }
-            .map { ($0, abs(self.x(forTime: $0.time, in: window, width: canvasWidth) - x)) }
-            .filter { $0.1 <= markerGrabDistance }
-            .min(by: { $0.1 < $1.1 })?
-            .0
-    }
-
-    private func handleViewportScroll(deltaX: CGFloat, deltaY: CGFloat) {
-        guard viewportDuration > 0, canvasWidth > 0 else { return }
-        guard deltaX != 0 else { return }
-
-        let secondsPerPoint = viewportDuration / canvasWidth
-        let deltaSeconds = -TimeInterval(deltaX) * secondsPerPoint
-        onViewportPan(deltaSeconds)
     }
 
     private struct ViewportWindow {
@@ -382,126 +296,10 @@ struct WaveformView: View {
 
     private func viewportWindow() -> ViewportWindow? {
         guard audioDuration > 0, viewportDuration > 0 else { return nil }
-
-        // Clamp requested viewport to the audio duration.
         let start = max(0, min(viewportStart, audioDuration))
         let end = max(start, min(start + viewportDuration, audioDuration))
         guard end > start else { return nil }
-
         return ViewportWindow(start: start, end: end)
-    }
-
-    private func drawRegions(context: GraphicsContext, size: CGSize) {
-        guard let window = viewportWindow() else { return }
-        let width = size.width
-
-        for marker in markers {
-            let end = marker.end ?? audioDuration
-            guard end > window.start, marker.time < window.end else { continue }
-            let x0 = max(x(forTime: marker.time, in: window, width: width), 0)
-            let x1 = min(x(forTime: end, in: window, width: width), width)
-            let rect = CGRect(x: x0, y: 0, width: max(x1 - x0, 0), height: size.height)
-            context.fill(Path(rect), with: .color(marker.color.opacity(marker.isSelected ? 0.24 : 0.10)))
-
-            // Title pill, pinned to the visible part of the region so it stays readable while scrolling.
-            guard let label = marker.label, !label.isEmpty, rect.width > 24 else { continue }
-            var layer = context
-            layer.clip(to: Path(rect.insetBy(dx: 4, dy: 0)))
-            let text = Text(marker.isHidden ? "\(Image(systemName: "eye.slash")) \(label)" : label)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(marker.isHidden ? .secondary : .primary)
-            let resolved = layer.resolve(text)
-            let textSize = resolved.measure(in: CGSize(width: rect.width - 12, height: 20))
-            let pill = CGRect(x: rect.minX + 6, y: 6, width: textSize.width + 12, height: textSize.height + 4)
-            layer.fill(Path(roundedRect: pill, cornerRadius: pill.height / 2), with: .color(marker.color.opacity(0.35)))
-            layer.draw(resolved, at: CGPoint(x: pill.minX + 6, y: pill.midY), anchor: .leading)
-        }
-    }
-
-    private func drawWaveform(context: GraphicsContext, size: CGSize) {
-        let width = size.width
-        let height = size.height
-        let midHeight = height / 2
-
-        guard let window = viewportWindow() else { return }
-        let visibleBuckets: [Float]
-        if window.duration <= WaveformPeakStore.maxDetailWindow {
-            // Exact peaks where tiles have loaded, the overview elsewhere until they do.
-            visibleBuckets = WaveformSampling.viewportPeaks(
-                overview: peaks.overview,
-                overviewBucketDuration: peaks.overviewBucketDuration,
-                tiles: peaks.tiles,
-                tileDuration: WaveformPeakStore.tileDuration,
-                detailBucketDuration: WaveformPeakStore.detailBucketDuration,
-                start: window.start,
-                end: window.end
-            )
-        } else {
-            visibleBuckets = WaveformSampling.samplesForViewport(
-                samples: peaks.overview,
-                audioDuration: audioDuration,
-                viewportStart: window.start,
-                viewportDuration: window.duration,
-                bucketDuration: peaks.overviewBucketDuration
-            )
-        }
-        guard !visibleBuckets.isEmpty else { return }
-
-        // For a fixed ~20s viewport and 0.1s buckets, visibleBuckets is ~200.
-        // Still, protect ourselves if viewportDuration changes in the future.
-        let targetBarCount = max(1, Int(floor(width)))
-        let bars = WaveformSampling.downsample(buckets: visibleBuckets, maxBars: targetBarCount)
-
-        let barWidth = width / CGFloat(bars.count)
-        let barSpacing: CGFloat = 0.5
-        let playheadX = viewportWindow().map { x(forTime: currentTime, in: $0, width: width) } ?? 0
-
-        for (index, sample) in bars.enumerated() {
-            let x = CGFloat(index) * barWidth
-            // Leave room for the title pills at the top of each region.
-            let barHeight = CGFloat(sample) * (height - 36) * 0.9
-
-            let rect = CGRect(
-                x: x,
-                y: midHeight + 8 - barHeight / 2,
-                width: max(barWidth - barSpacing, 1),
-                height: max(barHeight, 1)
-            )
-
-            // Make bars rounded at top + bottom (capsule-like).
-            let radius = min(rect.width, rect.height) / 2
-
-            let color: Color = x < playheadX ? Self.playedWaveform : .primary.opacity(0.55)
-            context.fill(
-                Path(roundedRect: rect, cornerRadius: radius),
-                with: .color(color)
-            )
-        }
-    }
-
-    private func drawPlayhead(context: GraphicsContext, size: CGSize) {
-        guard let window = viewportWindow() else { return }
-
-        let t = currentTime
-
-        // If time is out of window, don't draw (shouldn't happen if viewport follows playhead, but safe).
-        guard t >= window.start - 0.001, t <= window.end + 0.001 else { return }
-
-        let x = x(forTime: t, in: window, width: size.width)
-
-        var path = Path()
-        path.move(to: CGPoint(x: x, y: 0))
-        path.addLine(to: CGPoint(x: x, y: size.height))
-
-        context.stroke(path, with: .color(.black.opacity(0.35)), lineWidth: 3) // subtle outline
-        context.stroke(path, with: .color(.white.opacity(0.9)), lineWidth: 1.5)
-
-        var cap = Path()
-        cap.move(to: CGPoint(x: x - 5, y: 0))
-        cap.addLine(to: CGPoint(x: x + 5, y: 0))
-        cap.addLine(to: CGPoint(x: x, y: 7))
-        cap.closeSubpath()
-        context.fill(cap, with: .color(.white.opacity(0.9)))
     }
 
     private func drawViewportTimestamps(context: GraphicsContext, size: CGSize) {
@@ -510,7 +308,10 @@ struct WaveformView: View {
 
         guard let window = viewportWindow() else { return }
 
-        let intervals = viewportTickIntervals()
+        let intervals = ViewportMath.rulerTickIntervals(
+            viewportDuration: window.duration,
+            width: Double(width)
+        )
         let halfTickInterval = intervals.half
         let majorInterval = intervals.major
         let labelInterval = intervals.label
@@ -549,66 +350,6 @@ struct WaveformView: View {
         }
     }
 
-    private func viewportTickIntervals() -> (half: TimeInterval, major: TimeInterval, label: TimeInterval) {
-        // Match the active viewport window size to the requested cadence.
-        // Prefer "full" when the viewport spans the whole audio duration.
-        if audioDuration > 0, abs(viewportDuration - audioDuration) < 0.5, audioDuration > 60 {
-            return (half: 15, major: 30, label: 120)
-        }
-
-        if viewportDuration <= 10.5 {
-            return (half: 0.25, major: 0.5, label: 1)
-        }
-        if viewportDuration <= 30.5 {
-            return (half: 0.25, major: 0.5, label: 5)
-        }
-        if viewportDuration <= 60.5 {
-            return (half: 0.5, major: 1, label: 10)
-        }
-        if viewportDuration <= 120.5 {
-            return (half: 1, major: 2, label: 15)
-        }
-        if viewportDuration <= 300.5 {
-            return (half: 3, major: 6, label: 30)
-        }
-        if viewportDuration <= 600.5 {
-            return (half: 5, major: 10, label: 60)
-        }
-
-        // Fallback for longer windows (treat as full-width style).
-        return (half: 15, major: 30, label: 120)
-    }
-
-    private func drawMarkers(context: GraphicsContext, size: CGSize) {
-        guard let window = viewportWindow() else { return }
-        guard window.duration > 0 else { return }
-        guard !markers.isEmpty else { return }
-
-        let width = size.width
-        let height = size.height
-
-        for marker in markers {
-            guard marker.time >= window.start - 0.0001, marker.time <= window.end + 0.0001 else { continue }
-
-            let x = x(forTime: marker.time, in: window, width: width)
-            let lineWidth: CGFloat = marker.isSelected || marker.id == draggingMarkerID ? 3 : marker.lineWidth
-            var path = Path()
-            path.move(to: CGPoint(x: x, y: 0))
-            path.addLine(to: CGPoint(x: x, y: height))
-            context.stroke(path, with: .color(marker.color), lineWidth: lineWidth)
-
-            // Grab handle at the bottom of the boundary, so it reads as draggable.
-            guard !marker.isLocked else { continue }
-            let handle = CGRect(x: x - 4, y: height - 18, width: 8, height: 16)
-            context.fill(Path(roundedRect: handle, cornerRadius: 3), with: .color(marker.color))
-            for offset in [-1.5, 1.5] as [CGFloat] {
-                var grip = Path()
-                grip.move(to: CGPoint(x: x + offset, y: handle.minY + 4))
-                grip.addLine(to: CGPoint(x: x + offset, y: handle.maxY - 4))
-                context.stroke(grip, with: .color(.white.opacity(0.8)), lineWidth: 0.75)
-            }
-        }
-    }
 }
 
 extension WaveformView {
@@ -643,25 +384,46 @@ extension WaveformView {
     }
 }
 
-private struct ScrollWheelView: NSViewRepresentable {
-    let onScroll: (CGFloat, CGFloat) -> Void
+/// Overview bars + chapter tints. Deliberately ignores playhead/viewport so SwiftUI can
+/// skip redrawing this layer on every playback tick via `.equatable()`.
+private struct OverviewStaticCanvas: View, Equatable {
+    let overview: [Float]
+    let audioDuration: TimeInterval
+    let markers: [WaveformView.Marker]
 
-    func makeNSView(context: Context) -> ScrollCaptureView {
-        let view = ScrollCaptureView()
-        view.onScroll = onScroll
-        return view
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.audioDuration == rhs.audioDuration
+            && lhs.markers == rhs.markers
+            && lhs.overview == rhs.overview
     }
 
-    func updateNSView(_ nsView: ScrollCaptureView, context: Context) {
-        nsView.onScroll = onScroll
-    }
-}
+    var body: some View {
+        Canvas { context, size in
+            guard audioDuration > 0 else { return }
+            let width = size.width
+            let height = size.height
 
-private final class ScrollCaptureView: NSView {
-    var onScroll: ((CGFloat, CGFloat) -> Void)?
+            for marker in markers {
+                let end = marker.end ?? audioDuration
+                let x0 = CGFloat(marker.time / audioDuration) * width
+                let x1 = CGFloat(end / audioDuration) * width
+                let rect = CGRect(x: x0, y: 0, width: max(x1 - x0, 1), height: height)
+                context.fill(Path(rect), with: .color(marker.color.opacity(marker.isSelected ? 0.35 : 0.18)))
+            }
 
-    override func scrollWheel(with event: NSEvent) {
-        onScroll?(event.scrollingDeltaX, event.scrollingDeltaY)
+            let bars = WaveformSampling.downsample(buckets: overview, maxBars: max(1, Int(width / 2)))
+            let barWidth = width / CGFloat(max(bars.count, 1))
+            for (index, sample) in bars.enumerated() {
+                let barHeight = max(CGFloat(sample) * height * 0.8, 1)
+                let rect = CGRect(
+                    x: CGFloat(index) * barWidth,
+                    y: (height - barHeight) / 2,
+                    width: max(barWidth - 0.5, 0.5),
+                    height: barHeight
+                )
+                context.fill(Path(rect), with: .color(.primary.opacity(0.45)))
+            }
+        }
     }
 }
 
