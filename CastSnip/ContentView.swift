@@ -71,7 +71,8 @@ struct ContentView: View {
             let listHeight = totalHeight * splitFraction
             VStack(spacing: 0) {
                 timelinePane
-                    .frame(height: max(totalHeight - listHeight, 0))
+                    .frame(maxHeight: .infinity)
+                transportBar
                 splitDivider(totalHeight: totalHeight)
                 ChapterListView(
                     playheadMillis: transportPlayheadMillis,
@@ -177,7 +178,6 @@ struct ContentView: View {
                         .lineLimit(1)
                 }
                 Spacer()
-                zoomControls
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -267,7 +267,13 @@ struct ContentView: View {
     }
 
     private var zoomControls: some View {
+        // Max = widest view (max zoom out), so it sits with −, not past +.
         HStack(spacing: 4) {
+            Button("Max") { selectedViewportIndex = max(viewportOptions.count - 1, 0) }
+                .disabled(selectedViewportIndex == viewportOptions.count - 1)
+                .help("Show the whole episode (⌘0)")
+                .padding(.trailing, 6)
+
             Button { zoom(in: false) } label: {
                 Image(systemName: "minus.magnifyingglass")
             }
@@ -275,7 +281,7 @@ struct ContentView: View {
             .help("Zoom out (⌘-)")
             .accessibilityLabel("Zoom out")
 
-            Text(viewportOptions[safe: selectedViewportIndex].map(viewportLabel) ?? "Full")
+            Text(viewportOptions[safe: selectedViewportIndex].map(viewportLabel) ?? "Max")
                 .monospacedDigit()
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 34)
@@ -287,20 +293,15 @@ struct ContentView: View {
             .disabled(selectedViewportIndex <= 0)
             .help("Zoom in (⌘=)")
             .accessibilityLabel("Zoom in")
-
-            Button("Fit") { selectedViewportIndex = max(viewportOptions.count - 1, 0) }
-                .disabled(selectedViewportIndex == viewportOptions.count - 1)
-                .help("Show the whole episode (⌘0)")
         }
         .buttonStyle(.borderless)
         .font(.callout)
     }
 
-    // MARK: - Toolbar
+    // MARK: - Transport
 
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
+    private var transportBar: some View {
+        ZStack {
             HStack(spacing: 14) {
                 Button { player.jumpBackward(10) } label: {
                     Label(EditorAccessibility.back10, systemImage: "gobackward.10")
@@ -309,8 +310,10 @@ struct ContentView: View {
                 .accessibilityIdentifier(EditorAccessibility.back10)
 
                 Button { player.togglePlayPause() } label: {
-                    Label(player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play,
-                          systemImage: player.isPlaying ? "pause.fill" : "play.fill")
+                    Label(
+                        player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play,
+                        systemImage: player.isPlaying ? "pause.fill" : "play.fill"
+                    )
                 }
                 .disabled(player.duration <= 0)
                 .keyboardShortcut(.space, modifiers: [])
@@ -328,11 +331,24 @@ struct ContentView: View {
                     .monospacedDigit()
                     .foregroundStyle(.secondary)
                     .fixedSize()
-                    .padding(.trailing, 6)
             }
             .labelStyle(.iconOnly)
-        }
 
+            HStack {
+                Spacer(minLength: 0)
+                zoomControls
+            }
+        }
+        .buttonStyle(.borderless)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(.bar)
+    }
+
+    // MARK: - Toolbar
+
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Button { showInspector.toggle() } label: {
                 Label("Inspector", systemImage: "sidebar.trailing")
@@ -474,7 +490,7 @@ struct ContentView: View {
     private func viewportLabel(for duration: TimeInterval) -> String {
         let maxViewport = player.duration
         if maxViewport > 0, abs(duration - maxViewport) < 0.5 {
-            return "Full"
+            return "Max"
         }
         if duration >= 60 {
             let minutes = Int(duration / 60)

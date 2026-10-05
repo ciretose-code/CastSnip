@@ -204,8 +204,8 @@ struct CastSnipApp: App {
                 Button("Open Sample Episode") {
                     openSampleEpisode()
                 }
-                Button("mostlysecurity.com") {
-                    showMostlySecurityWebsite()
+                Button("CastSnip Website") {
+                    openCastSnipWebsite()
                 }
                 Button(AutofillMemoryCopy.browseMenu) {
                     showAutofillBrowser = true
@@ -492,8 +492,8 @@ struct CastSnipApp: App {
         }
     }
     
-    func showMostlySecurityWebsite() {
-        let address = "https://mostlysecurity.com"
+    private func openCastSnipWebsite() {
+        let address = "https://castsnip.com"
         guard let url = URL(string: address) else {
             logger.error("Invalid URL: \(address)")
             return

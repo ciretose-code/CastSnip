@@ -122,6 +122,20 @@ final class WaveformDetailSurface: NSView {
         var selectedID: UUID?
         var audioDuration: TimeInterval
         var viewportDuration: TimeInterval
+
+        /// Fields that must trigger a rebake even while playback is scrolling the strip.
+        func matchesStructure(of model: WaveformDetailModel, bounds: CGRect, scale: CGFloat) -> Bool {
+            viewWidth == bounds.width
+                && viewHeight == bounds.height
+                && self.scale == scale
+                && overviewCount == model.overview.count
+                && tileKeys == model.tiles.keys.sorted()
+                && markerIDs == model.markers.map(\.id)
+                && markerTimes == model.markers.map(\.time)
+                && selectedID == model.markers.first(where: \.isSelected)?.id
+                && audioDuration == model.audioDuration
+                && viewportDuration == model.viewportDuration
+        }
     }
 
     override init(frame frameRect: NSRect) {
@@ -138,10 +152,13 @@ final class WaveformDetailSurface: NSView {
         wantsLayer = true
         layer = CALayer()
         layer?.backgroundColor = NSColor.clear.cgColor
+        // Clip the 3× scroll strip (and overlays) to the view so they never paint
+        // under the trailing inspector / artwork.
+        layer?.masksToBounds = true
 
-        contentLayer.masksToBounds = false
+        contentLayer.masksToBounds = true
         waveformLayer.contentsGravity = .resize
-        markersLayer.masksToBounds = false
+        markersLayer.masksToBounds = true
         playedWashLayer.backgroundColor = NSColor(Color.castSnipBlue).withAlphaComponent(0.28).cgColor
         playheadLayer.fillColor = NSColor.white.withAlphaComponent(0.9).cgColor
         playheadLayer.strokeColor = NSColor.black.withAlphaComponent(0.35).cgColor
@@ -183,6 +200,8 @@ final class WaveformDetailSurface: NSView {
     func applyModel(_ newModel: WaveformDetailModel) {
         let playingChanged = newModel.isPlaying != model.isPlaying
         let epochChanged = newModel.followEpoch != model.followEpoch
+        // Zoom / fit changes strip density — must rebake even while the playhead is scrolling.
+        let viewportDurationChanged = newModel.viewportDuration != model.viewportDuration
         model = newModel
         if playingChanged {
             if model.isPlaying {
@@ -193,12 +212,8 @@ final class WaveformDetailSurface: NSView {
         }
         // Skip strip rebake while dragging a marker — live markersLayer tracks the handle.
         if dragMarkerID == nil {
-            if epochChanged, model.isPlaying {
-                // Overview seek / snap: ensure strip recenters on playhead.
-                requestBakeIfNeeded(force: true)
-            } else {
-                requestBakeIfNeeded(force: false)
-            }
+            let force = viewportDurationChanged || (epochChanged && model.isPlaying)
+            requestBakeIfNeeded(force: force)
         }
         updateChrome()
     }
@@ -210,8 +225,11 @@ final class WaveformDetailSurface: NSView {
         guard bounds.width > 1, bounds.height > 1, model.audioDuration > 0, model.viewportDuration > 0 else { return }
         guard !model.overview.isEmpty else { return }
 
-        // While playing, keep scrolling the existing strip until the playhead nears an edge.
-        if model.isPlaying, !force, waveformLayer.contents != nil, stripDuration > 0 {
+        // While playing, keep scrolling the existing strip until the playhead nears an edge —
+        // but never skip when zoom/size/peaks changed (those update BakeKey; stripStart alone
+        // drifts every frame with the playhead and must not force a continuous rebake).
+        if model.isPlaying, !force, waveformLayer.contents != nil, stripDuration > 0,
+           let last = lastBakeKey, last.matchesStructure(of: model, bounds: bounds, scale: window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2) {
             let needsPrefetch = WaveformStripMath.needsPrefetch(
                 currentTime: model.currentTime,
                 stripStart: stripStart,
