@@ -56,6 +56,7 @@ final class EncodeBitrateStore {
     func attachAccessory(to panel: NSSavePanel, tagging: ID3TaggingStore) -> AccessoryControls {
         let label = NSTextField(labelWithString: "Bitrate:")
         label.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        label.setContentHuggingPriority(.required, for: .horizontal)
 
         let popup = NSPopUpButton(frame: .zero, pullsDown: false)
         for option in EncodeBitrate.allCases {
@@ -64,14 +65,27 @@ final class EncodeBitrateStore {
         }
         popup.selectItem(withTag: bitrate.rawValue)
         popup.toolTip = "Constant bitrate for the encoded MP3"
+        popup.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        let bitrateRow = NSStackView(views: [label, popup])
+        bitrateRow.orientation = .horizontal
+        bitrateRow.alignment = .centerY
+        bitrateRow.spacing = 8
 
         let checkbox = tagging.makeCheckbox()
+        checkbox.setContentCompressionResistancePriority(.required, for: .horizontal)
 
-        let stack = NSStackView(views: [label, popup, checkbox])
-        stack.orientation = .horizontal
-        stack.alignment = .centerY
+        // Vertical layout + explicit width: NSSavePanel otherwise clamps a single
+        // horizontal row between the separator lines and squashes the popup.
+        let stack = NSStackView(views: [bitrateRow, checkbox])
+        stack.orientation = .vertical
+        stack.alignment = .leading
         stack.spacing = 10
-        stack.edgeInsets = NSEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stack.widthAnchor.constraint(greaterThanOrEqualToConstant: 300)
+        ])
         panel.accessoryView = stack
 
         return AccessoryControls(popup: popup, tagsCheckbox: checkbox)
