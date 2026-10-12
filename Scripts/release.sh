@@ -20,6 +20,7 @@ set -euo pipefail
 SCHEME="CastSnip"
 PROJECT="CastSnip.xcodeproj"
 APP_NAME="CastSnip"
+DISPLAY_NAME="CastSet"
 EXPORT_OPTIONS="Scripts/ExportOptions.plist"
 NOTARY_PROFILE="${NOTARY_PROFILE:-castsnip-notary}"   # keychain profile from store-credentials
 
@@ -93,7 +94,7 @@ VERSION=$(xcodebuild -project "$PROJECT" -scheme "$SCHEME" -showBuildSettings 2>
 BUILD=$(git rev-list --count HEAD)
 TAG="v${VERSION}.${BUILD}"
 COMMIT=$(git rev-parse HEAD)
-DMG_PATH="build/${APP_NAME}-${VERSION}.${BUILD}.dmg"
+DMG_PATH="build/${DISPLAY_NAME}-${VERSION}.${BUILD}.dmg"
 
 if git rev-parse "$TAG" >/dev/null 2>&1; then
   die "tag ${TAG} already exists — nothing new to release"
@@ -102,7 +103,7 @@ if gh release view "$TAG" >/dev/null 2>&1; then
   die "release ${TAG} already published"
 fi
 
-echo "  ${APP_NAME} ${VERSION} (build ${BUILD}) → ${TAG} at ${COMMIT:0:7}"
+echo "  ${DISPLAY_NAME} ${VERSION} (build ${BUILD}) → ${TAG} at ${COMMIT:0:7}"
 
 # ── Clean slate ────────────────────────────────────────────────────────────────
 # A previous run that died mid-DMG leaves a volume mounted, and hdiutil will
@@ -185,7 +186,7 @@ APP_SIZE_MB=$(du -sm "$APP_PATH" | awk '{print $1}')
 
 hdiutil create \
   -megabytes $((APP_SIZE_MB + 20)) \
-  -volname "${APP_NAME} ${VERSION}" \
+  -volname "${DISPLAY_NAME} ${VERSION}" \
   -fs HFS+ \
   -ov \
   "$STAGING_DMG" >/dev/null
@@ -248,7 +249,7 @@ step "Publishing GitHub release ${TAG}..."
 gh release create "$TAG" \
   "$DMG_PATH" \
   --target "$COMMIT" \
-  --title "${APP_NAME} ${TAG}" \
+  --title "${DISPLAY_NAME} ${TAG}" \
   --generate-notes
 
 echo ""
