@@ -34,6 +34,9 @@ struct ContentView: View {
 
     /// Set to true to snap the viewport immediately on the next `updateViewport()` call.
     @State private var shouldSnapViewport = true
+    /// User panned the waveform. Playback leaves the window there until overview seek,
+    /// chapter jump, zoom, or play is pressed again.
+    @State private var viewportFollowDetached = false
 
     /// Throttled playhead for chapter list / toolbar labels (waveform uses `player.currentTime`).
     @State private var transportPlayheadMillis: UInt32 = 0
@@ -123,7 +126,12 @@ struct ContentView: View {
             updateViewport()
             publishTransportIfNeeded(time: newTime)
         }
-        .onChange(of: player.isPlaying) { _, _ in
+        .onChange(of: player.isPlaying) { _, playing in
+            if playing {
+                viewportFollowDetached = false
+                shouldSnapViewport = true
+                updateViewport()
+            }
             publishTransportIfNeeded(time: player.currentTime)
         }
         .onChange(of: podcastAudioFile.selectedChapter) { _, selected in
@@ -188,6 +196,7 @@ struct ContentView: View {
                 viewportDuration: viewportDuration,
                 currentTime: player.currentTime,
                 isPlaying: player.isPlaying,
+                followsPlayhead: player.isPlaying && !viewportFollowDetached,
                 markers: WaveformView.makeMarkers(from: chapters, selectedID: podcastAudioFile.selectedChapter?.id),
                 onSeek: { time in
                     player.seek(to: time)
@@ -198,9 +207,13 @@ struct ContentView: View {
                 onViewportPan: { deltaSeconds in
                     let duration = player.duration
                     guard duration > 0 else { return }
-                    let maxStart = max(0, duration - viewportDuration)
-                    viewportStart = min(max(viewportStart + deltaSeconds, 0), maxStart)
+                    viewportStart = ViewportMath.clampViewportStart(
+                        viewportStart + deltaSeconds,
+                        audioDuration: duration,
+                        viewportDuration: viewportDuration
+                    )
                     shouldSnapViewport = false
+                    viewportFollowDetached = true
                 }
             )
             .onMarkerMove { id, time in
@@ -529,10 +542,12 @@ struct ContentView: View {
             duration: duration,
             viewportDuration: viewportDuration,
             isPlaying: player.isPlaying,
-            snap: snap
+            snap: snap,
+            detached: viewportFollowDetached
         )
         if snap {
             shouldSnapViewport = false
+            viewportFollowDetached = false
         }
     }
 
