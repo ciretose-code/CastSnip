@@ -11,6 +11,18 @@ import AppKit
 import UniformTypeIdentifiers
 import OSLog
 
+/// Open request for the editor. `reloadID` increments even when `fileURL` is unchanged
+/// so reopening the current file loads it from disk again.
+struct DocumentOpenState: Equatable {
+    var fileURL: URL?
+    var reloadID: Int = 0
+
+    mutating func open(_ url: URL) {
+        fileURL = url
+        reloadID += 1
+    }
+}
+
 @main
 struct CastSnipApp: App {
     
@@ -19,6 +31,8 @@ struct CastSnipApp: App {
     
     @State var podcastAudioFile = AudioFile()
     @State var fileURL: URL?
+    /// Bumped on every open, including the file that is already open, so the scene reloads from disk.
+    @State private var documentReloadID = 0
     @State private var recentFiles = RecentFilesStore.shared
     @State private var tagging = ID3TaggingStore.shared
     @State private var encodeBitrate = EncodeBitrateStore.shared
@@ -90,11 +104,10 @@ struct CastSnipApp: App {
                     AutofillMemoryView()
                 }
         }
-        .onChange(of: fileURL) {
-            if let url = fileURL {
-                Task {
-                    await podcastAudioFile.loadPodcast(from: url)
-                }
+        .onChange(of: documentReloadID) {
+            guard documentReloadID > 0, let url = fileURL else { return }
+            Task {
+                await podcastAudioFile.loadPodcast(from: url)
             }
         }
         .commands {
@@ -285,7 +298,10 @@ struct CastSnipApp: App {
     private func applyOpen(_ url: URL) {
         SecurityScopedBookmarkStore.shared.rememberAndAccess(url)
         RecentFilesStore.shared.remember(url)
-        fileURL = url
+        var state = DocumentOpenState(fileURL: fileURL, reloadID: documentReloadID)
+        state.open(url)
+        fileURL = state.fileURL
+        documentReloadID = state.reloadID
         NSApp.keyWindow?.representedURL = url
     }
 

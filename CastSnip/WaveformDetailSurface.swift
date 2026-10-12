@@ -21,6 +21,9 @@ struct WaveformDetailModel: Equatable {
     var tiles: [Int: [Float]]
     var markers: [WaveformView.Marker]
     var followEpoch: Int
+    /// While playing, scroll the strip with the playhead. After a user pan this is false
+    /// and the strip stays anchored to `viewportStart`.
+    var followsPlayhead: Bool
 
     static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.viewportStart == rhs.viewportStart
@@ -34,6 +37,7 @@ struct WaveformDetailModel: Equatable {
             && lhs.tiles.allSatisfy { rhs.tiles[$0.key] == $0.value }
             && lhs.markers == rhs.markers
             && lhs.followEpoch == rhs.followEpoch
+            && lhs.followsPlayhead == rhs.followsPlayhead
     }
 }
 
@@ -93,7 +97,8 @@ final class WaveformDetailSurface: NSView {
         overviewBucketDuration: 0,
         tiles: [:],
         markers: [],
-        followEpoch: 0
+        followEpoch: 0,
+        followsPlayhead: true
     )
 
     private var stripStart: TimeInterval = 0
@@ -220,18 +225,26 @@ final class WaveformDetailSurface: NSView {
 
     // MARK: - Bake
 
+    /// Playhead while follow mode is on; otherwise the center of the visible window.
+    private var stripAnchor: TimeInterval {
+        if model.followsPlayhead, model.isPlaying {
+            return model.currentTime
+        }
+        return model.viewportStart + model.viewportDuration / 2
+    }
+
     private func requestBakeIfNeeded(force: Bool) {
         let bounds = self.bounds
         guard bounds.width > 1, bounds.height > 1, model.audioDuration > 0, model.viewportDuration > 0 else { return }
         guard !model.overview.isEmpty else { return }
 
-        // While playing, keep scrolling the existing strip until the playhead nears an edge —
-        // but never skip when zoom/size/peaks changed (those update BakeKey; stripStart alone
-        // drifts every frame with the playhead and must not force a continuous rebake).
+        // While playing, keep the existing strip until the anchor nears an edge.
+        // Follow mode anchors on the playhead; a detached pan anchors on the visible
+        // window so playback ticks do not rebake or yank the strip back.
         if model.isPlaying, !force, waveformLayer.contents != nil, stripDuration > 0,
            let last = lastBakeKey, last.matchesStructure(of: model, bounds: bounds, scale: window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2) {
             let needsPrefetch = WaveformStripMath.needsPrefetch(
-                currentTime: model.currentTime,
+                currentTime: stripAnchor,
                 stripStart: stripStart,
                 stripDuration: stripDuration
             )
@@ -239,9 +252,7 @@ final class WaveformDetailSurface: NSView {
         }
 
         let scale = window?.backingScaleFactor ?? NSScreen.main?.backingScaleFactor ?? 2
-        let anchor: TimeInterval = model.isPlaying
-            ? model.currentTime
-            : model.viewportStart + model.viewportDuration / 2
+        let anchor = stripAnchor
         let stripWindow = WaveformStripMath.stripWindow(
             anchorTime: anchor,
             viewportDuration: model.viewportDuration,
@@ -553,6 +564,8 @@ final class WaveformDetailSurface: NSView {
     override func scrollWheel(with event: NSEvent) {
         guard let delta = ViewportMath.panDeltaSeconds(
             deltaX: Double(event.scrollingDeltaX),
+            deltaY: Double(event.scrollingDeltaY),
+            shift: event.modifierFlags.contains(.shift),
             width: Double(bounds.width),
             viewportDuration: model.viewportDuration
         ) else { return }

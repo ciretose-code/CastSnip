@@ -54,17 +54,32 @@ enum ViewportMath {
         return target
     }
 
-    /// Converts a horizontal scroll delta (points) into seconds of viewport pan.
-    /// A positive `deltaX` yields a negative time delta so the waveform follows the gesture.
+    /// Converts a scroll delta (points) into seconds of viewport pan.
+    /// A positive delta yields a negative time delta so the waveform follows the gesture.
     ///
-    /// - Returns: Seconds to add to the viewport start, or `nil` when `width` or `viewportDuration` is not positive.
+    /// Horizontal motion wins unless `|deltaY|` is larger, so a vertical trackpad swipe
+    /// still moves along the file. With `shift`, the vertical wheel is the pan axis
+    /// (Magic Mouse / USB wheel).
+    ///
+    /// - Returns: Seconds to add to the viewport start, or `nil` when the window is invalid or the scroll is zero.
     static func panDeltaSeconds(
         deltaX: Double,
+        deltaY: Double = 0,
+        shift: Bool = false,
         width: Double,
         viewportDuration: TimeInterval
     ) -> TimeInterval? {
         guard viewportDuration > 0, width > 0 else { return nil }
-        return -deltaX * (viewportDuration / width)
+        let axis: Double
+        if shift {
+            axis = deltaY != 0 ? deltaY : deltaX
+        } else if abs(deltaY) > abs(deltaX) {
+            axis = deltaY
+        } else {
+            axis = deltaX
+        }
+        guard axis != 0 else { return nil }
+        return -axis * (viewportDuration / width)
     }
 
     /// Clamps a proposed viewport start so a pan cannot move before 0 or past the last full window.
@@ -125,16 +140,25 @@ enum ViewportMath {
     /// Next viewport start while following the playhead.
     ///
     /// While playing (or when `snap` is requested) the viewport hard-centers on
-    /// `currentTime`. When paused without a snap, the existing start is kept so
-    /// a manual pan is not overwritten by a stale chase.
+    /// `currentTime`. A user pan sets `detached`: playback keeps the window where
+    /// they put it until an explicit snap (overview seek, chapter jump, zoom, or
+    /// pressing play). When paused without a snap, the existing start is kept.
     static func followedStart(
         currentStart: TimeInterval,
         currentTime: TimeInterval,
         duration: TimeInterval,
         viewportDuration: TimeInterval,
         isPlaying: Bool,
-        snap: Bool
+        snap: Bool,
+        detached: Bool = false
     ) -> TimeInterval {
+        if detached && !snap {
+            return clampViewportStart(
+                currentStart,
+                audioDuration: duration,
+                viewportDuration: viewportDuration
+            )
+        }
         guard isPlaying || snap else { return currentStart }
         return viewportStart(
             currentTime: currentTime,

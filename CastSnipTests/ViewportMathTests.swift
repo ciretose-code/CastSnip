@@ -99,6 +99,33 @@ final class ViewportMathTests: XCTestCase {
         XCTAssertNil(ViewportMath.panDeltaSeconds(deltaX: 10, width: 200, viewportDuration: 0))
     }
 
+    func testPanDeltaSeconds_UsesVerticalDeltaWhenItDominates() throws {
+        XCTAssertEqual(
+            try XCTUnwrap(ViewportMath.panDeltaSeconds(deltaX: 4, deltaY: 40, width: 200, viewportDuration: 20)),
+            -4,
+            accuracy: 0.0001
+        )
+        XCTAssertEqual(
+            try XCTUnwrap(ViewportMath.panDeltaSeconds(deltaX: -80, deltaY: 10, width: 200, viewportDuration: 20)),
+            8,
+            accuracy: 0.0001
+        )
+    }
+
+    func testPanDeltaSeconds_ShiftUsesVerticalWheelAsHorizontalPan() throws {
+        XCTAssertEqual(
+            try XCTUnwrap(ViewportMath.panDeltaSeconds(
+                deltaX: 100, deltaY: -40, shift: true, width: 200, viewportDuration: 20
+            )),
+            4,
+            accuracy: 0.0001
+        )
+    }
+
+    func testPanDeltaSeconds_ReturnsNilWhenScrollIsZero() {
+        XCTAssertNil(ViewportMath.panDeltaSeconds(deltaX: 0, deltaY: 0, width: 200, viewportDuration: 20))
+    }
+
     func testClampViewportStart_ClampsPanBelowZeroAndPastEnd() {
         XCTAssertEqual(ViewportMath.clampViewportStart(-5, audioDuration: 100, viewportDuration: 20), 0)
         XCTAssertEqual(ViewportMath.clampViewportStart(90, audioDuration: 100, viewportDuration: 20), 80)
@@ -182,6 +209,32 @@ final class ViewportMathTests: XCTestCase {
             snap: false
         )
         XCTAssertEqual(next, 12, accuracy: 0.0001)
+    }
+
+    func testFollowedStart_WhenDetachedWhilePlaying_KeepsCurrentStart() {
+        let next = ViewportMath.followedStart(
+            currentStart: 12,
+            currentTime: 40,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: true,
+            snap: false,
+            detached: true
+        )
+        XCTAssertEqual(next, 12, accuracy: 0.0001)
+    }
+
+    func testFollowedStart_WhenDetachedAndSnapRequested_Recenters() {
+        let next = ViewportMath.followedStart(
+            currentStart: 12,
+            currentTime: 40,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: true,
+            snap: true,
+            detached: true
+        )
+        XCTAssertEqual(next, 30, accuracy: 0.0001)
     }
 
     func testShouldPublishTransport_WhilePlaying_ThrottlesToInterval() {

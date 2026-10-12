@@ -28,6 +28,10 @@ struct WaveformView: View {
     /// When true, skip expensive per-frame chrome (chapter title pills) so playback stays fluid.
     var isPlaying: Bool = false
 
+    /// When true during playback, the detail strip stays centered on the playhead.
+    /// A trackpad pan sets this false until the user snaps the window again.
+    var followsPlayhead: Bool = true
+
     /// Called when the user clicks/taps the waveform to seek.
     let onSeek: (TimeInterval) -> Void
 
@@ -138,6 +142,7 @@ struct WaveformView: View {
         viewportDuration: TimeInterval,
         currentTime: TimeInterval,
         isPlaying: Bool = false,
+        followsPlayhead: Bool = true,
         markers: [Marker] = [],
         onSeek: @escaping (TimeInterval) -> Void = { _ in },
         onViewportPan: @escaping (TimeInterval) -> Void = { _ in }
@@ -148,6 +153,7 @@ struct WaveformView: View {
         self.viewportDuration = viewportDuration
         self.currentTime = currentTime
         self.isPlaying = isPlaying
+        self.followsPlayhead = followsPlayhead
         self.markers = markers
         self.onSeek = onSeek
         self.onViewportPan = onViewportPan
@@ -274,7 +280,8 @@ struct WaveformView: View {
                 overviewBucketDuration: peaks.overviewBucketDuration,
                 tiles: peaks.tiles,
                 markers: markers,
-                followEpoch: followEpoch
+                followEpoch: followEpoch,
+                followsPlayhead: followsPlayhead
             ),
             onSeek: onSeek,
             onViewportPan: onViewportPan,
@@ -285,7 +292,7 @@ struct WaveformView: View {
         )
         .frame(maxHeight: .infinity)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { canvasWidth = $0 }
-        .help("Click to seek · drag a chapter edge to retime · double-click to add a chapter · pinch to zoom")
+        .help("Click to seek · swipe to pan · drag a chapter edge to retime · double-click to add a chapter · pinch to zoom")
     }
 
     private struct ViewportWindow {
