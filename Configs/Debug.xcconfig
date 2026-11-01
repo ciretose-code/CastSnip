@@ -1,0 +1,2 @@
+// Shared debug settings. Optional local team override:
+#include? "Local.xcconfig"
