@@ -8,6 +8,9 @@ xcuserdata/
 *.xccheckout
 .DS_Store
 
+# Per-developer Apple Team ID (copy from Configs/Local.xcconfig.example)
+Configs/Local.xcconfig
+
 # Claude Code worktrees (used for isolated feature work; not project content)
 .worktrees/
 /.claude/worktrees/

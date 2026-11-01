@@ -1,0 +1,110 @@
+# XcodeGen spec for CastSnip / CastSet (macOS).
+# Contributors: set your team in Configs/Local.xcconfig, then run `xcodegen`.
+# Do not commit a regenerated .xcodeproj that only changes DEVELOPMENT_TEAM.
+# The checked-in CastSnip.xcodeproj remains the primary project for maintainers.
+
+name: CastSnip
+
+options:
+  bundleIdPrefix: com.ciretose
+  deploymentTarget:
+    macOS: "26.6"
+  createIntermediateGroups: true
+  groupSortPosition: top
+  developmentLanguage: en
+
+packages:
+  LAME:
+    url: https://github.com/ciretose-code/LAME.git
+    from: 4.0.0
+
+configFiles:
+  Debug: Configs/Debug.xcconfig
+  Release: Configs/Release.xcconfig
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "26.6"
+    CODE_SIGN_STYLE: Automatic
+    CURRENT_PROJECT_VERSION: "1"
+    MARKETING_VERSION: "1.0"
+
+targets:
+  CastSnip:
+    type: application
+    platform: macOS
+    sources:
+      - path: CastSnip
+      - path: README.md
+        buildPhase: resources
+        optional: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ciretose.podcast.CastSnip
+        PRODUCT_NAME: "$(TARGET_NAME)"
+        CODE_SIGN_ENTITLEMENTS: CastSnip/CastSnip.entitlements
+        CODE_SIGN_STYLE: Automatic
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: CastSet
+        INFOPLIST_KEY_CFBundleName: CastSet
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        DEVELOPMENT_ASSET_PATHS: '"CastSnip/Preview Content"'
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_FILE_ACCESS_DOWNLOADS_FOLDER: readwrite
+        ENABLE_HARDENED_RUNTIME: YES
+        ENABLE_PREVIEWS: YES
+        ENABLE_USER_SELECTED_FILES: readwrite
+        LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"
+        SDKROOT: macosx
+        SUPPORTED_PLATFORMS: macosx
+        SUPPORTS_MACCATALYST: NO
+        SWIFT_EMIT_LOC_STRINGS: YES
+        DEAD_CODE_STRIPPING: YES
+    dependencies:
+      - package: LAME
+    scheme:
+      testTargets:
+        - CastSnipTests
+        - CastSnipUITests
+
+  CastSnipTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: CastSnipTests
+    dependencies:
+      - target: CastSnip
+      - package: LAME
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ciretose.util.CastSnipTests
+        GENERATE_INFOPLIST_FILE: YES
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/CastSnip.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CastSnip"
+        SDKROOT: macosx
+        STRING_CATALOG_GENERATE_SYMBOLS: NO
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        SWIFT_EMIT_LOC_STRINGS: NO
+        SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY: YES
+        DEAD_CODE_STRIPPING: YES
+
+  CastSnipUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources:
+      - path: CastSnipUITests
+    dependencies:
+      - target: CastSnip
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ciretose.util.CastSnipUITests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: CastSnip
+        SDKROOT: macosx
+        SUPPORTED_PLATFORMS: macosx
+        STRING_CATALOG_GENERATE_SYMBOLS: NO
+        SWIFT_APPROACHABLE_CONCURRENCY: YES
+        SWIFT_EMIT_LOC_STRINGS: NO
+        DEAD_CODE_STRIPPING: YES
