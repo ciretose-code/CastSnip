@@ -9,6 +9,10 @@
 #     --key-id <KEY_ID> \
 #     --issuer <ISSUER_ID>
 #
+# Release signing (Hash/Check): minisign secret key at
+#   ~/Code/.private_keys/ciretose.key
+# Override with MINISIGN_SECRET_KEY if needed. Signing prompts for the key password.
+#
 # Usage:
 #   ./Scripts/release.sh                # full release
 #   ./Scripts/release.sh --dry-run      # build and package, but don't notarize or publish
@@ -22,6 +26,7 @@ PROJECT="CastSnip.xcodeproj"
 DISPLAY_NAME="CastSnip"
 EXPORT_OPTIONS="Scripts/ExportOptions.plist"
 NOTARY_PROFILE="${NOTARY_PROFILE:-castsnip-notary}"   # keychain profile from store-credentials
+MINISIGN_SECRET_KEY="${MINISIGN_SECRET_KEY:-$HOME/Code/.private_keys/ciretose.key}"
 
 ARCHIVE_PATH="build/${SCHEME}.xcarchive"
 EXPORT_PATH="build/export"
@@ -79,6 +84,9 @@ if [ "$DRY_RUN" = false ]; then
        Set one up once with:
          xcrun notarytool store-credentials \"$NOTARY_PROFILE\" --key ... --key-id ... --issuer ...
        Or point at another profile with NOTARY_PROFILE=<name> $0"
+
+  command -v minisign >/dev/null || die "minisign is not installed — brew install minisign"
+  [ -f "$MINISIGN_SECRET_KEY" ] || die "minisign secret key not found: ${MINISIGN_SECRET_KEY}"
 fi
 
 # ── Version ────────────────────────────────────────────────────────────────────
@@ -251,17 +259,39 @@ step "Stapling..."
 xcrun stapler staple "$DMG_PATH"
 xcrun stapler validate "$DMG_PATH"
 
+# ── Sign checksums for Hash/Check ──────────────────────────────────────────────
+step "Signing SHA256SUMS with minisign..."
+SUMS_PATH="build/SHA256SUMS"
+(
+  cd "$(dirname "$DMG_PATH")"
+  shasum -a 256 "$(basename "$DMG_PATH")"
+) > "$SUMS_PATH"
+minisign -Sm "$SUMS_PATH" -s "$MINISIGN_SECRET_KEY" \
+  -t "SHA256SUMS for $(basename "$DMG_PATH")"
+SIG_PATH="${SUMS_PATH}.minisig"
+echo "  ${SUMS_PATH} + ${SIG_PATH}"
+
 # ── Publish ────────────────────────────────────────────────────────────────────
 # The tag is created by `gh` at this exact commit. Nothing is pushed to main —
 # a release does not need to write anything back to the repository.
 step "Publishing GitHub release ${TAG}..."
 gh release create "$TAG" \
   "$DMG_PATH" \
+  "$SUMS_PATH" \
+  "$SIG_PATH" \
   --target "$COMMIT" \
   --title "${DISPLAY_NAME} ${TAG}" \
+  --notes "$(cat <<EOF
+### Verify with Hash/Check
+
+Download \`SHA256SUMS\` and \`SHA256SUMS.minisig\` alongside the DMG.
+Public key: https://ciretose.com/ciretose.pub
+EOF
+)" \
   --generate-notes
 
 echo ""
 echo "✅ Released ${TAG}"
 echo "   DMG: ${DMG_PATH}"
+echo "   Checksums: ${SUMS_PATH} (signed)"
 echo "   $(gh release view "$TAG" --json url --jq .url)"
