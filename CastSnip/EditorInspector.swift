@@ -12,8 +12,8 @@ import UniformTypeIdentifiers
 
 struct EditorInspector: View {
     enum Pane: String, CaseIterable, Identifiable {
-        case chapter = "Chapter"
         case episode = "Episode"
+        case chapter = "Chapter"
         var id: Self { self }
     }
 
