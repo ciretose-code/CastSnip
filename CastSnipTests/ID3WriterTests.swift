@@ -306,7 +306,7 @@ struct ID3WriterTests {
 
         #expect(texts["TYER"] == "2024")
         #expect(texts["TENC"] == Podcast.castSnipEncoder)
-        #expect(Podcast.castSnipEncoder == "CastSnip by ciretose")
+        #expect(Podcast.castSnipEncoder == "CastSnip Editor")
     }
 
     @Test func ensureDefaultYearFillsCurrentYearWhenEmpty() {
