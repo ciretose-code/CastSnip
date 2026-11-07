@@ -14,6 +14,14 @@ enum ID3MetadataMapping {
             podcast.episode = value
         case "TPE1":
             podcast.artist = value
+        case "TYER":
+            podcast.year = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        case "TDRC":
+            // ID3v2.4 recording time — keep the leading year digits.
+            let digits = value.prefix(while: { $0.isNumber })
+            if digits.count >= 4 {
+                podcast.year = String(digits.prefix(4))
+            }
         case "COMM":
             podcast.summary = value
         case "USLT":

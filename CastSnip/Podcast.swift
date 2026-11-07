@@ -24,6 +24,23 @@ class Podcast {
     var episode:String = ""
     var summary:String = ""
     var artist:String = ""
+    var year:String = ""
+
+    static let castSnipEncoder = "CastSnip Editor"
+
+    /// Fills an empty year with the current calendar year. Returns `true` when a default was applied.
+    @discardableResult
+    static func ensureDefaultYear(
+        _ year: inout String,
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> Bool {
+        if !year.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return false
+        }
+        year = String(calendar.component(.year, from: now))
+        return true
+    }
     
     func getFileSizeFormatted() -> String {
         guard let size = fileSizeInBytes else { return "Unknown" }

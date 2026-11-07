@@ -13,7 +13,7 @@ import OSLog
 @Observable
 class AudioFile: Identifiable {
  
-    let id3String = ["TALB", "TPE1", "TIT2", "COMM", "USLT", "TLEN", "TYER", "TENC"]
+    let id3String = ["TALB", "TPE1", "TIT2", "COMM", "USLT", "TLEN", "TYER", "TDRC", "TENC"]
     let id3Data = ["CTOC", "CHAP", "APIC"]
     
     var podcast = Podcast()
@@ -46,9 +46,21 @@ class AudioFile: Identifiable {
         }
 
         ShowAutofillStore.shared.applyToPodcastIfEmpty(podcast, filename: url.path)
+
+        var didMutateOnOpen = false
+        // Require a readable audio file — AVURLAsset can exist for missing paths.
+        if podcast.file != nil {
+            didMutateOnOpen = ChapterTimeline.ensureLeadingIntro(
+                into: &podcast.chapters,
+                durationMillis: podcast.durationInMillis ?? 0
+            )
+            if Podcast.ensureDefaultYear(&podcast.year) {
+                didMutateOnOpen = true
+            }
+        }
         
         isLoading = false
-        hasUnsavedChanges = false
+        hasUnsavedChanges = didMutateOnOpen
     }
 
     func save(to destination: URL, includeTags: Bool = true) throws {
@@ -145,6 +157,14 @@ class AudioFile: Identifiable {
     
     func getEpisode() -> Binding<String> {
         dirtyBinding(\.episode)
+    }
+
+    func getAuthors() -> Binding<String> {
+        dirtyBinding(\.artist)
+    }
+
+    func getYear() -> Binding<String> {
+        dirtyBinding(\.year)
     }
     
     func getSummary() -> Binding<String> {

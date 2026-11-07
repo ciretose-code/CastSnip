@@ -1,4 +1,4 @@
-# XcodeGen spec for CastSnip / CastSet (macOS).
+# XcodeGen spec for CastSnip (macOS).
 # Contributors: set your team in Configs/Local.xcconfig, then run `xcodegen`.
 # Do not commit a regenerated .xcodeproj that only changes DEVELOPMENT_TEAM.
 # The checked-in CastSnip.xcodeproj remains the primary project for maintainers.
@@ -46,8 +46,8 @@ targets:
         CODE_SIGN_ENTITLEMENTS: CastSnip/CastSnip.entitlements
         CODE_SIGN_STYLE: Automatic
         GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: CastSet
-        INFOPLIST_KEY_CFBundleName: CastSet
+        INFOPLIST_KEY_CFBundleDisplayName: CastSnip
+        INFOPLIST_KEY_CFBundleName: CastSnip
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         DEVELOPMENT_ASSET_PATHS: '"CastSnip/Preview Content"'

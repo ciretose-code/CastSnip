@@ -226,7 +226,7 @@ struct CastSnipApp: App {
                 Button("Open Sample Episode") {
                     openSampleEpisode()
                 }
-                Button("CastSet Website") {
+                Button("CastSnip Website") {
                     openCastSnipWebsite()
                 }
                 Button(AutofillMemoryCopy.browseMenu) {
@@ -257,7 +257,7 @@ struct CastSnipApp: App {
     }
 
     private var windowTitle: String {
-        guard let name = fileURL?.lastPathComponent else { return "CastSet" }
+        guard let name = fileURL?.lastPathComponent else { return "CastSnip" }
         return podcastAudioFile.hasUnsavedChanges ? "\(name) — Edited" : name
     }
 

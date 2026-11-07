@@ -96,6 +96,45 @@ struct ChapterTimelineTests {
         #expect(chapters.first { $0.title == "Intro" }?.endTime == 1000)
         #expect(Podcast.chaptersDoNotOverlap(chapters))
     }
+
+    @Test func ensureLeadingIntroInsertsWhenMissingZeroStart() {
+        var chapters = [
+            Chapter(title: "Main", startTime: 5_000, endTime: 10_000, podcastDuration: 10_000)
+        ]
+
+        let inserted = ChapterTimeline.ensureLeadingIntro(into: &chapters, durationMillis: 10_000)
+
+        #expect(inserted == true)
+        #expect(chapters.map(\.title) == ["Intro", "Main"])
+        #expect(chapters[0].startTime == 0)
+        #expect(chapters[0].endTime == 5_000)
+        #expect(chapters[1].startTime == 5_000)
+        #expect(Podcast.chaptersDoNotOverlap(chapters))
+    }
+
+    @Test func ensureLeadingIntroCoversFullDurationWhenEmpty() {
+        var chapters: [Chapter] = []
+
+        let inserted = ChapterTimeline.ensureLeadingIntro(into: &chapters, durationMillis: 8_000)
+
+        #expect(inserted == true)
+        #expect(chapters.count == 1)
+        #expect(chapters[0].title == "Intro")
+        #expect(chapters[0].startTime == 0)
+        #expect(chapters[0].endTime == 8_000)
+    }
+
+    @Test func ensureLeadingIntroLeavesExistingZeroStartAlone() {
+        var chapters = [
+            Chapter(title: "Cold open", startTime: 0, endTime: 2_000, podcastDuration: 10_000),
+            Chapter(title: "Main", startTime: 2_000, endTime: 10_000, podcastDuration: 10_000)
+        ]
+
+        let inserted = ChapterTimeline.ensureLeadingIntro(into: &chapters, durationMillis: 10_000)
+
+        #expect(inserted == false)
+        #expect(chapters.map(\.title) == ["Cold open", "Main"])
+    }
 }
 
 struct ChapterBoundaryTests {

@@ -19,8 +19,7 @@ set -euo pipefail
 # ── Config ─────────────────────────────────────────────────────────────────────
 SCHEME="CastSnip"
 PROJECT="CastSnip.xcodeproj"
-# Xcode target/scheme stay CastSnip; the shipped product is branded CastSet.
-DISPLAY_NAME="CastSet"
+DISPLAY_NAME="CastSnip"
 EXPORT_OPTIONS="Scripts/ExportOptions.plist"
 NOTARY_PROFILE="${NOTARY_PROFILE:-castsnip-notary}"   # keychain profile from store-credentials
 
@@ -162,12 +161,12 @@ xcodebuild -exportArchive \
 APP_PATH=$(find "$EXPORT_PATH" -maxdepth 1 -name "*.app" | head -1)
 [ -n "$APP_PATH" ] || die "no .app found in ${EXPORT_PATH}"
 
-# Ship as CastSet.app even though the Xcode target is still named CastSnip.
-CASTSET_APP="${EXPORT_PATH}/${DISPLAY_NAME}.app"
-if [ "$APP_PATH" != "$CASTSET_APP" ]; then
-  rm -rf "$CASTSET_APP"
-  mv "$APP_PATH" "$CASTSET_APP"
-  APP_PATH="$CASTSET_APP"
+# Ensure the exported bundle matches the release display name.
+RELEASE_APP="${EXPORT_PATH}/${DISPLAY_NAME}.app"
+if [ "$APP_PATH" != "$RELEASE_APP" ]; then
+  rm -rf "$RELEASE_APP"
+  mv "$APP_PATH" "$RELEASE_APP"
+  APP_PATH="$RELEASE_APP"
 fi
 
 # Check the signature before spending minutes at the notary service. `spctl`

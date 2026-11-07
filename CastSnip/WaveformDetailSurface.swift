@@ -158,7 +158,7 @@ final class WaveformDetailSurface: NSView {
         layer = CALayer()
         layer?.backgroundColor = NSColor.clear.cgColor
         // Clip the 3× scroll strip (and overlays) to the view so they never paint
-        // under the trailing inspector / artwork.
+        // under the leading inspector / artwork.
         layer?.masksToBounds = true
 
         contentLayer.masksToBounds = true
