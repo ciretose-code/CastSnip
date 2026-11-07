@@ -37,6 +37,7 @@ struct CastSnipApp: App {
     @State private var tagging = ID3TaggingStore.shared
     @State private var encodeBitrate = EncodeBitrateStore.shared
     @State private var silenceSettings = SilenceSettingsStore.shared
+    @StateObject private var releaseChecks = ReleaseCheckManager()
     @State private var pendingAction: PendingDocumentAction?
     @State private var showDiscardAlert = false
     @State private var showShortcutsHelp = false
@@ -63,6 +64,7 @@ struct CastSnipApp: App {
                         saveInPlace: { saveInPlace() },
                         saveAs: { saveAs() }
                     )
+                    releaseChecks.startAutomaticChecks()
                     if let url = UITestLaunchArguments().resolvedOpenURL() {
                         applyOpen(url)
                     }
@@ -111,6 +113,13 @@ struct CastSnipApp: App {
             }
         }
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button(releaseChecks.isChecking ? "Checking for Updates…" : "Check for Updates…") {
+                    releaseChecks.checkForUpdates()
+                }
+                .disabled(releaseChecks.isChecking)
+            }
+
             CommandGroup(replacing: .newItem) {
                 Button("New") {
                     requestClose()
@@ -228,7 +237,17 @@ struct CastSnipApp: App {
         .defaultSize(width: 1180, height: 760)
 
         Settings {
-            SilenceSettingsView(store: silenceSettings)
+            TabView {
+                SilenceSettingsView(store: silenceSettings)
+                    .tabItem {
+                        Label("Silence", systemImage: "speaker.slash")
+                    }
+                UpdateSettingsView(releaseChecks: releaseChecks)
+                    .tabItem {
+                        Label("Updates", systemImage: "arrow.triangle.2.circlepath")
+                    }
+            }
+            .frame(minWidth: 420, minHeight: 240)
         }
     }
 
