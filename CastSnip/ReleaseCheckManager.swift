@@ -126,7 +126,7 @@ struct GitHubReleaseChecker {
         }
     }
 
-    static let defaultReleasesURL = URL(string: "https://api.github.com/repos/ewuehler/CastSnip/releases/latest")!
+    static let defaultReleasesURL = URL(string: "https://api.github.com/repos/ciretose-code/CastSnip/releases/latest")!
 
     private let currentVersion: AppReleaseVersion
     private let fetcher: ReleaseFetching

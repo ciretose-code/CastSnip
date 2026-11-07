@@ -33,7 +33,7 @@ struct ReleaseCheckManagerTests {
             fetcher: MockReleaseFetcher(json: """
             {
               "tag_name": "v1.0.5",
-              "html_url": "https://github.com/ewuehler/CastSnip/releases/tag/v1.0.5"
+              "html_url": "https://github.com/ciretose-code/CastSnip/releases/tag/v1.0.5"
             }
             """)
         )
@@ -43,7 +43,7 @@ struct ReleaseCheckManagerTests {
         #expect(outcome == .updateAvailable(
             currentVersion: "1.0.4",
             latestVersion: "1.0.5",
-            releasePage: URL(string: "https://github.com/ewuehler/CastSnip/releases/tag/v1.0.5")!
+            releasePage: URL(string: "https://github.com/ciretose-code/CastSnip/releases/tag/v1.0.5")!
         ))
     }
 
@@ -55,7 +55,7 @@ struct ReleaseCheckManagerTests {
             fetcher: MockReleaseFetcher(json: """
             {
               "tag_name": "v1.0.5",
-              "html_url": "https://github.com/ewuehler/CastSnip/releases/tag/v1.0.5"
+              "html_url": "https://github.com/ciretose-code/CastSnip/releases/tag/v1.0.5"
             }
             """)
         )
@@ -73,7 +73,7 @@ struct ReleaseCheckManagerTests {
             fetcher: MockReleaseFetcher(json: """
             {
               "tag_name": "latest",
-              "html_url": "https://github.com/ewuehler/CastSnip/releases/tag/latest"
+              "html_url": "https://github.com/ciretose-code/CastSnip/releases/tag/latest"
             }
             """)
         )
