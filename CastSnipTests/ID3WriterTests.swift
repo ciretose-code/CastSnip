@@ -293,7 +293,7 @@ struct ID3WriterTests {
         #expect(texts["TLEN"] == "12000")
     }
 
-    @Test func taggedMP3WritesYearAndCastSetEncoder() throws {
+    @Test func taggedMP3WritesYearAndCastSnipEncoder() throws {
         let podcast = Podcast()
         podcast.year = "2024"
 
@@ -305,8 +305,8 @@ struct ID3WriterTests {
         })
 
         #expect(texts["TYER"] == "2024")
-        #expect(texts["TENC"] == Podcast.castSetEncoder)
-        #expect(Podcast.castSetEncoder == "CastSet by ciretose")
+        #expect(texts["TENC"] == Podcast.castSnipEncoder)
+        #expect(Podcast.castSnipEncoder == "CastSnip by ciretose")
     }
 
     @Test func ensureDefaultYearFillsCurrentYearWhenEmpty() {

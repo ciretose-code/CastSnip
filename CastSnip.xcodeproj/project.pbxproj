@@ -631,8 +631,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = CastSet;
-				INFOPLIST_KEY_CFBundleName = CastSet;
+				INFOPLIST_KEY_CFBundleDisplayName = CastSnip;
+				INFOPLIST_KEY_CFBundleName = CastSnip;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.6;
 				MARKETING_VERSION = 1.0;
@@ -662,8 +662,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = CastSet;
-				INFOPLIST_KEY_CFBundleName = CastSet;
+				INFOPLIST_KEY_CFBundleDisplayName = CastSnip;
+				INFOPLIST_KEY_CFBundleName = CastSnip;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.6;
 				MARKETING_VERSION = 1.0;

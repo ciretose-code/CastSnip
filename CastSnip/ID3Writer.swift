@@ -50,9 +50,9 @@ enum ID3Writer {
         if !podcast.year.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             frames.append(textFrame("TYER", podcast.year.trimmingCharacters(in: .whitespacesAndNewlines)))
         }
-        frames.append(textFrame("TENC", Podcast.castSetEncoder))
+        frames.append(textFrame("TENC", Podcast.castSnipEncoder))
         if !podcast.summary.isEmpty {
-            // Write both: CastSet UI reads COMM; Forecast-era tools (html.sh) expect USLT.
+            // Write both: CastSnip UI reads COMM; Forecast-era tools (html.sh) expect USLT.
             frames.append(commentFrame(podcast.summary))
             frames.append(unsyncedLyricsFrame(podcast.summary))
         }

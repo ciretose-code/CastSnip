@@ -100,7 +100,7 @@ enum ReleaseCheckError: Equatable, LocalizedError {
         case .invalidResponse:
             return "GitHub returned an unexpected response."
         case .invalidReleaseVersion(let tag):
-            return "The latest release tag \"\(tag)\" is not a version CastSet can compare."
+            return "The latest release tag \"\(tag)\" is not a version CastSnip can compare."
         case .httpStatus(let statusCode):
             return "GitHub returned HTTP \(statusCode) while checking for updates."
         case .noPublishedRelease:
@@ -150,7 +150,7 @@ struct GitHubReleaseChecker {
     func checkForUpdates() async throws -> ReleaseCheckOutcome {
         var request = URLRequest(url: releasesURL)
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
-        request.setValue("CastSet/\(currentVersion.displayString)", forHTTPHeaderField: "User-Agent")
+        request.setValue("CastSnip/\(currentVersion.displayString)", forHTTPHeaderField: "User-Agent")
 
         let (data, response) = try await fetcher.data(for: request)
 
@@ -322,7 +322,7 @@ final class ReleaseCheckManager: ObservableObject {
             let alert = NSAlert()
             alert.alertStyle = .informational
             alert.messageText = "You’re up to date"
-            alert.informativeText = "CastSet \(currentVersion) is the latest release on GitHub."
+            alert.informativeText = "CastSnip \(currentVersion) is the latest release on GitHub."
             alert.addButton(withTitle: "OK")
             _ = run(alert)
         }
@@ -331,7 +331,7 @@ final class ReleaseCheckManager: ObservableObject {
     private func presentUpdate(currentVersion: String, latestVersion: String, releasePage: URL, allowSkip: Bool) {
         let alert = NSAlert()
         alert.alertStyle = .informational
-        alert.messageText = "CastSet \(latestVersion) is available"
+        alert.messageText = "CastSnip \(latestVersion) is available"
         alert.informativeText = "You’re currently running \(currentVersion). Open the GitHub release page to download the latest version?"
         alert.addButton(withTitle: "Open Release Page")
         alert.addButton(withTitle: "Not Now")

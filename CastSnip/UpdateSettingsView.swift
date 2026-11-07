@@ -27,7 +27,7 @@ struct UpdateSettingsView: View {
             } header: {
                 Text("Updates")
             } footer: {
-                Text("CastSet checks GitHub Releases for a newer notarized build and opens the download page when one is available.")
+                Text("CastSnip checks GitHub Releases for a newer notarized build and opens the download page when one is available.")
             }
         }
         .formStyle(.grouped)

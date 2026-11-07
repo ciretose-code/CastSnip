@@ -29,7 +29,7 @@ enum ID3ParserError: Error, LocalizedError {
         case .missingTag:
             return "The file does not contain an ID3 tag."
         case .unsupportedVersion(let version):
-            return "ID3v2.\(version) is not supported. CastSet reads ID3v2.3 tags."
+            return "ID3v2.\(version) is not supported. CastSnip reads ID3v2.3 tags."
         }
     }
 }

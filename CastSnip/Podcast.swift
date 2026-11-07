@@ -26,7 +26,7 @@ class Podcast {
     var artist:String = ""
     var year:String = ""
 
-    static let castSetEncoder = "CastSet by ciretose"
+    static let castSnipEncoder = "CastSnip by ciretose"
 
     /// Fills an empty year with the current calendar year. Returns `true` when a default was applied.
     @discardableResult
