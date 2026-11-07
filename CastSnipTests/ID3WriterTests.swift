@@ -500,6 +500,33 @@ struct AudioFileLoadSaveTests {
         #expect(!audioFile.isLoading)
     }
 
+    @Test func loadPodcastInsertsIntroOnMP3WhenChaptersSkipZero() async throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-intro-\(UUID().uuidString).mp3")
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let audio: Data
+        if let sample = sampleAudioURL(), let data = try? Data(contentsOf: sample) {
+            audio = data
+        } else {
+            audio = Data([0xFF, 0xFB, 0x90, 0x00, 0x11, 0x22, 0x33, 0x44])
+        }
+        let podcast = Podcast()
+        podcast.durationInMillis = 10_000
+        podcast.year = "2024"
+        podcast.chapters = [
+            Chapter(title: "Main", startTime: 5_000, endTime: 10_000, podcastDuration: 10_000)
+        ]
+        try ID3Writer.taggedMP3(from: audio, podcast: podcast).write(to: url)
+
+        let audioFile = AudioFile()
+        await audioFile.loadPodcast(from: url)
+
+        #expect(audioFile.podcast.chapters.map(\.title) == ["Intro", "Main"])
+        #expect(audioFile.podcast.chapters.map(\.startTime) == [0, 5_000])
+        #expect(audioFile.hasUnsavedChanges)
+    }
+
     @Test func loadPodcastMissingFileSetsError() async {
         let missing = FileManager.default.temporaryDirectory
             .appendingPathComponent("castsnip-missing-\(UUID().uuidString).mp3")

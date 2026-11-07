@@ -135,6 +135,13 @@ struct ChapterTimelineTests {
         #expect(inserted == false)
         #expect(chapters.map(\.title) == ["Cold open", "Main"])
     }
+
+    @Test func ensureLeadingIntroSkipsWhenDurationUnknown() {
+        var chapters: [Chapter] = []
+        let inserted = ChapterTimeline.ensureLeadingIntro(into: &chapters, durationMillis: 0)
+        #expect(inserted == false)
+        #expect(chapters.isEmpty)
+    }
 }
 
 struct ChapterBoundaryTests {

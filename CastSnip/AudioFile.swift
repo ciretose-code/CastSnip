@@ -50,17 +50,25 @@ class AudioFile: Identifiable {
         var didMutateOnOpen = false
         // Require a readable audio file — AVURLAsset can exist for missing paths.
         if podcast.file != nil {
-            didMutateOnOpen = ChapterTimeline.ensureLeadingIntro(
-                into: &podcast.chapters,
-                durationMillis: podcast.durationInMillis ?? 0
-            )
-            if Podcast.ensureDefaultYear(&podcast.year) {
-                didMutateOnOpen = true
+            // Default year in memory for the Episode UI, but do not dirty solely for that.
+            _ = Podcast.ensureDefaultYear(&podcast.year)
+
+            // Only auto-insert Intro on MP3 with a known duration. Save uses ID3Writer,
+            // which would corrupt WAV/AIFF/M4A if we dirtied them on open.
+            if Self.isMP3(url) {
+                didMutateOnOpen = ChapterTimeline.ensureLeadingIntro(
+                    into: &podcast.chapters,
+                    durationMillis: podcast.durationInMillis ?? 0
+                )
             }
         }
         
         isLoading = false
         hasUnsavedChanges = didMutateOnOpen
+    }
+
+    static func isMP3(_ url: URL) -> Bool {
+        url.pathExtension.lowercased() == "mp3"
     }
 
     func save(to destination: URL, includeTags: Bool = true) throws {
@@ -88,6 +96,8 @@ class AudioFile: Identifiable {
 
     func canSaveInPlace(to url: URL?) -> Bool {
         guard let url else { return false }
+        // ID3Writer only produces safe in-place writes for MP3.
+        guard Self.isMP3(url) else { return false }
         if url.path.contains("/Contents/Resources/") {
             return false
         }

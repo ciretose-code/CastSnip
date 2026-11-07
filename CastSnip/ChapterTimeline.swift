@@ -86,6 +86,7 @@ enum ChapterTimeline {
         into chapters: inout [Chapter],
         durationMillis: UInt32
     ) -> Bool {
+        guard durationMillis > 0 else { return false }
         if chapters.contains(where: { $0.startTime == 0 }) {
             return false
         }
