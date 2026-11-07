@@ -52,7 +52,9 @@ enum ID3Writer {
         }
         frames.append(textFrame("TENC", Podcast.castSetEncoder))
         if !podcast.summary.isEmpty {
+            // Write both: CastSet UI reads COMM; Forecast-era tools (html.sh) expect USLT.
             frames.append(commentFrame(podcast.summary))
+            frames.append(unsyncedLyricsFrame(podcast.summary))
         }
         if let millis = podcast.durationInMillis, millis > 0 {
             frames.append(textFrame("TLEN", String(millis)))
@@ -140,12 +142,21 @@ enum ID3Writer {
     }
 
     private static func commentFrame(_ text: String) -> Data {
+        frame("COMM", body: languagePrefixedTextBody(text))
+    }
+
+    private static func unsyncedLyricsFrame(_ text: String) -> Data {
+        frame("USLT", body: languagePrefixedTextBody(text))
+    }
+
+    /// Encoding + `eng` + empty descriptor + text (COMM / USLT share this layout).
+    private static func languagePrefixedTextBody(_ text: String) -> Data {
         var body = Data([0x03])
         body.append(contentsOf: "eng".utf8)
         body.append(0x00)
         body.append(contentsOf: text.utf8)
         body.append(0x00)
-        return frame("COMM", body: body)
+        return body
     }
 
     private static func pictureFrame(_ jpeg: Data) -> Data {

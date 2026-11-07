@@ -282,13 +282,14 @@ struct ID3WriterTests {
         let mp3 = ID3Writer.taggedMP3(from: Data([0xFF, 0xFB, 0x90, 0x00]), podcast: podcast)
         let frames = try ID3Parser.readFrames(from: mp3)
         let texts = Dictionary(uniqueKeysWithValues: frames.compactMap { frame -> (String, String)? in
-            guard ["TALB", "TIT2", "COMM", "TLEN"].contains(frame.name) else { return nil }
+            guard ["TALB", "TIT2", "COMM", "USLT", "TLEN"].contains(frame.name) else { return nil }
             return (frame.name, ID3Parser.decodeTextFrameBody(frame.body))
         })
 
         #expect(texts["TALB"] == "Mostly Security")
         #expect(texts["TIT2"] == "329: Cool")
         #expect(texts["COMM"]?.contains("Notes") == true)
+        #expect(texts["USLT"]?.contains("Notes") == true)
         #expect(texts["TLEN"] == "12000")
     }
 
