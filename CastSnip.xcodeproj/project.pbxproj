@@ -47,6 +47,8 @@
 		A11D3E010001000100000024 /* WaveformSampling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000023 /* WaveformSampling.swift */; };
 		A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000025 /* ID3TaggingStore.swift */; };
 		A11DET010001000100000002 /* WaveformDetailSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11DET010001000100000001 /* WaveformDetailSurface.swift */; };
+		A11REL010001000100000002 /* ReleaseCheckManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11REL010001000100000001 /* ReleaseCheckManager.swift */; };
+		A11REL010001000100000004 /* UpdateSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11REL010001000100000003 /* UpdateSettingsView.swift */; };
 		A11LAME010001000100000003 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000002 /* LAME */; };
 		A11LAME010001000100000005 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000004 /* LAME */; };
 		B0A1A0010001000100000002 /* ChapterListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000001 /* ChapterListView.swift */; };
@@ -117,6 +119,8 @@
 		A11D3E010001000100000023 /* WaveformSampling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformSampling.swift; sourceTree = "<group>"; };
 		A11D3E010001000100000025 /* ID3TaggingStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ID3TaggingStore.swift; sourceTree = "<group>"; };
 		A11DET010001000100000001 /* WaveformDetailSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformDetailSurface.swift; sourceTree = "<group>"; };
+		A11REL010001000100000001 /* ReleaseCheckManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReleaseCheckManager.swift; sourceTree = "<group>"; };
+		A11REL010001000100000003 /* UpdateSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateSettingsView.swift; sourceTree = "<group>"; };
 		B0A1A0010001000100000001 /* ChapterListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterListView.swift; sourceTree = "<group>"; };
 		B0A1A0010001000100000003 /* EditorInspector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorInspector.swift; sourceTree = "<group>"; };
 		B0A1A0010001000100000005 /* WaveformPeakStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformPeakStore.swift; sourceTree = "<group>"; };
@@ -206,6 +210,8 @@
 				A11BIT010001000100000001 /* EncodeBitrateStore.swift */,
 				A11290010001000100000001 /* SilenceSettingsStore.swift */,
 				A11290010001000100000003 /* SilenceSettingsView.swift */,
+				A11REL010001000100000001 /* ReleaseCheckManager.swift */,
+				A11REL010001000100000003 /* UpdateSettingsView.swift */,
 				A11D3E010001000100000003 /* ID3MetadataMapping.swift */,
 				A11D3E010001000100000005 /* SecurityScopedBookmarkStore.swift */,
 				B0A1A0010001000100000001 /* ChapterListView.swift */,
@@ -427,6 +433,8 @@
 				A11BIT010001000100000002 /* EncodeBitrateStore.swift in Sources */,
 				A11290010001000100000002 /* SilenceSettingsStore.swift in Sources */,
 				A11290010001000100000004 /* SilenceSettingsView.swift in Sources */,
+				A11REL010001000100000002 /* ReleaseCheckManager.swift in Sources */,
+				A11REL010001000100000004 /* UpdateSettingsView.swift in Sources */,
 				A11D3E010001000100000004 /* ID3MetadataMapping.swift in Sources */,
 				A11D3E010001000100000006 /* SecurityScopedBookmarkStore.swift in Sources */,
 				A11D3E010001000100000008 /* ChapterTimeline.swift in Sources */,

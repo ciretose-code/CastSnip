@@ -19,14 +19,14 @@ set -euo pipefail
 # ── Config ─────────────────────────────────────────────────────────────────────
 SCHEME="CastSnip"
 PROJECT="CastSnip.xcodeproj"
-APP_NAME="CastSnip"
+# Xcode target/scheme stay CastSnip; the shipped product is branded CastSet.
 DISPLAY_NAME="CastSet"
 EXPORT_OPTIONS="Scripts/ExportOptions.plist"
 NOTARY_PROFILE="${NOTARY_PROFILE:-castsnip-notary}"   # keychain profile from store-credentials
 
 ARCHIVE_PATH="build/${SCHEME}.xcarchive"
 EXPORT_PATH="build/export"
-MOUNT_DIR="/Volumes/${APP_NAME}-staging"
+MOUNT_DIR="/Volumes/${DISPLAY_NAME}-staging"
 STAGING_DMG="build/staging.dmg"
 
 DRY_RUN=false
@@ -162,6 +162,14 @@ xcodebuild -exportArchive \
 APP_PATH=$(find "$EXPORT_PATH" -maxdepth 1 -name "*.app" | head -1)
 [ -n "$APP_PATH" ] || die "no .app found in ${EXPORT_PATH}"
 
+# Ship as CastSet.app even though the Xcode target is still named CastSnip.
+CASTSET_APP="${EXPORT_PATH}/${DISPLAY_NAME}.app"
+if [ "$APP_PATH" != "$CASTSET_APP" ]; then
+  rm -rf "$CASTSET_APP"
+  mv "$APP_PATH" "$CASTSET_APP"
+  APP_PATH="$CASTSET_APP"
+fi
+
 # Check the signature before spending minutes at the notary service. `spctl`
 # rejecting it here is the same rejection Gatekeeper would give a user.
 step "Verifying signature..."
@@ -196,7 +204,7 @@ cp -R "$APP_PATH" "$MOUNT_DIR/"
 
 osascript <<APPLESCRIPT >/dev/null
 tell application "Finder"
-  set theDisk to disk "${APP_NAME}-staging"
+  set theDisk to disk "${DISPLAY_NAME}-staging"
   make new alias file to folder "Applications" of startup disk at theDisk
   tell theDisk
     open
