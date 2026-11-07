@@ -47,6 +47,10 @@ enum ID3Writer {
         if !podcast.artist.isEmpty {
             frames.append(textFrame("TPE1", podcast.artist))
         }
+        if !podcast.year.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            frames.append(textFrame("TYER", podcast.year.trimmingCharacters(in: .whitespacesAndNewlines)))
+        }
+        frames.append(textFrame("TENC", Podcast.castSetEncoder))
         if !podcast.summary.isEmpty {
             frames.append(commentFrame(podcast.summary))
         }

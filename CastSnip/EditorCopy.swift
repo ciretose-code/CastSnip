@@ -34,6 +34,7 @@ enum EditorAccessibility {
     static let podcastTitle = "Podcast title"
     static let episodeTitle = "Episode title"
     static let authors = "Authors"
+    static let year = "Year"
     static let addChapter = "Add chapter"
     static let emptyEditor = "Empty editor"
     static let encoding = "Encoding"

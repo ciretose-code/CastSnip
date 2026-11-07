@@ -292,6 +292,39 @@ struct ID3WriterTests {
         #expect(texts["TLEN"] == "12000")
     }
 
+    @Test func taggedMP3WritesYearAndCastSetEncoder() throws {
+        let podcast = Podcast()
+        podcast.year = "2024"
+
+        let mp3 = ID3Writer.taggedMP3(from: Data([0xFF, 0xFB, 0x90, 0x00]), podcast: podcast)
+        let frames = try ID3Parser.readFrames(from: mp3)
+        let texts = Dictionary(uniqueKeysWithValues: frames.compactMap { frame -> (String, String)? in
+            guard ["TYER", "TENC"].contains(frame.name) else { return nil }
+            return (frame.name, ID3Parser.decodeTextFrameBody(frame.body))
+        })
+
+        #expect(texts["TYER"] == "2024")
+        #expect(texts["TENC"] == Podcast.castSetEncoder)
+        #expect(Podcast.castSetEncoder == "CastSet by ciretose")
+    }
+
+    @Test func ensureDefaultYearFillsCurrentYearWhenEmpty() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let date = calendar.date(from: DateComponents(year: 2025, month: 6, day: 1))!
+        var year = ""
+        let inserted = Podcast.ensureDefaultYear(&year, now: date, calendar: calendar)
+        #expect(inserted == true)
+        #expect(year == "2025")
+    }
+
+    @Test func ensureDefaultYearKeepsExistingValue() {
+        var year = "2019"
+        let inserted = Podcast.ensureDefaultYear(&year)
+        #expect(inserted == false)
+        #expect(year == "2019")
+    }
+
     @Test func taggedMP3WritesChaptersAndTOCThatParserCanRead() throws {
         let podcast = Podcast()
         podcast.durationInMillis = 10_000
@@ -459,6 +492,7 @@ struct AudioFileLoadSaveTests {
         #expect(audioFile.podcast.chapters.count == 2)
         #expect(audioFile.podcast.chapters.sorted()[0].title.contains("Cold open"))
         #expect(audioFile.podcast.chapters.sorted()[1].title.contains("Main"))
+        #expect(audioFile.podcast.year == "2024")
         #expect(audioFile.podcast.logo != nil)
         #expect(audioFile.errorMessage == nil)
         #expect(!audioFile.hasUnsavedChanges)
@@ -595,6 +629,7 @@ private func writeTaggedTempPodcast() throws -> (URL, () -> Void) {
     let podcast = Podcast()
     podcast.title = "Load Show"
     podcast.episode = "Load Episode"
+    podcast.year = "2024"
     podcast.durationInMillis = 10_000
     podcast.logo = makeSolidJPEGImage()
     podcast.chapters = [

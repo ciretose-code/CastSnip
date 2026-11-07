@@ -528,6 +528,23 @@ struct AudioFileTests {
         #expect(audioFile.podcast.artist == "Mostly Security")
         #expect(audioFile.hasUnsavedChanges)
     }
+
+    @Test func testGetYear() {
+        let audioFile = AudioFile()
+        audioFile.podcast.year = "2026"
+
+        #expect(audioFile.getYear().wrappedValue == "2026")
+    }
+
+    @Test func testSetYearMarksDirty() {
+        let audioFile = AudioFile()
+
+        var binding = audioFile.getYear()
+        binding.wrappedValue = "2026"
+
+        #expect(audioFile.podcast.year == "2026")
+        #expect(audioFile.hasUnsavedChanges)
+    }
     
     @Test func testSetSummary() {
         let audioFile = AudioFile()

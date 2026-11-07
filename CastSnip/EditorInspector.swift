@@ -197,6 +197,8 @@ private struct EpisodeInspector: View {
                     .accessibilityIdentifier(EditorAccessibility.episodeTitle)
                 TextField("Authors", text: audioFile.getAuthors(), prompt: Text("Authors"))
                     .accessibilityIdentifier(EditorAccessibility.authors)
+                TextField("Year", text: audioFile.getYear(), prompt: Text("Year"))
+                    .accessibilityIdentifier(EditorAccessibility.year)
             }
 
             Section("Summary") {

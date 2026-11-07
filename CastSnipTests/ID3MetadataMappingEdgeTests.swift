@@ -55,21 +55,34 @@ struct ID3MetadataMappingEdgeTests {
         #expect(podcast.durationInMillis == nil)
     }
 
+    @Test func tyerSetsYear() {
+        let podcast = Podcast()
+        ID3MetadataMapping.applyString(key: "TYER", value: "2024", to: podcast)
+        #expect(podcast.year == "2024")
+    }
+
+    @Test func tdrcSetsYearFromLeadingDigits() {
+        let podcast = Podcast()
+        ID3MetadataMapping.applyString(key: "TDRC", value: "2026-03-15", to: podcast)
+        #expect(podcast.year == "2026")
+    }
+
     @Test func unknownKeyIsNoOp() {
         let podcast = Podcast()
         podcast.title = "Show"
         podcast.episode = "Ep"
         podcast.artist = "Artist"
         podcast.summary = "Notes"
+        podcast.year = "2020"
         podcast.durationInMillis = 1_000
 
-        ID3MetadataMapping.applyString(key: "TYER", value: "2024", to: podcast)
         ID3MetadataMapping.applyString(key: "XXXX", value: "ignored", to: podcast)
 
         #expect(podcast.title == "Show")
         #expect(podcast.episode == "Ep")
         #expect(podcast.artist == "Artist")
         #expect(podcast.summary == "Notes")
+        #expect(podcast.year == "2020")
         #expect(podcast.durationInMillis == 1_000)
     }
 

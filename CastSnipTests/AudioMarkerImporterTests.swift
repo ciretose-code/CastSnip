@@ -247,6 +247,7 @@ struct AudioMarkerImporterTests {
         #expect(audioFile.podcast.asset != nil)
         #expect(audioFile.podcast.chapters.map(\.title) == ["Intro"])
         #expect(audioFile.podcast.chapters.first?.startTime == 0)
+        #expect(!audioFile.podcast.year.isEmpty)
         #expect(audioFile.hasUnsavedChanges)
         #expect(audioFile.errorMessage == nil)
     }
