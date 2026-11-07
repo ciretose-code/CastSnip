@@ -15,11 +15,18 @@ struct AudioFilePolicyTests {
         #expect(!audioFile.canSaveInPlace(to: bundled))
     }
 
-    @Test func canSaveInPlaceToATempPathOutsideTheBundle() {
+    @Test func canSaveInPlaceToATempMP3OutsideTheBundle() {
         let audioFile = AudioFile()
         let temp = FileManager.default.temporaryDirectory
             .appendingPathComponent("castsnip-policy-\(UUID().uuidString).mp3")
         #expect(audioFile.canSaveInPlace(to: temp))
+    }
+
+    @Test func cannotSaveInPlaceToWavEvenOutsideTheBundle() {
+        let audioFile = AudioFile()
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("castsnip-policy-\(UUID().uuidString).wav")
+        #expect(!audioFile.canSaveInPlace(to: temp))
     }
 
     @Test func closeDocumentClearsSelectionErrorDirtyFlagAndChapters() {

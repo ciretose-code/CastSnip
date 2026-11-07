@@ -236,7 +236,7 @@ struct AudioMarkerImporterTests {
     }
 
     @Test @MainActor
-    func loadPodcastInsertsIntroWhenWavHasNoMarkers() async throws {
+    func loadPodcastDoesNotInsertIntroOnWavWithoutMarkers() async throws {
         let wav = WAVMarkerFixture.file(sampleRate: 8_000, frames: 8_000, cues: [], includeLabels: false)
         let url = try writeTemp(wav, ext: "wav")
         defer { try? FileManager.default.removeItem(at: url) }
@@ -245,15 +245,15 @@ struct AudioMarkerImporterTests {
         await audioFile.loadPodcast(from: url)
 
         #expect(audioFile.podcast.asset != nil)
-        #expect(audioFile.podcast.chapters.map(\.title) == ["Intro"])
-        #expect(audioFile.podcast.chapters.first?.startTime == 0)
+        #expect(audioFile.podcast.chapters.isEmpty)
+        // Year may default in memory, but WAV open must not dirty (Save would corrupt via ID3Writer).
         #expect(!audioFile.podcast.year.isEmpty)
-        #expect(audioFile.hasUnsavedChanges)
+        #expect(!audioFile.hasUnsavedChanges)
         #expect(audioFile.errorMessage == nil)
     }
 
     @Test @MainActor
-    func loadPodcastInsertsIntroBeforeMarkersThatSkipZero() async throws {
+    func loadPodcastLeavesWavMarkersWithoutLeadingIntro() async throws {
         let wav = WAVMarkerFixture.file(
             sampleRate: 8_000,
             frames: 8_000,
@@ -268,9 +268,9 @@ struct AudioMarkerImporterTests {
         let audioFile = AudioFile()
         await audioFile.loadPodcast(from: url)
 
-        #expect(audioFile.podcast.chapters.map(\.title) == ["Intro", "Main"])
-        #expect(audioFile.podcast.chapters.map(\.startTime) == [0, 500])
-        #expect(audioFile.hasUnsavedChanges)
+        #expect(audioFile.podcast.chapters.map(\.title) == ["Main"])
+        #expect(audioFile.podcast.chapters.map(\.startTime) == [500])
+        #expect(!audioFile.hasUnsavedChanges)
     }
 
     @Test @MainActor
