@@ -17,6 +17,9 @@ struct ContentView: View {
     @State private var isDraggingAudio = false
     @State private var showInspector = true
     @State private var inspectorPane: EditorInspector.Pane = .episode
+    /// Leading inspector column width; persisted by `InspectorWidthStore`.
+    @State private var inspectorWidth = InspectorWidthStore.load()
+    @State private var inspectorDragStartWidth: Double?
     /// Share of the editor height given to the chapter list; persisted by `EditorSplitStore`.
     @State private var splitFraction = EditorSplitStore.load()
     @State private var splitDragStartFraction: Double?
@@ -76,9 +79,9 @@ struct ContentView: View {
                     podcastAudioFile.markAsModified()
                     return applied
                 }
-                .frame(minWidth: 280, idealWidth: 320, maxWidth: 460)
+                .frame(width: inspectorWidth)
                 .frame(maxHeight: .infinity)
-                Divider()
+                inspectorWidthDivider
             }
 
             GeometryReader { geometry in
@@ -250,6 +253,37 @@ struct ContentView: View {
         }
     }
 
+    /// Draggable divider between the leading inspector and the editor. Double-click resets it.
+    private var inspectorWidthDivider: some View {
+        Divider()
+            .frame(maxHeight: .infinity)
+            .padding(.horizontal, 3)
+            .contentShape(Rectangle())
+            .padding(.horizontal, -3)
+            .zIndex(1)
+            .onHover { inside in
+                if inside { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
+            }
+            .gesture(
+                DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                    .onChanged { value in
+                        let start = inspectorDragStartWidth ?? inspectorWidth
+                        inspectorDragStartWidth = start
+                        inspectorWidth = InspectorWidthStore.clamp(start + value.translation.width)
+                    }
+                    .onEnded { _ in
+                        inspectorDragStartWidth = nil
+                        InspectorWidthStore.save(inspectorWidth)
+                    }
+            )
+            .onTapGesture(count: 2) {
+                inspectorWidth = InspectorWidthStore.defaultWidth
+                InspectorWidthStore.save(inspectorWidth)
+            }
+            .help("Drag to resize · double-click to reset")
+            .accessibilityHidden(true)
+    }
+
     /// Draggable divider between the waveform and the chapter list. Double-click resets it.
     private func splitDivider(totalHeight: Double) -> some View {
         Divider()
@@ -367,7 +401,7 @@ struct ContentView: View {
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .primaryAction) {
+        ToolbarItem(placement: .navigation) {
             Button { showInspector.toggle() } label: {
                 Label("Inspector", systemImage: "sidebar.leading")
             }

@@ -26,6 +26,7 @@
 		A11290010001000100000004 /* SilenceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11290010001000100000003 /* SilenceSettingsView.swift */; };
 		A1132000000000000000002 /* AutofillMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1132000000000000000001 /* AutofillMemoryView.swift */; };
 		A11340010001000100000002 /* EditorSplitStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11340010001000100000001 /* EditorSplitStore.swift */; };
+		A113INS010001000100000002 /* InspectorWidthStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A113INS010001000100000001 /* InspectorWidthStore.swift */; };
 		A11BAKE010001000100000002 /* WaveformStripBaker.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11BAKE010001000100000001 /* WaveformStripBaker.swift */; };
 		A11BIT010001000100000002 /* EncodeBitrateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11BIT010001000100000001 /* EncodeBitrateStore.swift */; };
 		A11D3E010001000100000002 /* ID3Writer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000001 /* ID3Writer.swift */; };
@@ -47,10 +48,10 @@
 		A11D3E010001000100000024 /* WaveformSampling.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000023 /* WaveformSampling.swift */; };
 		A11D3E010001000100000026 /* ID3TaggingStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11D3E010001000100000025 /* ID3TaggingStore.swift */; };
 		A11DET010001000100000002 /* WaveformDetailSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11DET010001000100000001 /* WaveformDetailSurface.swift */; };
-		A11REL010001000100000002 /* ReleaseCheckManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11REL010001000100000001 /* ReleaseCheckManager.swift */; };
-		A11REL010001000100000004 /* UpdateSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11REL010001000100000003 /* UpdateSettingsView.swift */; };
 		A11LAME010001000100000003 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000002 /* LAME */; };
 		A11LAME010001000100000005 /* LAME in Frameworks */ = {isa = PBXBuildFile; productRef = A11LAME010001000100000004 /* LAME */; };
+		A11REL010001000100000002 /* ReleaseCheckManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11REL010001000100000001 /* ReleaseCheckManager.swift */; };
+		A11REL010001000100000004 /* UpdateSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11REL010001000100000003 /* UpdateSettingsView.swift */; };
 		B0A1A0010001000100000002 /* ChapterListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000001 /* ChapterListView.swift */; };
 		B0A1A0010001000100000004 /* EditorInspector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000003 /* EditorInspector.swift */; };
 		B0A1A0010001000100000006 /* WaveformPeakStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A1A0010001000100000005 /* WaveformPeakStore.swift */; };
@@ -97,6 +98,7 @@
 		A11290010001000100000003 /* SilenceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SilenceSettingsView.swift; sourceTree = "<group>"; };
 		A1132000000000000000001 /* AutofillMemoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutofillMemoryView.swift; sourceTree = "<group>"; };
 		A11340010001000100000001 /* EditorSplitStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorSplitStore.swift; sourceTree = "<group>"; };
+		A113INS010001000100000001 /* InspectorWidthStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectorWidthStore.swift; sourceTree = "<group>"; };
 		A11380010001000100000001 /* CastSnipUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CastSnipUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A11BAKE010001000100000001 /* WaveformStripBaker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WaveformStripBaker.swift; sourceTree = "<group>"; };
 		A11BIT010001000100000001 /* EncodeBitrateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncodeBitrateStore.swift; sourceTree = "<group>"; };
@@ -191,6 +193,7 @@
 				A11D3E01000100010000000D /* OpenPodcastEnvironment.swift */,
 				A11D3E01000100010000000F /* RecentFilesStore.swift */,
 				A11340010001000100000001 /* EditorSplitStore.swift */,
+				A113INS010001000100000001 /* InspectorWidthStore.swift */,
 				A11D3E010001000100000019 /* ShowAutofillStore.swift */,
 				A1132000000000000000001 /* AutofillMemoryView.swift */,
 				A11D3E010001000100000011 /* KeyboardShortcutsHelp.swift */,
@@ -442,6 +445,7 @@
 				A11D3E01000100010000000E /* OpenPodcastEnvironment.swift in Sources */,
 				A11D3E010001000100000010 /* RecentFilesStore.swift in Sources */,
 				A11340010001000100000002 /* EditorSplitStore.swift in Sources */,
+				A113INS010001000100000002 /* InspectorWidthStore.swift in Sources */,
 				A11D3E010001000100000012 /* KeyboardShortcutsHelp.swift in Sources */,
 				A11D3E010001000100000014 /* EditorCopy.swift in Sources */,
 				A11D3E010001000100000016 /* EmptyPodcastView.swift in Sources */,
