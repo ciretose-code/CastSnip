@@ -2,7 +2,7 @@
 //  EditorInspector.swift
 //  CastSnip
 //
-//  Trailing inspector for the timeline editor: details for the selected chapter, and the
+//  Leading inspector for the timeline editor: details for the selected chapter, and the
 //  episode metadata that is usually set once per file.
 //
 
@@ -195,6 +195,8 @@ private struct EpisodeInspector: View {
                     .accessibilityIdentifier(EditorAccessibility.podcastTitle)
                 TextField("Episode", text: audioFile.getEpisode(), prompt: Text("Episode title"))
                     .accessibilityIdentifier(EditorAccessibility.episodeTitle)
+                TextField("Authors", text: audioFile.getAuthors(), prompt: Text("Authors"))
+                    .accessibilityIdentifier(EditorAccessibility.authors)
             }
 
             Section("Summary") {

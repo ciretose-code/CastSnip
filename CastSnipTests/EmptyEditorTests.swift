@@ -56,6 +56,7 @@ struct EditorAccessibilityTests {
         #expect(EditorAccessibility.viewport.localizedCaseInsensitiveContains("zoom"))
         #expect(EditorAccessibility.podcastTitle.localizedCaseInsensitiveContains("title"))
         #expect(EditorAccessibility.episodeTitle.localizedCaseInsensitiveContains("episode"))
+        #expect(EditorAccessibility.authors.localizedCaseInsensitiveContains("author"))
         #expect(EditorAccessibility.playPause == "PlayPause")
         #expect(EditorAccessibility.emptyEditor == "Empty editor")
         #expect(EditorAccessibility.encoding == "Encoding")

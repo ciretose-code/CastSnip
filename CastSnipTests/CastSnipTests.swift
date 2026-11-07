@@ -484,6 +484,14 @@ struct AudioFileTests {
         let binding = audioFile.getEpisode()
         #expect(binding.wrappedValue == "Episode 42")
     }
+
+    @Test func testGetAuthors() {
+        let audioFile = AudioFile()
+        audioFile.podcast.artist = "Mostly Security"
+
+        let binding = audioFile.getAuthors()
+        #expect(binding.wrappedValue == "Mostly Security")
+    }
     
     @Test func testGetSummary() {
         let audioFile = AudioFile()
@@ -509,6 +517,16 @@ struct AudioFileTests {
         binding.wrappedValue = "New Episode"
         
         #expect(audioFile.podcast.episode == "New Episode")
+    }
+
+    @Test func testSetAuthorsMarksDirty() {
+        let audioFile = AudioFile()
+
+        var binding = audioFile.getAuthors()
+        binding.wrappedValue = "Mostly Security"
+
+        #expect(audioFile.podcast.artist == "Mostly Security")
+        #expect(audioFile.hasUnsavedChanges)
     }
     
     @Test func testSetSummary() {

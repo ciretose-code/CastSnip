@@ -236,7 +236,7 @@ struct AudioMarkerImporterTests {
     }
 
     @Test @MainActor
-    func loadPodcastLeavesEmptyChaptersWhenWavHasNoMarkers() async throws {
+    func loadPodcastInsertsIntroWhenWavHasNoMarkers() async throws {
         let wav = WAVMarkerFixture.file(sampleRate: 8_000, frames: 8_000, cues: [], includeLabels: false)
         let url = try writeTemp(wav, ext: "wav")
         defer { try? FileManager.default.removeItem(at: url) }
@@ -245,8 +245,31 @@ struct AudioMarkerImporterTests {
         await audioFile.loadPodcast(from: url)
 
         #expect(audioFile.podcast.asset != nil)
-        #expect(audioFile.podcast.chapters.isEmpty)
+        #expect(audioFile.podcast.chapters.map(\.title) == ["Intro"])
+        #expect(audioFile.podcast.chapters.first?.startTime == 0)
+        #expect(audioFile.hasUnsavedChanges)
         #expect(audioFile.errorMessage == nil)
+    }
+
+    @Test @MainActor
+    func loadPodcastInsertsIntroBeforeMarkersThatSkipZero() async throws {
+        let wav = WAVMarkerFixture.file(
+            sampleRate: 8_000,
+            frames: 8_000,
+            cues: [
+                .init(id: 1, sample: 4_000, label: "Main"),
+            ],
+            includeLabels: true
+        )
+        let url = try writeTemp(wav, ext: "wav")
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let audioFile = AudioFile()
+        await audioFile.loadPodcast(from: url)
+
+        #expect(audioFile.podcast.chapters.map(\.title) == ["Intro", "Main"])
+        #expect(audioFile.podcast.chapters.map(\.startTime) == [0, 500])
+        #expect(audioFile.hasUnsavedChanges)
     }
 
     @Test @MainActor
@@ -288,6 +311,7 @@ struct AudioMarkerImporterTests {
         await audioFile.loadPodcast(from: url)
 
         #expect(audioFile.podcast.asset != nil)
+        // RF64 opens as an asset but AVAudioFile can't read it, so no Intro is inserted.
         #expect(audioFile.podcast.chapters.isEmpty)
         #expect(audioFile.errorMessage?.localizedCaseInsensitiveContains("rf64") == true)
     }

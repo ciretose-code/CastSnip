@@ -69,29 +69,34 @@ struct ContentView: View {
     }
 
     private var editor: some View {
-        GeometryReader { geometry in
-            let totalHeight = geometry.size.height
-            let listHeight = totalHeight * splitFraction
-            VStack(spacing: 0) {
-                timelinePane
-                    .frame(maxHeight: .infinity)
-                transportBar
-                splitDivider(totalHeight: totalHeight)
-                ChapterListView(
-                    playheadMillis: transportPlayheadMillis,
-                    onAdd: { addChapter(atMillis: actionPlayheadMillis) },
-                    onSeek: { chapter in seekToChapter(chapter) }
-                )
-                .frame(height: listHeight)
+        HStack(spacing: 0) {
+            if showInspector {
+                EditorInspector(pane: $inspectorPane, playheadMillis: transportPlayheadMillis) { chapter, proposed in
+                    let applied = ChapterTimeline.moveStart(of: chapter, to: proposed, in: podcastAudioFile.podcast.chapters, durationMillis: durationMillis)
+                    podcastAudioFile.markAsModified()
+                    return applied
+                }
+                .frame(minWidth: 280, idealWidth: 320, maxWidth: 460)
+                .frame(maxHeight: .infinity)
+                Divider()
             }
-        }
-        .inspector(isPresented: $showInspector) {
-            EditorInspector(pane: $inspectorPane, playheadMillis: transportPlayheadMillis) { chapter, proposed in
-                let applied = ChapterTimeline.moveStart(of: chapter, to: proposed, in: podcastAudioFile.podcast.chapters, durationMillis: durationMillis)
-                podcastAudioFile.markAsModified()
-                return applied
+
+            GeometryReader { geometry in
+                let totalHeight = geometry.size.height
+                let listHeight = totalHeight * splitFraction
+                VStack(spacing: 0) {
+                    timelinePane
+                        .frame(maxHeight: .infinity)
+                    transportBar
+                    splitDivider(totalHeight: totalHeight)
+                    ChapterListView(
+                        playheadMillis: transportPlayheadMillis,
+                        onAdd: { addChapter(atMillis: actionPlayheadMillis) },
+                        onSeek: { chapter in seekToChapter(chapter) }
+                    )
+                    .frame(height: listHeight)
+                }
             }
-            .inspectorColumnWidth(min: 280, ideal: 320, max: 460)
         }
         .toolbar { toolbarContent }
         .focusedSceneValue(\.editorCommands, editorCommands)
@@ -364,7 +369,7 @@ struct ContentView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Button { showInspector.toggle() } label: {
-                Label("Inspector", systemImage: "sidebar.trailing")
+                Label("Inspector", systemImage: "sidebar.leading")
             }
             .help(showInspector ? "Hide inspector (⌥⌘I)" : "Show inspector (⌥⌘I)")
         }

@@ -46,9 +46,18 @@ class AudioFile: Identifiable {
         }
 
         ShowAutofillStore.shared.applyToPodcastIfEmpty(podcast, filename: url.path)
+
+        var insertedIntro = false
+        // Require a readable audio file — AVURLAsset can exist for missing paths.
+        if podcast.file != nil {
+            insertedIntro = ChapterTimeline.ensureLeadingIntro(
+                into: &podcast.chapters,
+                durationMillis: podcast.durationInMillis ?? 0
+            )
+        }
         
         isLoading = false
-        hasUnsavedChanges = false
+        hasUnsavedChanges = insertedIntro
     }
 
     func save(to destination: URL, includeTags: Bool = true) throws {
@@ -145,6 +154,10 @@ class AudioFile: Identifiable {
     
     func getEpisode() -> Binding<String> {
         dirtyBinding(\.episode)
+    }
+
+    func getAuthors() -> Binding<String> {
+        dirtyBinding(\.artist)
     }
     
     func getSummary() -> Binding<String> {

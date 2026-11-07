@@ -79,6 +79,29 @@ enum ChapterTimeline {
         chapters.removeAll { $0.id == chapter.id }
     }
 
+    /// Ensures the timeline starts at 0:00 with an "Intro" chapter when none does.
+    /// Existing chapters stay after it. Returns `true` when an Intro was inserted.
+    @discardableResult
+    static func ensureLeadingIntro(
+        into chapters: inout [Chapter],
+        durationMillis: UInt32
+    ) -> Bool {
+        if chapters.contains(where: { $0.startTime == 0 }) {
+            return false
+        }
+
+        let endTime = chapters.sorted().first?.startTime ?? durationMillis
+        let intro = Chapter(
+            title: "Intro",
+            url: "",
+            startTime: 0,
+            endTime: endTime,
+            podcastDuration: durationMillis
+        )
+        chapters.insert(intro, at: 0)
+        return true
+    }
+
     @discardableResult
     static func insertChapter(
         into chapters: inout [Chapter],
