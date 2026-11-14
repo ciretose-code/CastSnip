@@ -138,6 +138,14 @@ struct KeyboardShortcutsHelpTests {
     }
 }
 
+struct HelpCreditsTests {
+
+    @Test func creditsLinkPointsAtLAMESourceForge() {
+        #expect(HelpCredits.menuTitle == "Credits")
+        #expect(HelpCredits.lameURL.absoluteString == "https://lame.sourceforge.io/")
+    }
+}
+
 struct ID3TaggingStoreTests {
 
     @Test func missingPreferenceDefaultsToIncludingTags() {

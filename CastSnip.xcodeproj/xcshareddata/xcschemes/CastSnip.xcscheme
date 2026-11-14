@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "2620"
+   LastUpgradeVersion = "1430"
    version = "1.7">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES"
-      buildArchitectures = "Automatic">
+      runPostActionsOnFailure = "NO">
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"
@@ -15,7 +15,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "7B1D20B22BD36A83006D1AA4"
+               BlueprintIdentifier = "C4AC511F5AE35A0049D3C92F"
                BuildableName = "CastSnip.app"
                BlueprintName = "CastSnip"
                ReferencedContainer = "container:CastSnip.xcodeproj">
@@ -27,20 +27,24 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
-      shouldUseLaunchSchemeArgsEnv = "YES">
-      <TestPlans>
-         <TestPlanReference
-            reference = "container:CastSnip.xctestplan"
-            default = "YES">
-         </TestPlanReference>
-      </TestPlans>
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      onlyGenerateCoverageForSpecifiedTargets = "NO">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "C4AC511F5AE35A0049D3C92F"
+            BuildableName = "CastSnip.app"
+            BlueprintName = "CastSnip"
+            ReferencedContainer = "container:CastSnip.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
       <Testables>
          <TestableReference
             skipped = "NO"
-            parallelizable = "YES">
+            parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "7B2A958D2F2C74E600C924FB"
+               BlueprintIdentifier = "214BEA663C088992D2BA15EE"
                BuildableName = "CastSnipTests.xctest"
                BlueprintName = "CastSnipTests"
                ReferencedContainer = "container:CastSnip.xcodeproj">
@@ -51,13 +55,15 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "A11380010001000100000004"
+               BlueprintIdentifier = "1974D19C2AAFC19C2A7FB2F7"
                BuildableName = "CastSnipUITests.xctest"
                BlueprintName = "CastSnipUITests"
                ReferencedContainer = "container:CastSnip.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -73,12 +79,14 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7B1D20B22BD36A83006D1AA4"
+            BlueprintIdentifier = "C4AC511F5AE35A0049D3C92F"
             BuildableName = "CastSnip.app"
             BlueprintName = "CastSnip"
             ReferencedContainer = "container:CastSnip.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -90,12 +98,14 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7B1D20B22BD36A83006D1AA4"
+            BlueprintIdentifier = "C4AC511F5AE35A0049D3C92F"
             BuildableName = "CastSnip.app"
             BlueprintName = "CastSnip"
             ReferencedContainer = "container:CastSnip.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+      </CommandLineArguments>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

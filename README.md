@@ -25,20 +25,8 @@ Edit `project.yml` if you need a different bundle identifier or other project se
 
 ## Releasing
 
-Maintainers cut a signed, notarized CastSnip DMG from `main` and publish it to GitHub Releases:
+Maintainers cut a signed, notarized CastSnip DMG from `main` via the shared osxr toolkit (`osxr.json`). Use `/osxr:release` in Claude/Cursor, or run the toolkit script directly. Dry-run is the default; pass `--apply` only to notarize and publish.
 
-```bash
-./Scripts/release.sh --dry-run   # archive, sign, package; stop before notarizing
-./Scripts/release.sh             # notarize, staple, and publish
-```
-
-One-time notary setup (keychain profile `castsnip-notary`):
-
-```bash
-xcrun notarytool store-credentials "castsnip-notary" \
-  --key ~/.private_keys/AuthKey_<KEY_ID>.p8 \
-  --key-id <KEY_ID> \
-  --issuer <ISSUER_ID>
-```
+One-time machine setup is `/osxr:setup` (Developer ID, `osxr-notary` keychain profile, minisign under `~/.config/osxr/`).
 
 The shipped app is `CastSnip.app` inside a notarized DMG. In-app **Check for Updates…** (CastSnip menu and Settings → Updates) polls this repo’s GitHub Releases and opens the download page when a newer build is available.
