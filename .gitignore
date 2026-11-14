@@ -11,6 +11,11 @@ xcuserdata/
 # Per-developer Apple Team ID (copy from Configs/Local.xcconfig.example)
 Configs/Local.xcconfig
 
+# Release tooling — ExportOptions is generated under build/ by osxr
+Scripts/ExportOptions.plist
+*.p8
+*.key
+
 # Claude Code worktrees (used for isolated feature work; not project content)
 .worktrees/
 /.claude/worktrees/

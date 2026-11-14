@@ -22,6 +22,11 @@ enum SampleEpisode {
     }
 }
 
+enum HelpCredits {
+    static let menuTitle = "Credits"
+    static let lameURL = URL(string: "https://lame.sourceforge.io/")!
+}
+
 enum EditorAccessibility {
     static let coverArt = "Cover art"
     static let coverArtHint = "Opens an image picker"

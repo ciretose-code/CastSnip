@@ -1,0 +1,11 @@
+{
+  "scheme": "CastSnip",
+  "project": "CastSnip.xcodeproj",
+  "appName": "CastSnip",
+  "notaryProfile": "osxr-notary",
+  "versionSource": "xcodegen",
+  "projectYml": "project.yml",
+  "releaseBranch": "main",
+  "runTests": true,
+  "minisignPublicKeyURL": "https://ciretose.com/ciretose.pub"
+}

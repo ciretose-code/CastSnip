@@ -229,6 +229,9 @@ struct CastSnipApp: App {
                 Button("CastSnip Website") {
                     openCastSnipWebsite()
                 }
+                Button(HelpCredits.menuTitle) {
+                    openLAMECredits()
+                }
                 Button(AutofillMemoryCopy.browseMenu) {
                     showAutofillBrowser = true
                 }
@@ -534,6 +537,10 @@ struct CastSnipApp: App {
             return
         }
         NSWorkspace.shared.open(url)
+    }
+
+    private func openLAMECredits() {
+        NSWorkspace.shared.open(HelpCredits.lameURL)
     }
 }
 
