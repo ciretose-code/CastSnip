@@ -20,10 +20,6 @@ struct ContentView: View {
     /// Leading inspector column width; persisted by `InspectorWidthStore`.
     @State private var inspectorWidth = InspectorWidthStore.load()
     @State private var inspectorDragStartWidth: Double?
-    /// Share of the editor height given to the chapter list; persisted by `EditorSplitStore`.
-    @State private var splitFraction = EditorSplitStore.load()
-    @State private var splitDragStartFraction: Double?
-
     @StateObject private var player = AudioPlayerManager()
     
     private let minViewportDuration: TimeInterval = 10
@@ -84,21 +80,15 @@ struct ContentView: View {
                 inspectorWidthDivider
             }
 
-            GeometryReader { geometry in
-                let totalHeight = geometry.size.height
-                let listHeight = totalHeight * splitFraction
-                VStack(spacing: 0) {
-                    timelinePane
-                        .frame(maxHeight: .infinity, alignment: .top)
-                    transportBar
-                    splitDivider(totalHeight: totalHeight)
-                    ChapterListView(
-                        playheadMillis: transportPlayheadMillis,
-                        onAdd: { addChapter(atMillis: actionPlayheadMillis) },
-                        onSeek: { chapter in seekToChapter(chapter) }
-                    )
-                    .frame(height: listHeight)
-                }
+            VStack(spacing: 0) {
+                timelinePane
+                chapterListDivider
+                ChapterListView(
+                    playheadMillis: transportPlayheadMillis,
+                    onAdd: { addChapter(atMillis: actionPlayheadMillis) },
+                    onSeek: { chapter in seekToChapter(chapter) }
+                )
+                .frame(maxHeight: .infinity)
             }
         }
         .toolbar { toolbarContent }
@@ -193,7 +183,8 @@ struct ContentView: View {
                         .foregroundStyle(.red)
                         .lineLimit(1)
                 }
-                Spacer()
+                Spacer(minLength: 8)
+                zoomControls
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
@@ -250,6 +241,8 @@ struct ContentView: View {
                 zoom(in: zoomIn)
             }
             .background(Color(nsColor: .textBackgroundColor).opacity(0.4))
+
+            transportBar
         }
     }
 
@@ -284,114 +277,62 @@ struct ContentView: View {
             .accessibilityHidden(true)
     }
 
-    /// Draggable divider between the waveform and the chapter list. Double-click resets it.
-    private func splitDivider(totalHeight: Double) -> some View {
+    /// Hairline between the transport bar and the chapter list.
+    private var chapterListDivider: some View {
         Divider()
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 3)
-            .contentShape(Rectangle())
-            .padding(.vertical, -3)
-            .zIndex(1)
-            .onHover { inside in
-                if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
-            }
-            .gesture(
-                DragGesture(minimumDistance: 1, coordinateSpace: .global)
-                    .onChanged { value in
-                        let start = splitDragStartFraction ?? splitFraction
-                        splitDragStartFraction = start
-                        splitFraction = EditorSplitStore.fraction(
-                            chapterHeight: start * totalHeight - value.translation.height,
-                            totalHeight: totalHeight
-                        )
-                    }
-                    .onEnded { _ in
-                        splitDragStartFraction = nil
-                        EditorSplitStore.save(splitFraction)
-                    }
-            )
-            .onTapGesture(count: 2) {
-                splitFraction = EditorSplitStore.defaultFraction
-                EditorSplitStore.save(splitFraction)
-            }
-            .help("Drag to resize · double-click to reset")
-            .accessibilityHidden(true)
     }
 
     private var zoomControls: some View {
-        // Max = widest view (max zoom out), so it sits with −, not past +.
-        HStack(spacing: 4) {
-            Button("Max") { selectedViewportIndex = max(viewportOptions.count - 1, 0) }
-                .disabled(selectedViewportIndex == viewportOptions.count - 1)
-                .help("Show the whole episode (⌘0)")
-                .padding(.trailing, 6)
-
-            Button { zoom(in: false) } label: {
-                Image(systemName: "minus.magnifyingglass")
+        Picker(EditorAccessibility.viewport, selection: $selectedViewportIndex) {
+            ForEach(Array(viewportOptions.enumerated()), id: \.offset) { index, duration in
+                Text("\(Int(duration))s").tag(index)
             }
-            .disabled(selectedViewportIndex >= viewportOptions.count - 1)
-            .help("Zoom out (⌘-)")
-            .accessibilityLabel("Zoom out")
-
-            Text(viewportOptions[safe: selectedViewportIndex].map(viewportLabel) ?? "Max")
-                .monospacedDigit()
-                .foregroundStyle(.secondary)
-                .frame(minWidth: 34)
-                .accessibilityLabel(EditorAccessibility.viewport)
-
-            Button { zoom(in: true) } label: {
-                Image(systemName: "plus.magnifyingglass")
-            }
-            .disabled(selectedViewportIndex <= 0)
-            .help("Zoom in (⌘=)")
-            .accessibilityLabel("Zoom in")
         }
-        .buttonStyle(.borderless)
-        .font(.callout)
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .controlSize(.small)
+        .fixedSize()
+        .disabled(viewportOptions.isEmpty)
+        .help("Waveform zoom window")
+        .accessibilityLabel(EditorAccessibility.viewport)
     }
 
     // MARK: - Transport
 
     private var transportBar: some View {
-        ZStack {
-            HStack(spacing: 14) {
-                Button { player.jumpBackward(10) } label: {
-                    Label(EditorAccessibility.back10, systemImage: "gobackward.10")
-                }
-                .disabled(player.duration <= 0)
-                .accessibilityIdentifier(EditorAccessibility.back10)
-
-                Button { player.togglePlayPause() } label: {
-                    Label(
-                        player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play,
-                        systemImage: player.isPlaying ? "pause.fill" : "play.fill"
-                    )
-                }
-                .disabled(player.duration <= 0)
-                .keyboardShortcut(.space, modifiers: [])
-                .help(player.loadError ?? (player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play))
-                .accessibilityIdentifier(EditorAccessibility.playPause)
-
-                Button { player.jumpForward(10) } label: {
-                    Label(EditorAccessibility.forward10, systemImage: "goforward.10")
-                }
-                .disabled(player.duration <= 0)
-                .accessibilityIdentifier(EditorAccessibility.forward10)
-
-                Text("\(ID3Parser.toTrackTime(millis: transportPlayheadMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true)) / \(ID3Parser.toTrackTime(millis: durationMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true))")
-                    .font(.callout)
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-                    .fixedSize()
+        HStack(spacing: 14) {
+            Button { player.jumpBackward(10) } label: {
+                Label(EditorAccessibility.back10, systemImage: "gobackward.10")
             }
-            .labelStyle(.iconOnly)
+            .disabled(player.duration <= 0)
+            .accessibilityIdentifier(EditorAccessibility.back10)
 
-            HStack {
-                Spacer(minLength: 0)
-                zoomControls
+            Button { player.togglePlayPause() } label: {
+                Label(
+                    player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play,
+                    systemImage: player.isPlaying ? "pause.fill" : "play.fill"
+                )
             }
+            .disabled(player.duration <= 0)
+            .keyboardShortcut(.space, modifiers: [])
+            .help(player.loadError ?? (player.isPlaying ? EditorAccessibility.pause : EditorAccessibility.play))
+            .accessibilityIdentifier(EditorAccessibility.playPause)
+
+            Button { player.jumpForward(10) } label: {
+                Label(EditorAccessibility.forward10, systemImage: "goforward.10")
+            }
+            .disabled(player.duration <= 0)
+            .accessibilityIdentifier(EditorAccessibility.forward10)
+
+            Text("\(ID3Parser.toTrackTime(millis: transportPlayheadMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true)) / \(ID3Parser.toTrackTime(millis: durationMillis, showHours: podcastAudioFile.podcast.shouldShowHours, showMillis: true))")
+                .font(.callout)
+                .monospacedDigit()
+                .foregroundStyle(.secondary)
+                .fixedSize()
         }
+        .labelStyle(.iconOnly)
         .buttonStyle(.borderless)
+        .frame(maxWidth: .infinity)
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
         .background(.bar)
@@ -498,27 +439,13 @@ struct ContentView: View {
             return
         }
 
-        var options: [TimeInterval] = []
-        let baseOptions: [TimeInterval] = [
-            minViewportDuration,
-            30,
-            60,
-            120,
-            300,
-            600,
-            duration
-        ]
-
-        for option in baseOptions where option <= duration + 0.0001 {
-            if !options.contains(option) {
-                options.append(option)
-            }
-        }
-
-        viewportOptions = options
+        let baseOptions: [TimeInterval] = [10, 20, 30, 45, 60, 90]
+        viewportOptions = baseOptions.filter { $0 <= duration + 0.0001 }
 
         // Re-select the closest option to the current duration.
-        if let closestIndex = viewportOptions.enumerated().min(by: { abs($0.element - viewportDuration) < abs($1.element - viewportDuration) })?.offset {
+        if let closestIndex = viewportOptions.enumerated().min(by: {
+            abs($0.element - viewportDuration) < abs($1.element - viewportDuration)
+        })?.offset {
             selectedViewportIndex = closestIndex
         } else {
             selectedViewportIndex = 0
@@ -537,18 +464,6 @@ struct ContentView: View {
 
         shouldSnapViewport = true
         updateViewport()
-    }
-
-    private func viewportLabel(for duration: TimeInterval) -> String {
-        let maxViewport = player.duration
-        if maxViewport > 0, abs(duration - maxViewport) < 0.5 {
-            return "Max"
-        }
-        if duration >= 60 {
-            let minutes = Int(duration / 60)
-            return "\(minutes)m"
-        }
-        return "\(Int(duration))s"
     }
 
     private func clampViewportDuration() {
@@ -616,6 +531,7 @@ struct ContentView: View {
         }
     }
     return ContentTestView()
+        .frame(width: 900, height: 600)
 }
 
 #Preview("Load Null") {
