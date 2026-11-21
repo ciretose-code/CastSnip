@@ -53,6 +53,7 @@ struct WaveformView: View {
     /// Called on a pinch: true to zoom in, false to zoom out.
     var onZoom: (Bool) -> Void = { _ in }
 
+    private let detailHeight: CGFloat = 56
     private let overviewHeight: CGFloat = 32
     private let rulerHeight: CGFloat = 20
 
@@ -290,7 +291,7 @@ struct WaveformView: View {
             onAddChapter: onAddChapter,
             onZoom: onZoom
         )
-        .frame(maxHeight: .infinity)
+        .frame(height: detailHeight)
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { canvasWidth = $0 }
         .help("Click to seek · swipe to pan · drag a chapter edge to retime · double-click to add a chapter · pinch to zoom")
     }

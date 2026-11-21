@@ -19,3 +19,6 @@ Scripts/ExportOptions.plist
 # Claude Code worktrees (used for isolated feature work; not project content)
 .worktrees/
 /.claude/worktrees/
+
+# Superpowers brainstorm companion mockups
+.superpowers/

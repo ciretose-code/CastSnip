@@ -225,12 +225,9 @@ final class WaveformDetailSurface: NSView {
 
     // MARK: - Bake
 
-    /// Playhead while follow mode is on; otherwise the center of the visible window.
+    /// Center of the visible window — strip bakes track the fixed viewport, not the playhead.
     private var stripAnchor: TimeInterval {
-        if model.followsPlayhead, model.isPlaying {
-            return model.currentTime
-        }
-        return model.viewportStart + model.viewportDuration / 2
+        model.viewportStart + model.viewportDuration / 2
     }
 
     private func requestBakeIfNeeded(force: Bool) {

@@ -174,8 +174,20 @@ final class ViewportMathTests: XCTestCase {
         XCTAssertNil(ViewportMath.playheadX(time: 5, viewportStart: 0, viewportDuration: 20, audioDuration: 0, width: 200))
     }
 
-    func testFollowedStart_WhilePlaying_SnapsToCenteredTarget() {
-        // Previous start lagged behind; playback should hard-snap, not ease.
+    func testFollowedStart_WhilePlaying_PlayheadInsideWindow_KeepsCurrentStart() {
+        let next = ViewportMath.followedStart(
+            currentStart: 20,
+            currentTime: 30,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: true,
+            snap: false
+        )
+        XCTAssertEqual(next, 20, accuracy: 0.0001)
+    }
+
+    func testFollowedStart_WhilePlaying_PlayheadExitsRight_PagesWithInset() {
+        // Window [10, 30]; time 40 → start = 40 - 0.1*20 = 38
         let next = ViewportMath.followedStart(
             currentStart: 10,
             currentTime: 40,
@@ -184,7 +196,32 @@ final class ViewportMathTests: XCTestCase {
             isPlaying: true,
             snap: false
         )
-        XCTAssertEqual(next, 30, accuracy: 0.0001)
+        XCTAssertEqual(next, 38, accuracy: 0.0001)
+    }
+
+    func testFollowedStart_WhilePlaying_PlayheadExitsLeft_PagesWithInset() {
+        // Window [40, 60]; time 30 → start = 30 - 0.9*20 = 12
+        let next = ViewportMath.followedStart(
+            currentStart: 40,
+            currentTime: 30,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: true,
+            snap: false
+        )
+        XCTAssertEqual(next, 12, accuracy: 0.0001)
+    }
+
+    func testFollowedStart_WhilePlaying_PlayheadOnRightEdge_KeepsCurrentStart() {
+        let next = ViewportMath.followedStart(
+            currentStart: 10,
+            currentTime: 30,
+            duration: 120,
+            viewportDuration: 20,
+            isPlaying: true,
+            snap: false
+        )
+        XCTAssertEqual(next, 10, accuracy: 0.0001)
     }
 
     func testFollowedStart_WhenSnapRequested_SnapsEvenIfPaused() {

@@ -20,4 +20,18 @@ struct WaveformStripBakerTests {
         #expect(image!.width == 600)
         #expect(image!.height == 200)
     }
+
+    @Test func amplitudeBarAtDetailHeightUsesMostOfStrip() {
+        let height: CGFloat = 56
+        let rect = WaveformStripBaker.amplitudeBarRect(
+            sample: 1,
+            x: 0,
+            barWidth: 2,
+            height: height
+        )
+        #expect(rect.height >= height * 0.75)
+        #expect(abs(rect.midY - height / 2) < 0.5)
+        #expect(rect.minY >= 0)
+        #expect(rect.maxY <= height)
+    }
 }
