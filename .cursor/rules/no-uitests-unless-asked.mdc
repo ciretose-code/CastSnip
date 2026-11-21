@@ -1,0 +1,11 @@
+---
+description: Do not run CastSnip UI tests unless the user explicitly asks
+alwaysApply: true
+---
+
+# UI tests only on request
+
+Never run `CastSnipUITests` (or `-only-testing:CastSnipUITests`) unless Eric explicitly asks.
+
+- Release / `osxr` / `xcodebuild … test` should use the scheme default (`CastSnipTests` only).
+- Do not add `CastSnipUITests` back to the scheme `testTargets` without an explicit ask.

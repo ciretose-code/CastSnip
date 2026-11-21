@@ -50,17 +50,6 @@
                ReferencedContainer = "container:CastSnip.xcodeproj">
             </BuildableReference>
          </TestableReference>
-         <TestableReference
-            skipped = "NO"
-            parallelizable = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "1974D19C2AAFC19C2A7FB2F7"
-               BuildableName = "CastSnipUITests.xctest"
-               BlueprintName = "CastSnipUITests"
-               ReferencedContainer = "container:CastSnip.xcodeproj">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>
