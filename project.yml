@@ -30,7 +30,7 @@ settings:
     # osxr (versionSource=xcodegen) bumps CFBundleVersion; CURRENT_PROJECT_VERSION
     # references it so the bundle build matches. Seeded at 150 to continue past
     # the last commit-count release (v1.0.150).
-    CFBundleVersion: "151"
+    CFBundleVersion: "152"
     CURRENT_PROJECT_VERSION: "$(CFBundleVersion)"
     MARKETING_VERSION: "1.0"
     # LAME SPM binary is arm64-only; Intel is already outside the deployment target.
