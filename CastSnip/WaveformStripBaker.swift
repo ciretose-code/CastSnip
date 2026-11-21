@@ -35,6 +35,24 @@ enum WaveformStripBaker {
         var markers: [MarkerDTO]
     }
 
+    /// Vertical bar for one amplitude sample in strip coordinates (y grows downward).
+    /// Full-scale bars use ~80% of strip height and stay vertically centered.
+    nonisolated static func amplitudeBarRect(
+        sample: Float,
+        x: CGFloat,
+        barWidth: CGFloat,
+        height: CGFloat
+    ) -> CGRect {
+        let midHeight = height / 2
+        let barHeight = CGFloat(sample) * height * 0.8
+        return CGRect(
+            x: x,
+            y: midHeight - barHeight / 2,
+            width: max(barWidth - 0.5, 1),
+            height: max(barHeight, 1)
+        )
+    }
+
     nonisolated static func bake(_ input: Input) -> CGImage? {
         let scale = max(input.scale, 1)
         let pixelWidth = max(1, Int((input.size.width * scale).rounded()))
@@ -104,17 +122,15 @@ enum WaveformStripBaker {
             let targetBarCount = max(1, Int(floor(width)))
             let bars = WaveformSampling.downsample(buckets: visibleBuckets, maxBars: targetBarCount)
             let barWidth = width / CGFloat(bars.count)
-            let midHeight = height / 2
             ctx.setFillColor(NSColor.labelColor.withAlphaComponent(0.55).cgColor)
 
             for (index, sample) in bars.enumerated() {
                 let x = CGFloat(index) * barWidth
-                let barHeight = CGFloat(sample) * (height - 36) * 0.9
-                let rect = CGRect(
+                let rect = amplitudeBarRect(
+                    sample: sample,
                     x: x,
-                    y: midHeight + 8 - barHeight / 2,
-                    width: max(barWidth - 0.5, 1),
-                    height: max(barHeight, 1)
+                    barWidth: barWidth,
+                    height: height
                 )
                 ctx.fill(rect)
             }

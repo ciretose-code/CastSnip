@@ -89,7 +89,7 @@ struct ContentView: View {
                 let listHeight = totalHeight * splitFraction
                 VStack(spacing: 0) {
                     timelinePane
-                        .frame(maxHeight: .infinity)
+                        .frame(maxHeight: .infinity, alignment: .top)
                     transportBar
                     splitDivider(totalHeight: totalHeight)
                     ChapterListView(
