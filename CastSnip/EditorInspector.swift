@@ -77,7 +77,7 @@ private struct ChapterInspector: View {
                     ArtworkWell(
                         image: chapter.image ?? audioFile.podcast.logo,
                         size: ArtworkWell.inspectorSize,
-                        caption: chapter.image == nil ? "Using episode art" : nil,
+                        caption: nil,
                         prompt: "Select a chapter image"
                     ) { image in
                         audioFile.setImage(image, for: chapter)
@@ -113,14 +113,6 @@ private struct ChapterInspector: View {
                     Text(ID3Parser.toTrackTime(millis: endMillis > chapter.startTime ? endMillis - chapter.startTime : 0, showHours: showHours, showMillis: true))
                         .monospacedDigit()
                 }
-            } header: {
-                Text("Timing")
-            } footer: {
-                Text(isLocked
-                     ? "The first chapter's start is fixed. Each chapter ends where the next begins."
-                     : "Each chapter ends where the next begins. Drag an edge on the waveform to retime.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
@@ -201,13 +193,13 @@ private struct EpisodeInspector: View {
                     .accessibilityIdentifier(EditorAccessibility.year)
             }
 
-            Section("Summary") {
+            Section {
                 TextField("Summary", text: audioFile.getSummary(), prompt: Text("Episode summary"), axis: .vertical)
                     .labelsHidden()
                     .lineLimit(4...12)
             }
 
-            Section("File") {
+            Section {
                 LabeledContent("Name", value: audioFile.podcast.url?.lastPathComponent ?? "—")
                 LabeledContent("Running Time") {
                     Text(audioFile.podcast.getDurationFormatted()).monospacedDigit().textSelection(.enabled)
@@ -285,12 +277,9 @@ struct ArtworkWell: View {
             .onDrop(of: [.image, .fileURL], isTargeted: $isTargeted, perform: handleDrop)
             .accessibilityAddTraits(.isButton)
 
-            // Always reserve caption height so episode and chapter artwork cards match.
-            Text(caption ?? " ")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .opacity(caption == nil ? 0 : 1)
-                .accessibilityHidden(caption == nil)
+            if let caption {
+                Text(caption).font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 
