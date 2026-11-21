@@ -1,0 +1,8 @@
+---
+description: Never use the Superpowers brainstorming visual companion server; show visuals via static HTML
+alwaysApply: true
+---
+
+# No brainstorm visual companion
+
+Never use `start-server.sh` / the companion localhost server (it dies with the agent shell). For visual options: write a self-contained HTML file and `open` it (`file://`). Do not fall back to text-only when the user wants to see layouts.
