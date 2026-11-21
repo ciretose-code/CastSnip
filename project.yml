@@ -72,9 +72,10 @@ targets:
     dependencies:
       - package: LAME
     scheme:
+      # CastSnipUITests stay in the project but are not on the scheme — run them
+      # only when explicitly requested (-only-testing:CastSnipUITests).
       testTargets:
         - CastSnipTests
-        - CastSnipUITests
 
   CastSnipTests:
     type: bundle.unit-test
