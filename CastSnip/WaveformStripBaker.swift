@@ -53,6 +53,11 @@ enum WaveformStripBaker {
         )
     }
 
+    /// Capsule ends — half the bar width, capped by half the height.
+    nonisolated static func amplitudeBarCornerRadius(for rect: CGRect) -> CGFloat {
+        min(rect.width, rect.height) / 2
+    }
+
     nonisolated static func bake(_ input: Input) -> CGImage? {
         let scale = max(input.scale, 1)
         let pixelWidth = max(1, Int((input.size.width * scale).rounded()))
@@ -132,7 +137,9 @@ enum WaveformStripBaker {
                     barWidth: barWidth,
                     height: height
                 )
-                ctx.fill(rect)
+                let radius = amplitudeBarCornerRadius(for: rect)
+                ctx.addPath(CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil))
+                ctx.fillPath()
             }
         }
 

@@ -422,14 +422,17 @@ private struct OverviewStaticCanvas: View, Equatable {
             let bars = WaveformSampling.downsample(buckets: overview, maxBars: max(1, Int(width / 2)))
             let barWidth = width / CGFloat(max(bars.count, 1))
             for (index, sample) in bars.enumerated() {
-                let barHeight = max(CGFloat(sample) * height * 0.8, 1)
-                let rect = CGRect(
+                let rect = WaveformStripBaker.amplitudeBarRect(
+                    sample: sample,
                     x: CGFloat(index) * barWidth,
-                    y: (height - barHeight) / 2,
-                    width: max(barWidth - 0.5, 0.5),
-                    height: barHeight
+                    barWidth: barWidth,
+                    height: height
                 )
-                context.fill(Path(rect), with: .color(.primary.opacity(0.45)))
+                let radius = WaveformStripBaker.amplitudeBarCornerRadius(for: rect)
+                context.fill(
+                    Path(roundedRect: rect, cornerRadius: radius),
+                    with: .color(.primary.opacity(0.45))
+                )
             }
         }
     }

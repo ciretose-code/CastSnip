@@ -34,4 +34,11 @@ struct WaveformStripBakerTests {
         #expect(rect.minY >= 0)
         #expect(rect.maxY <= height)
     }
+
+    @Test func amplitudeBarCornerRadiusCapsEnds() {
+        let tall = CGRect(x: 0, y: 0, width: 3, height: 40)
+        #expect(WaveformStripBaker.amplitudeBarCornerRadius(for: tall) == 1.5)
+        let short = CGRect(x: 0, y: 0, width: 4, height: 2)
+        #expect(WaveformStripBaker.amplitudeBarCornerRadius(for: short) == 1)
+    }
 }

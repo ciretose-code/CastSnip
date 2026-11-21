@@ -76,7 +76,7 @@ private struct ChapterInspector: View {
                     Spacer()
                     ArtworkWell(
                         image: chapter.image ?? audioFile.podcast.logo,
-                        size: 120,
+                        size: ArtworkWell.inspectorSize,
                         caption: chapter.image == nil ? "Using episode art" : nil,
                         prompt: "Select a chapter image"
                     ) { image in
@@ -88,8 +88,8 @@ private struct ChapterInspector: View {
             }
 
             Section {
-                TextField("Title", text: audioFile.titleBinding(for: chapter), prompt: Text(Chapter.DEFAULT_TITLE))
-                TextField("Link", text: audioFile.urlBinding(for: chapter), prompt: Text("https://…"))
+                InspectorPromptField(hint: "Title", text: audioFile.titleBinding(for: chapter))
+                InspectorPromptField(hint: "Link", text: audioFile.urlBinding(for: chapter))
                 if chapter.validate().contains(.invalidURL) {
                     Label("Links need a scheme and host, like https://example.com", systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
@@ -179,7 +179,7 @@ private struct EpisodeInspector: View {
             Section {
                 HStack {
                     Spacer()
-                    ArtworkWell(image: audioFile.podcast.logo, size: 180, caption: nil, prompt: "Select a cover art image") { image in
+                    ArtworkWell(image: audioFile.podcast.logo, size: ArtworkWell.inspectorSize, caption: nil, prompt: "Select a cover art image") { image in
                         audioFile.podcast.logo = image
                         audioFile.markAsModified()
                     }
@@ -191,13 +191,13 @@ private struct EpisodeInspector: View {
             }
 
             Section {
-                TextField("Show", text: audioFile.getTitle(), prompt: Text("Podcast title"))
+                InspectorPromptField(hint: "Show", text: audioFile.getTitle())
                     .accessibilityIdentifier(EditorAccessibility.podcastTitle)
-                TextField("Episode", text: audioFile.getEpisode(), prompt: Text("Episode title"))
+                InspectorPromptField(hint: "Episode", text: audioFile.getEpisode())
                     .accessibilityIdentifier(EditorAccessibility.episodeTitle)
-                TextField("Authors", text: audioFile.getAuthors(), prompt: Text("Authors"))
+                InspectorPromptField(hint: "Authors", text: audioFile.getAuthors())
                     .accessibilityIdentifier(EditorAccessibility.authors)
-                TextField("Year", text: audioFile.getYear(), prompt: Text("Year"))
+                InspectorPromptField(hint: "Year", text: audioFile.getYear())
                     .accessibilityIdentifier(EditorAccessibility.year)
             }
 
@@ -221,10 +221,29 @@ private struct EpisodeInspector: View {
     }
 }
 
+// MARK: - Prompt fields
+
+/// Full-width field: hint text when empty, left-aligned value when filled.
+private struct InspectorPromptField: View {
+    let hint: String
+    @Binding var text: String
+
+    var body: some View {
+        TextField("", text: $text, prompt: Text(hint))
+            .labelsHidden()
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityLabel(hint)
+    }
+}
+
 // MARK: - Artwork
 
 /// Square image well: click to choose a file, or drop an image on it.
 struct ArtworkWell: View {
+    /// Shared size for episode and chapter artwork in the inspector.
+    static let inspectorSize: CGFloat = 180
+
     let image: NSImage?
     let size: CGFloat
     let caption: String?
@@ -266,9 +285,12 @@ struct ArtworkWell: View {
             .onDrop(of: [.image, .fileURL], isTargeted: $isTargeted, perform: handleDrop)
             .accessibilityAddTraits(.isButton)
 
-            if let caption {
-                Text(caption).font(.caption).foregroundStyle(.secondary)
-            }
+            // Always reserve caption height so episode and chapter artwork cards match.
+            Text(caption ?? " ")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .opacity(caption == nil ? 0 : 1)
+                .accessibilityHidden(caption == nil)
         }
     }
 
