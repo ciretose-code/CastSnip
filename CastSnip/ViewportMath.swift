@@ -137,12 +137,17 @@ enum ViewportMath {
     /// The waveform uses the full display-link rate; these UIs stay cheaper.
     static let transportPublishInterval: TimeInterval = 0.1
 
-    /// Next viewport start while following the playhead.
+    /// Fraction of the viewport duration used as playhead inset after a page.
+    static let pageInsetFraction: Double = 0.1
+
+    /// Next viewport start while the playhead advances through a fixed window.
     ///
-    /// While playing (or when `snap` is requested) the viewport hard-centers on
-    /// `currentTime`. A user pan sets `detached`: playback keeps the window where
-    /// they put it until an explicit snap (overview seek, chapter jump, zoom, or
-    /// pressing play). When paused without a snap, the existing start is kept.
+    /// When `snap` is requested the viewport hard-centers on `currentTime`.
+    /// A user pan sets `detached`: playback keeps the window where they put it
+    /// until an explicit snap (overview seek, chapter jump, zoom, or pressing
+    /// play). While playing and not detached, the window stays put while the
+    /// playhead is inside it and pages when the playhead leaves (inset by
+    /// `pageInsetFraction`). When paused without a snap, the existing start is kept.
     static func followedStart(
         currentStart: TimeInterval,
         currentTime: TimeInterval,
@@ -152,17 +157,40 @@ enum ViewportMath {
         snap: Bool,
         detached: Bool = false
     ) -> TimeInterval {
-        if detached && !snap {
+        if snap {
+            return viewportStart(
+                currentTime: currentTime,
+                duration: duration,
+                viewportDuration: viewportDuration
+            )
+        }
+        if detached || !isPlaying {
             return clampViewportStart(
                 currentStart,
                 audioDuration: duration,
                 viewportDuration: viewportDuration
             )
         }
-        guard isPlaying || snap else { return currentStart }
-        return viewportStart(
-            currentTime: currentTime,
-            duration: duration,
+        guard viewportDuration > 0 else { return currentStart }
+        let windowStart = clampViewportStart(
+            currentStart,
+            audioDuration: duration,
+            viewportDuration: viewportDuration
+        )
+        let windowEnd = windowStart + viewportDuration
+        if currentTime >= windowStart, currentTime <= windowEnd {
+            return windowStart
+        }
+        if currentTime > windowEnd {
+            return clampViewportStart(
+                currentTime - pageInsetFraction * viewportDuration,
+                audioDuration: duration,
+                viewportDuration: viewportDuration
+            )
+        }
+        return clampViewportStart(
+            currentTime - (1 - pageInsetFraction) * viewportDuration,
+            audioDuration: duration,
             viewportDuration: viewportDuration
         )
     }
